@@ -1,0 +1,197 @@
+0 verbose cli /opt/homebrew/Cellar/node/24.10.0/bin/node /opt/homebrew/bin/npm
+1 info using npm@11.6.0
+2 info using node@v24.10.0
+3 silly config load:file:/opt/homebrew/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/cms/Desktop/Demo/POS/.npmrc
+5 silly config load:file:/Users/cms/.npmrc
+6 silly config load:file:/opt/homebrew/etc/npmrc
+7 verbose title npm install react-native-qrcode-svg
+8 verbose argv "install" "react-native-qrcode-svg" "--cache" "./.npm-cache"
+9 verbose logfile logs-max:10 dir:/Users/cms/Desktop/Demo/POS/.npm-cache/_logs/2026-07-06T11_05_26_975Z-
+10 verbose logfile /Users/cms/Desktop/Demo/POS/.npm-cache/_logs/2026-07-06T11_05_26_975Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ENOTFOUND
+14 silly idealTree buildDeps
+15 silly fetch manifest react-native-qrcode-svg@*
+16 silly packumentCache full:https://registry.npmjs.org/react-native-qrcode-svg cache-miss
+17 http fetch GET https://registry.npmjs.org/react-native-qrcode-svg attempt 1 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with ENOTFOUND
+19 http fetch GET https://registry.npmjs.org/react-native-qrcode-svg attempt 2 failed with ENOTFOUND
+20 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with ENOTFOUND
+21 http fetch GET https://registry.npmjs.org/react-native-qrcode-svg attempt 3 failed with ENOTFOUND
+22 silly placeDep ROOT react-native-qrcode-svg@ OK for: pos@1.0.0 want: *
+23 silly fetch manifest ws@^8.0.0
+24 silly packumentCache full:https://registry.npmjs.org/ws cache-miss
+25 http fetch GET https://registry.npmjs.org/ws attempt 1 failed with ENOTFOUND
+26 http fetch GET https://registry.npmjs.org/ws attempt 2 failed with ENOTFOUND
+27 http fetch GET https://registry.npmjs.org/ws attempt 3 failed with ENOTFOUND
+28 silly placeDep ROOT ws@ REPLACE for: @expo/ws-tunnel@2.0.0 want: ^8.0.0
+29 warn ERESOLVE overriding peer dependency {
+29 warn ERESOLVE   code: 'ERESOLVE',
+29 warn ERESOLVE   edge: {
+29 warn ERESOLVE     type: 'peer',
+29 warn ERESOLVE     name: 'ws',
+29 warn ERESOLVE     spec: '^8.0.0',
+29 warn ERESOLVE     error: 'PEER LOCAL',
+29 warn ERESOLVE     from: {
+29 warn ERESOLVE       name: '@expo/ws-tunnel',
+29 warn ERESOLVE       version: '2.0.0',
+29 warn ERESOLVE       location: 'node_modules/@expo/ws-tunnel',
+29 warn ERESOLVE       isWorkspace: false,
+29 warn ERESOLVE       dependents: [Array]
+29 warn ERESOLVE     }
+29 warn ERESOLVE   },
+29 warn ERESOLVE   dep: {
+29 warn ERESOLVE     name: 'ws',
+29 warn ERESOLVE     version: undefined,
+29 warn ERESOLVE     errors: [ [FetchError] ],
+29 warn ERESOLVE     package: {},
+29 warn ERESOLVE     whileInstalling: {
+29 warn ERESOLVE       name: '@expo/ws-tunnel',
+29 warn ERESOLVE       version: '2.0.0',
+29 warn ERESOLVE       path: '/Users/cms/Desktop/Demo/POS/node_modules/@expo/ws-tunnel'
+29 warn ERESOLVE     },
+29 warn ERESOLVE     location: 'node_modules/ws',
+29 warn ERESOLVE     isWorkspace: false,
+29 warn ERESOLVE     dependents: [ [Object] ]
+29 warn ERESOLVE   },
+29 warn ERESOLVE   force: false,
+29 warn ERESOLVE   isMine: false,
+29 warn ERESOLVE   strictPeerDeps: false,
+29 warn ERESOLVE   current: {
+29 warn ERESOLVE     name: 'ws',
+29 warn ERESOLVE     version: '8.21.0',
+29 warn ERESOLVE     location: 'node_modules/@expo/ws-tunnel/node_modules/ws',
+29 warn ERESOLVE     isWorkspace: false,
+29 warn ERESOLVE     dependents: []
+29 warn ERESOLVE   }
+29 warn ERESOLVE }
+30 silly fetch manifest @testing-library/dom@>=7.21.4
+31 silly packumentCache full:https://registry.npmjs.org/@testing-library%2fdom cache-miss
+32 http fetch GET https://registry.npmjs.org/@testing-library%2fdom attempt 1 failed with ENOTFOUND
+33 http fetch GET https://registry.npmjs.org/@testing-library%2fdom attempt 2 failed with ENOTFOUND
+34 http fetch GET https://registry.npmjs.org/@testing-library%2fdom attempt 3 failed with ENOTFOUND
+35 silly placeDep ROOT @testing-library/dom@ OK for: @testing-library/user-event@14.6.1 want: >=7.21.4
+36 warn ERESOLVE overriding peer dependency {
+36 warn ERESOLVE   code: 'ERESOLVE',
+36 warn ERESOLVE   edge: {
+36 warn ERESOLVE     type: 'peer',
+36 warn ERESOLVE     name: '@testing-library/dom',
+36 warn ERESOLVE     spec: '>=7.21.4',
+36 warn ERESOLVE     error: 'INVALID',
+36 warn ERESOLVE     from: {
+36 warn ERESOLVE       name: '@testing-library/user-event',
+36 warn ERESOLVE       version: '14.6.1',
+36 warn ERESOLVE       location: 'node_modules/@testing-library/user-event',
+36 warn ERESOLVE       isWorkspace: false,
+36 warn ERESOLVE       dependents: [Array]
+36 warn ERESOLVE     }
+36 warn ERESOLVE   },
+36 warn ERESOLVE   dep: {
+36 warn ERESOLVE     name: '@testing-library/dom',
+36 warn ERESOLVE     version: undefined,
+36 warn ERESOLVE     errors: [ [FetchError] ],
+36 warn ERESOLVE     package: {},
+36 warn ERESOLVE     whileInstalling: {
+36 warn ERESOLVE       name: '@testing-library/user-event',
+36 warn ERESOLVE       version: '14.6.1',
+36 warn ERESOLVE       path: '/Users/cms/Desktop/Demo/POS/node_modules/@testing-library/user-event'
+36 warn ERESOLVE     },
+36 warn ERESOLVE     location: 'node_modules/@testing-library/dom',
+36 warn ERESOLVE     isWorkspace: false,
+36 warn ERESOLVE     dependents: [ [Object] ]
+36 warn ERESOLVE   },
+36 warn ERESOLVE   force: false,
+36 warn ERESOLVE   isMine: false,
+36 warn ERESOLVE   strictPeerDeps: false,
+36 warn ERESOLVE   current: {
+36 warn ERESOLVE     name: '@testing-library/dom',
+36 warn ERESOLVE     version: undefined,
+36 warn ERESOLVE     errors: [ [FetchError] ],
+36 warn ERESOLVE     package: {},
+36 warn ERESOLVE     location: 'node_modules/@testing-library/dom',
+36 warn ERESOLVE     isWorkspace: false,
+36 warn ERESOLVE     dependents: []
+36 warn ERESOLVE   }
+36 warn ERESOLVE }
+37 silly fetch manifest @react-native/metro-config@*
+38 silly packumentCache full:https://registry.npmjs.org/@react-native%2fmetro-config cache-miss
+39 http fetch GET https://registry.npmjs.org/@react-native%2fmetro-config attempt 1 failed with ENOTFOUND
+40 http fetch GET https://registry.npmjs.org/@react-native%2fmetro-config attempt 2 failed with ENOTFOUND
+41 http fetch GET https://registry.npmjs.org/@react-native%2fmetro-config attempt 3 failed with ENOTFOUND
+42 silly placeDep ROOT @react-native/metro-config@ OK for: react-native-worklets@0.8.3 want: *
+43 silly fetch manifest @shopify/react-native-skia@>=1.2.3 <3.0.0
+44 silly packumentCache full:https://registry.npmjs.org/@shopify%2freact-native-skia cache-miss
+45 http fetch GET https://registry.npmjs.org/@shopify%2freact-native-skia attempt 1 failed with ENOTFOUND
+46 http fetch GET https://registry.npmjs.org/@shopify%2freact-native-skia attempt 2 failed with ENOTFOUND
+47 http fetch GET https://registry.npmjs.org/@shopify%2freact-native-skia attempt 3 failed with ENOTFOUND
+48 silly placeDep ROOT @shopify/react-native-skia@ OK for: victory-native@41.26.0 want: >=1.2.3 <3.0.0
+49 warn ERESOLVE overriding peer dependency {
+49 warn ERESOLVE   code: 'ERESOLVE',
+49 warn ERESOLVE   edge: {
+49 warn ERESOLVE     type: 'peer',
+49 warn ERESOLVE     name: '@shopify/react-native-skia',
+49 warn ERESOLVE     spec: '>=1.2.3 <3.0.0',
+49 warn ERESOLVE     error: 'INVALID',
+49 warn ERESOLVE     from: {
+49 warn ERESOLVE       name: 'victory-native',
+49 warn ERESOLVE       version: '41.26.0',
+49 warn ERESOLVE       location: 'node_modules/victory-native',
+49 warn ERESOLVE       isWorkspace: false,
+49 warn ERESOLVE       dependents: [Array]
+49 warn ERESOLVE     }
+49 warn ERESOLVE   },
+49 warn ERESOLVE   dep: {
+49 warn ERESOLVE     name: '@shopify/react-native-skia',
+49 warn ERESOLVE     version: undefined,
+49 warn ERESOLVE     errors: [ [FetchError] ],
+49 warn ERESOLVE     package: {},
+49 warn ERESOLVE     whileInstalling: {
+49 warn ERESOLVE       name: 'victory-native',
+49 warn ERESOLVE       version: '41.26.0',
+49 warn ERESOLVE       path: '/Users/cms/Desktop/Demo/POS/node_modules/victory-native'
+49 warn ERESOLVE     },
+49 warn ERESOLVE     location: 'node_modules/@shopify/react-native-skia',
+49 warn ERESOLVE     isWorkspace: false,
+49 warn ERESOLVE     dependents: [ [Object] ]
+49 warn ERESOLVE   },
+49 warn ERESOLVE   force: false,
+49 warn ERESOLVE   isMine: true,
+49 warn ERESOLVE   strictPeerDeps: false,
+49 warn ERESOLVE   current: {
+49 warn ERESOLVE     name: '@shopify/react-native-skia',
+49 warn ERESOLVE     version: undefined,
+49 warn ERESOLVE     errors: [ [FetchError] ],
+49 warn ERESOLVE     package: {},
+49 warn ERESOLVE     location: 'node_modules/@shopify/react-native-skia',
+49 warn ERESOLVE     isWorkspace: false,
+49 warn ERESOLVE     dependents: []
+49 warn ERESOLVE   }
+49 warn ERESOLVE }
+50 verbose type system
+51 verbose stack FetchError: request to https://registry.npmjs.org/react-native-qrcode-svg failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+51 verbose stack     at ClientRequest.<anonymous> (/opt/homebrew/lib/node_modules/npm/node_modules/minipass-fetch/lib/index.js:130:14)
+51 verbose stack     at ClientRequest.emit (node:events:508:28)
+51 verbose stack     at emitErrorEvent (node:_http_client:107:11)
+51 verbose stack     at _destroy (node:_http_client:954:9)
+51 verbose stack     at onSocketNT (node:_http_client:974:5)
+51 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+52 error code ENOTFOUND
+53 error syscall getaddrinfo
+54 error errno ENOTFOUND
+55 error network request to https://registry.npmjs.org/react-native-qrcode-svg failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+56 error network This is a problem related to network connectivity.
+56 error network In most cases you are behind a proxy or have bad network settings.
+56 error network
+56 error network If you are behind a proxy, please make sure that the
+56 error network 'proxy' config is set properly.  See: 'npm help config'
+57 silly unfinished npm timer reify 1783335927380
+58 silly unfinished npm timer reify:loadTrees 1783335927380
+59 verbose cwd /Users/cms/Desktop/Demo/POS
+60 verbose os Darwin 25.5.0
+61 verbose node v24.10.0
+62 verbose npm  v11.6.0
+63 verbose exit 1
+64 verbose code 1
+65 error A complete log of this run can be found in: /Users/cms/Desktop/Demo/POS/.npm-cache/_logs/2026-07-06T11_05_26_975Z-debug-0.log
