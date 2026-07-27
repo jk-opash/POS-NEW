@@ -1,13 +1,9 @@
-import React from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Bell, Menu, ScanLine } from "lucide-react-native";
-import { Text } from "@/components/ui/Text";
-import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Search } from "lucide-react-native";
-import { TextInput } from "react-native";
+import { Bell, Menu, ScanLine, Search, ShoppingBag } from "lucide-react-native";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export function POSHeader({
   isDesktop,
@@ -20,6 +16,8 @@ export function POSHeader({
   isRetail,
   isScannerConnected,
   onSimulateScan,
+  onTakeawayOrdersPress,
+  takeawayCount = 0,
 }) {
   return (
     <SafeAreaView edges={["top"]} style={styles.headerSafe}>
@@ -80,6 +78,39 @@ export function POSHeader({
             />
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: ThemeColors.primary,
+            paddingHorizontal: ThemeSpacing.md,
+            paddingVertical: 10,
+            borderRadius: ThemeRadius.md,
+          }}
+          onPress={onTakeawayOrdersPress}
+        >
+          <ShoppingBag size={18} color="#fff" style={{ marginRight: 6 }} />
+          <Text style={{ color: "#fff", fontWeight: "bold" }}>
+            Takeaway Orders
+          </Text>
+          {takeawayCount > 0 && (
+            <View style={{
+              backgroundColor: '#fff',
+              borderRadius: 10,
+              minWidth: 20,
+              height: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginLeft: 6,
+              paddingHorizontal: 4,
+            }}>
+              <Text style={{ color: ThemeColors.primary, fontSize: 11, fontWeight: 'bold' }}>
+                {takeawayCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

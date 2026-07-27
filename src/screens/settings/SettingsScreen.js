@@ -38,7 +38,6 @@ import { RolesPermissionsSettings } from "@/components/settings/tabs/RolesPermis
 import { SecuritySettings } from "@/components/settings/tabs/SecuritySettings";
 import { SubscriptionSettings } from "@/components/settings/tabs/SubscriptionSettings";
 import { SystemPreferences } from "@/components/settings/tabs/SystemPreferences";
-import { TaxSettings } from "@/components/settings/tabs/TaxSettings";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const GROUPS = [
@@ -56,12 +55,6 @@ const GROUPS = [
         label: "Branch",
         icon: MapPin,
         description: "Manage locations",
-      },
-      {
-        id: "tax",
-        label: "Tax",
-        icon: Receipt,
-        description: "Tax rates & rules",
       },
       {
         id: "receipt",
@@ -147,8 +140,6 @@ function renderContent(activeTab) {
       return <BusinessSettings />;
     case "branch":
       return <BranchSettings />;
-    case "tax":
-      return <TaxSettings />;
     case "receipt":
       return <ReceiptInvoiceSettings />;
     case "inventory":

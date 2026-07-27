@@ -19,6 +19,7 @@ export function DraggableTable({
   onRotationChange,
   onEdit,
   onPress,
+  onLongPress,
 }) {
   const translateX = useSharedValue(table.x);
   const translateY = useSharedValue(table.y);
@@ -83,7 +84,7 @@ export function DraggableTable({
     <Animated.View style={animatedStyle}>
       <GestureDetector gesture={panGesture}>
         <View>
-          <TableItem table={table} onPress={isEditMode ? undefined : onPress} />
+          <TableItem table={table} onPress={isEditMode ? undefined : onPress} onLongPress={isEditMode ? undefined : onLongPress} />
         </View>
       </GestureDetector>
 

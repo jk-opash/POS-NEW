@@ -85,7 +85,7 @@ export function OrderCard({ order, onPayBills, onSeeDetails }) {
               weight="semibold"
               style={[styles.itemPrice, styles.itemsPriceCol]}
             >
-              ₹{(item.price || 0).toFixed(2)}
+              ₹{Number(item.price || 0).toFixed(2)}
             </Text>
           </View>
         ))}
@@ -106,7 +106,7 @@ export function OrderCard({ order, onPayBills, onSeeDetails }) {
           Total
         </Text>
         <Text weight="extrabold" style={styles.totalAmount}>
-          ₹{order.total.toFixed(2)}
+          ₹{Number(order.total || 0).toFixed(2)}
         </Text>
       </View>
 

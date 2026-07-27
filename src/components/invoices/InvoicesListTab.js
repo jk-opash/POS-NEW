@@ -73,7 +73,7 @@ export function InvoicesListTab({
     return (
       inv.id.toLowerCase().includes(searchLower) ||
       inv.customer.name.toLowerCase().includes(searchLower) ||
-      inv.type.toLowerCase().includes(searchLower)
+      (inv.platform || inv.orderType).toLowerCase().includes(searchLower)
     );
   });
 
@@ -194,7 +194,7 @@ export function InvoicesListTab({
               {inv.table ? inv.table : inv.customer?.name || "Walk-in"}
             </Text>
             <Text style={{ color: ThemeColors.textMuted, fontSize: 12 }}>
-              {inv.type}
+              {inv.platform ? `Online - ${inv.platform}` : inv.orderType}
             </Text>
           </View>
         </View>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, Modal, Alert, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Modal, Image } from 'react-native';
+import { showAlert } from '@/utils/alert';
 import { Text } from '@/components/ui/Text';
 import { ThemeColors, ThemeSpacing, ThemeRadius } from '@/theme/theme';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -53,7 +54,7 @@ export function InventoryItemModal({ visible, onClose }) {
 
   const handleImageUpload = () => {
     // Mock image upload
-    Alert.alert(
+    showAlert(
       "Upload Image",
       "In a real app, this would open the image picker.",
       [

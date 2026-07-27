@@ -5,9 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   ScrollView,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import {
@@ -40,7 +40,7 @@ export function EBillModal({ visible, order, onClose }) {
 
   const handleSendSMS = () => {
     if (!validatePhone(phone)) {
-      Alert.alert("Invalid Number", "Please enter a valid phone number.");
+      showAlert("Invalid Number", "Please enter a valid phone number.");
       return;
     }
     setSendingSMS(true);
@@ -52,7 +52,7 @@ export function EBillModal({ visible, order, onClose }) {
 
   const handleSendEmail = () => {
     if (!validateEmail(email)) {
-      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      showAlert("Invalid Email", "Please enter a valid email address.");
       return;
     }
     setSendingEmail(true);

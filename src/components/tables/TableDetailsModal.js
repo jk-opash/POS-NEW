@@ -1,36 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Modal, TextInput, ScrollView } from 'react-native';
-import { Text } from '@/components/ui/Text';
-import { Dropdown } from '@/components/ui/Dropdown';
-import { ThemeColors, ThemeRadius, ThemeSpacing } from '@/theme/theme';
-import { X, Users, Trash2, Circle, Square, ChevronDown } from 'lucide-react-native';
+import { Dropdown } from "@/components/ui/Dropdown";
+import { Text } from "@/components/ui/Text";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { Circle, Square, Trash2, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const CAPACITY_OPTIONS = Array.from({ length: 10 }, (_, i) => {
   const cap = (i + 1) * 2;
   return {
     id: cap,
-    label: `${cap} Seat${cap > 1 ? 's' : ''}`,
+    label: `${cap} Seat${cap > 1 ? "s" : ""}`,
     capacity: cap,
     value: cap, // for Dropdown
     span: Math.ceil(cap / 4) || 1,
   };
 });
 
-export function TableDetailsModal({ visible, onClose, mode = 'add', initialData, onSave, onDelete }) {
-  const [name, setName] = useState('');
+export function TableDetailsModal({
+  visible,
+  onClose,
+  mode = "add",
+  initialData,
+  onSave,
+  onDelete,
+}) {
+  const [name, setName] = useState("");
   const [selectedCapacity, setSelectedCapacity] = useState(2);
-  const [shape, setShape] = useState('rectangle');
+  const [shape, setShape] = useState("rectangle");
 
   useEffect(() => {
     if (visible) {
-      if (mode === 'edit' && initialData) {
-        setName(initialData.name || '');
+      if (mode === "edit" && initialData) {
+        setName(initialData.name || "");
         setSelectedCapacity(initialData.capacity || 2);
-        setShape(initialData.shape || 'rectangle');
+        setShape(initialData.shape || "rectangle");
       } else {
-        setName('');
+        setName("");
         setSelectedCapacity(2);
-        setShape('rectangle');
+        setShape("rectangle");
       }
     }
   }, [visible, mode, initialData]);
@@ -38,12 +52,14 @@ export function TableDetailsModal({ visible, onClose, mode = 'add', initialData,
   if (!visible) return null;
 
   const handleSave = () => {
-    const config = CAPACITY_OPTIONS.find(c => c.capacity === selectedCapacity);
+    const config = CAPACITY_OPTIONS.find(
+      (c) => c.capacity === selectedCapacity,
+    );
     onSave({
-      name: name.trim() || 'New',
+      name: name.trim() || "New",
       capacity: config.capacity,
       span: config.span,
-      shape
+      shape,
     });
     onClose();
   };
@@ -54,16 +70,21 @@ export function TableDetailsModal({ visible, onClose, mode = 'add', initialData,
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text weight="bold" style={styles.title}>
-              {mode === 'edit' ? 'Edit Table' : 'Add New Table'}
+              {mode === "edit" ? "Edit Table" : "Add New Table"}
             </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textMuted} />
             </TouchableOpacity>
           </View>
-          
-          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+
+          <ScrollView
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.formGroup}>
-              <Text weight="medium" style={styles.label}>Table Name</Text>
+              <Text weight="medium" style={styles.label}>
+                Table Name
+              </Text>
               <TextInput
                 style={styles.input}
                 value={name}
@@ -75,59 +96,125 @@ export function TableDetailsModal({ visible, onClose, mode = 'add', initialData,
             </View>
 
             <View style={styles.formGroup}>
-              <Text weight="medium" style={styles.label}>Capacity</Text>
-              
+              <Text weight="medium" style={styles.label}>
+                Capacity
+              </Text>
+
               <Dropdown
                 options={CAPACITY_OPTIONS}
                 value={selectedCapacity}
                 onChange={setSelectedCapacity}
-                style={{ paddingVertical: ThemeSpacing.md, height: 'auto' }}
+                style={{ paddingVertical: ThemeSpacing.md, height: "auto" }}
               />
             </View>
 
             <View style={styles.formGroup}>
-              <Text weight="medium" style={styles.label}>Shape</Text>
+              <Text weight="medium" style={styles.label}>
+                Shape
+              </Text>
               <View style={styles.capacityGrid}>
-                <TouchableOpacity 
-                  style={[styles.capacityCard, shape === 'rectangle' && styles.capacityCardActive]}
-                  onPress={() => setShape('rectangle')}
+                <TouchableOpacity
+                  style={[
+                    styles.capacityCard,
+                    shape === "rectangle" && styles.capacityCardActive,
+                  ]}
+                  onPress={() => setShape("rectangle")}
                   activeOpacity={0.7}
                 >
-                  <Square size={18} color={shape === 'rectangle' ? ThemeColors.white : ThemeColors.emerald} />
-                  <Text weight={shape === 'rectangle' ? "bold" : "medium"} style={[styles.capacityText, shape === 'rectangle' && styles.capacityTextActive]}>
+                  <Square
+                    size={18}
+                    color={
+                      shape === "rectangle"
+                        ? ThemeColors.white
+                        : ThemeColors.emerald
+                    }
+                  />
+                  <Text
+                    weight={shape === "rectangle" ? "bold" : "medium"}
+                    style={[
+                      styles.capacityText,
+                      shape === "rectangle" && styles.capacityTextActive,
+                    ]}
+                  >
                     Rectangle
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={[styles.capacityCard, shape === 'square' && styles.capacityCardActive]}
-                  onPress={() => setShape('square')}
+                <TouchableOpacity
+                  style={[
+                    styles.capacityCard,
+                    shape === "square" && styles.capacityCardActive,
+                  ]}
+                  onPress={() => setShape("square")}
                   activeOpacity={0.7}
                 >
-                  <Square size={18} color={shape === 'square' ? ThemeColors.white : ThemeColors.emerald} />
-                  <Text weight={shape === 'square' ? "bold" : "medium"} style={[styles.capacityText, shape === 'square' && styles.capacityTextActive]}>
+                  <Square
+                    size={18}
+                    color={
+                      shape === "square"
+                        ? ThemeColors.white
+                        : ThemeColors.emerald
+                    }
+                  />
+                  <Text
+                    weight={shape === "square" ? "bold" : "medium"}
+                    style={[
+                      styles.capacityText,
+                      shape === "square" && styles.capacityTextActive,
+                    ]}
+                  >
                     Square
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={[styles.capacityCard, shape === 'oval' && styles.capacityCardActive]}
-                  onPress={() => setShape('oval')}
+                <TouchableOpacity
+                  style={[
+                    styles.capacityCard,
+                    shape === "oval" && styles.capacityCardActive,
+                  ]}
+                  onPress={() => setShape("oval")}
                   activeOpacity={0.7}
                 >
-                  <Circle size={18} color={shape === 'oval' ? ThemeColors.white : ThemeColors.emerald} />
-                  <Text weight={shape === 'oval' ? "bold" : "medium"} style={[styles.capacityText, shape === 'oval' && styles.capacityTextActive]}>
+                  <Circle
+                    size={18}
+                    color={
+                      shape === "oval" ? ThemeColors.white : ThemeColors.emerald
+                    }
+                  />
+                  <Text
+                    weight={shape === "oval" ? "bold" : "medium"}
+                    style={[
+                      styles.capacityText,
+                      shape === "oval" && styles.capacityTextActive,
+                    ]}
+                  >
                     Oval
                   </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={[styles.capacityCard, shape === 'circle' && styles.capacityCardActive]}
-                  onPress={() => setShape('circle')}
+                <TouchableOpacity
+                  style={[
+                    styles.capacityCard,
+                    shape === "circle" && styles.capacityCardActive,
+                  ]}
+                  onPress={() => setShape("circle")}
                   activeOpacity={0.7}
                 >
-                  <Circle size={18} color={shape === 'circle' ? ThemeColors.white : ThemeColors.emerald} />
-                  <Text weight={shape === 'circle' ? "bold" : "medium"} style={[styles.capacityText, shape === 'circle' && styles.capacityTextActive]}>
+                  <Circle
+                    size={18}
+                    color={
+                      shape === "circle"
+                        ? ThemeColors.white
+                        : ThemeColors.emerald
+                    }
+                  />
+                  <Text
+                    weight={shape === "circle" ? "bold" : "medium"}
+                    style={[
+                      styles.capacityText,
+                      shape === "circle" && styles.capacityTextActive,
+                    ]}
+                  >
                     Circle
                   </Text>
                 </TouchableOpacity>
@@ -136,19 +223,27 @@ export function TableDetailsModal({ visible, onClose, mode = 'add', initialData,
           </ScrollView>
 
           <View style={styles.footer}>
-            {mode === 'edit' && (
-              <TouchableOpacity style={styles.deleteBtn} onPress={() => { onDelete(); onClose(); }}>
+            {mode === "edit" && (
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={() => {
+                  onDelete();
+                  onClose();
+                }}
+              >
                 <Trash2 size={18} color={ThemeColors.red} />
                 <Text style={styles.deleteBtnText}>Delete</Text>
               </TouchableOpacity>
             )}
-            
+
             <View style={styles.footerRight}>
               <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                <Text weight="bold" style={styles.saveBtnText}>Save</Text>
+                <Text weight="bold" style={styles.saveBtnText}>
+                  Save
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -161,15 +256,15 @@ export function TableDetailsModal({ visible, onClose, mode = 'add', initialData,
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: ThemeColors.surface,
     width: 400,
     borderRadius: ThemeRadius.lg,
-    maxHeight: '80%',
+    maxHeight: "80%",
     shadowColor: ThemeColors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
@@ -177,9 +272,9 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: ThemeSpacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: ThemeColors.border,
@@ -212,13 +307,13 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.bg,
   },
   capacityGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: ThemeSpacing.md,
   },
   capacityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: ThemeSpacing.lg,
     paddingVertical: ThemeSpacing.md,
     borderWidth: 1,
@@ -239,17 +334,17 @@ const styles = StyleSheet.create({
     color: ThemeColors.white,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: ThemeSpacing.xl,
     borderTopWidth: 1,
     borderTopColor: ThemeColors.border,
   },
   footerRight: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: ThemeSpacing.md,
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
   cancelBtn: {
     paddingHorizontal: ThemeSpacing.lg,
@@ -271,8 +366,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: ThemeSpacing.sm,
     paddingHorizontal: ThemeSpacing.md,
     paddingVertical: ThemeSpacing.sm,
@@ -281,6 +376,6 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: {
     color: ThemeColors.red,
-    fontWeight: '500',
-  }
+    fontWeight: "500",
+  },
 });

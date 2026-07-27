@@ -1,6 +1,7 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import {
   Check,
   ChevronDown,
@@ -10,12 +11,14 @@ import {
   Percent,
   Printer,
   Utensils,
+  User,
+  Phone,
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import {
-  Alert,
   Modal,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -215,6 +218,19 @@ export function CartPanel({
     );
   };
 
+  const validateTakeawayCustomer = () => {
+    if (orderType === "Takeaway") {
+      if (!customerName.trim() || !customerContact.trim()) {
+        showAlert(
+          "Missing Information",
+          "Please enter Customer Name and Mobile Number for Takeaway orders.",
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
   return (
     <View style={[styles.rightPanel, isSmallScreen && styles.rightPanelMobile]}>
       {isSmallScreen && (
@@ -403,6 +419,32 @@ export function CartPanel({
               );
             })}
           </View>
+
+          {orderType === "Takeaway" && (
+            <View style={styles.customerInputs}>
+              <View style={styles.inputWrapper}>
+                <User size={14} color={ThemeColors.textMuted} />
+                <TextInput
+                  style={styles.inputCompact}
+                  placeholder="Customer Name"
+                  placeholderTextColor={ThemeColors.textMuted}
+                  value={customerName}
+                  onChangeText={setCustomerName}
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <Phone size={14} color={ThemeColors.textMuted} />
+                <TextInput
+                  style={styles.inputCompact}
+                  placeholder="Mobile Number"
+                  placeholderTextColor={ThemeColors.textMuted}
+                  keyboardType="phone-pad"
+                  value={customerContact}
+                  onChangeText={setCustomerContact}
+                />
+              </View>
+            </View>
+          )}
           {/* Modifiers (BOGO, Split, Sales Return) */}
         </View>
 
@@ -456,7 +498,7 @@ export function CartPanel({
                 ]}
                 onPress={() => {
                   if (cart.length === 0 && runningOrder.length === 0) {
-                    Alert.alert(
+                    showAlert(
                       "Checkout",
                       "Please add items or select an active table to checkout.",
                     );
@@ -511,11 +553,12 @@ export function CartPanel({
                 ]}
                 onPress={() => {
                   if (cart.length === 0 && runningOrder.length === 0) {
-                    Alert.alert(
+                    showAlert(
                       "Hold Order",
                       "Please add items to hold this order.",
                     );
                   } else {
+                    if (!validateTakeawayCustomer()) return;
                     onParkSale();
                   }
                 }}
@@ -538,12 +581,19 @@ export function CartPanel({
                 ]}
                 onPress={() => {
                   if (cart.length === 0) {
-                    Alert.alert(
+                    showAlert(
                       "Create KOT",
                       "Please add new items to send to the Kitchen.",
                     );
                   } else {
-                    onSendToKitchen?.({ print: false });
+                    if (!validateTakeawayCustomer()) return;
+                    onSendToKitchen?.({
+                      print: false,
+                      customer: orderType === "Takeaway" ? {
+                        name: customerName,
+                        contact: customerContact,
+                      } : undefined,
+                    });
                   }
                 }}
               >
@@ -594,22 +644,35 @@ export function CartPanel({
               <TouchableOpacity
                 style={[styles.payBtn, { flex: 1 }]}
                 onPress={() => {
-                  if (cart.length === 0 && runningOrder.length === 0) {
-                    Alert.alert(
-                      "Checkout",
-                      "Please add items or select an active table to checkout.",
-                    );
+                  if (orderType === "Takeaway") {
+                    if (cart.length === 0 && runningOrder.length === 0) {
+                      showAlert(
+                        "Checkout",
+                        "Please add items before proceeding to checkout.",
+                      );
+                      return;
+                    }
                   } else {
-                    onCheckout?.({
-                      paymentMethod: selectedPaymentMethod,
-                      modifiers: selectedModifiers,
-                      customer: {
-                        name: customerName,
-                        contact: customerContact,
-                      },
-                      action: "pay",
-                    });
+                    if (runningOrder.length === 0) {
+                      showAlert(
+                        "No KOT Found",
+                        "Please create a KOT before proceeding to checkout.",
+                      );
+                      return;
+                    }
                   }
+
+                  if (!validateTakeawayCustomer()) return;
+
+                  onCheckout?.({
+                    paymentMethod: selectedPaymentMethod,
+                    modifiers: selectedModifiers,
+                    customer: {
+                      name: customerName,
+                      contact: customerContact,
+                    },
+                    action: "pay",
+                  });
                 }}
               >
                 <Text weight="semibold" style={styles.payBtnText}>
@@ -626,22 +689,35 @@ export function CartPanel({
                   },
                 ]}
                 onPress={() => {
-                  if (cart.length === 0 && runningOrder.length === 0) {
-                    Alert.alert(
-                      "Checkout",
-                      "Please add items or select an active table to checkout.",
-                    );
+                  if (orderType === "Takeaway") {
+                    if (cart.length === 0 && runningOrder.length === 0) {
+                      showAlert(
+                        "Checkout",
+                        "Please add items before proceeding to checkout.",
+                      );
+                      return;
+                    }
                   } else {
-                    onCheckout?.({
-                      paymentMethod: selectedPaymentMethod,
-                      modifiers: selectedModifiers,
-                      customer: {
-                        name: customerName,
-                        contact: customerContact,
-                      },
-                      action: "ebill",
-                    });
+                    if (runningOrder.length === 0) {
+                      showAlert(
+                        "No KOT Found",
+                        "Please create a KOT before proceeding to checkout.",
+                      );
+                      return;
+                    }
                   }
+
+                  if (!validateTakeawayCustomer()) return;
+
+                  onCheckout?.({
+                    paymentMethod: selectedPaymentMethod,
+                    modifiers: selectedModifiers,
+                    customer: {
+                      name: customerName,
+                      contact: customerContact,
+                    },
+                    action: "ebill",
+                  });
                 }}
               >
                 <Text weight="semibold" style={styles.payBtnText}>
@@ -931,15 +1007,35 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   totalsContainer: {
-    padding: ThemeSpacing.md,
+    padding: ThemeSpacing.lg,
     backgroundColor: ThemeColors.surface,
     borderTopWidth: 1,
-    borderTopColor: ThemeColors.borderSubtle,
-    shadowColor: ThemeColors.black,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 10,
+    borderTopColor: ThemeColors.border,
+  },
+  customerInputs: {
+    gap: ThemeSpacing.sm,
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: ThemeColors.bg,
+    borderWidth: 1,
+    borderColor: ThemeColors.borderSubtle,
+    borderRadius: ThemeRadius.md,
+    paddingHorizontal: ThemeSpacing.sm,
+    height: 36,
+    flex: 1,
+    maxWidth: 160,
+  },
+  inputCompact: {
+    flex: 1,
+    paddingVertical: 0,
+    paddingHorizontal: ThemeSpacing.xs,
+    fontSize: 13,
+    color: ThemeColors.textPrimary,
   },
   modifierRow: {
     flexDirection: "row",

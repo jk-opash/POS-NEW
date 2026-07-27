@@ -1,6 +1,6 @@
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { AlertCircle } from "lucide-react-native";
+import { AlertCircle, Utensils } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -12,66 +12,84 @@ export function WaiterTicket({ order, onServeAll }) {
     if (order.status === "Completed" || order.status === "Cancelled") return;
 
     const calculateElapsed = () => {
-      const start = new Date(order.startTime).getTime();
+      const timeValue =
+        order.startTime || order.time || order.orderedAt || order.createdAt;
+      if (!timeValue) return;
+      const start = new Date(timeValue).getTime();
+      if (isNaN(start)) return;
       const now = Date.now();
-      setElapsed(Math.floor((now - start) / 1000));
+      setElapsed(Math.max(0, Math.floor((now - start) / 1000)));
     };
 
     calculateElapsed();
     const interval = setInterval(calculateElapsed, 1000);
     return () => clearInterval(interval);
-  }, [order.startTime, order.status]);
+  }, [
+    order.startTime,
+    order.time,
+    order.orderedAt,
+    order.createdAt,
+    order.status,
+  ]);
 
   const isOverdue = elapsed >= 15 * 60;
 
+  const formatTime = (seconds) => {
+    if (isNaN(seconds) || seconds < 0) return "0m 0s";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}m ${s}s`;
+  };
+
   const cardDynamicStyle = {
     backgroundColor: isOverdue ? ThemeColors.red + "15" : ThemeColors.surface,
-    borderWidth: isOverdue ? 2 : 1,
     borderColor: isOverdue ? ThemeColors.red : ThemeColors.borderSubtle,
   };
 
   return (
-    <View style={[styles.card, cardDynamicStyle]}>
+    <View style={[styles.orderCard, cardDynamicStyle]}>
       {/* ── Card Header ─────────────────────────── */}
       <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderMid}>
-          <Text weight="bold" style={styles.customerName}>
-            #{order.orderNumber} - {order.table || order.customer}
-          </Text>
+        <View style={styles.cardHeaderLeft}>
           <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: ThemeSpacing.sm,
-            }}
+            style={[
+              styles.iconBox,
+              { backgroundColor: ThemeColors.primary + "15" },
+            ]}
           >
-            <Text weight="regular" style={styles.orderType}>
-              {order.type} | Station: {order.station}
+            <Utensils size={18} color={ThemeColors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text weight="bold" style={styles.cardPlatform} numberOfLines={2}>
+              #{order.orderNumber} - {order.type}
             </Text>
+            {/* <View style={styles.cardTimeRow}>
+              <Clock size={12} color={ThemeColors.textMuted} />
+              <Text style={styles.cardTime} numberOfLines={1}>
+                {formatTime(elapsed)} {isOverdue && " (Overdue)"}
+              </Text>
+            </View> */}
           </View>
         </View>
       </View>
 
-      {/* ── Items Header ────────────────────────── */}
-      <View style={styles.itemsHeader}>
-        <Text weight="semibold" style={[styles.itemsHeaderText, { flex: 1 }]}>
-          Items
-        </Text>
-        <Text
-          weight="semibold"
-          style={[styles.itemsHeaderText, styles.itemsQtyCol]}
-        >
-          Qty
-        </Text>
-      </View>
-
       {/* ── Items List ──────────────────────────── */}
-      <View style={{ flex: 1 }}>
+      <View style={styles.orderItemsList}>
+        <View style={styles.customerRow}>
+          <Text weight="medium" style={styles.cardCustomer}>
+            Table: {order.table || order.customer || "N/A"}
+          </Text>
+          <Text style={styles.stationText}>Station: {order.station}</Text>
+        </View>
+
         {["Starter", "Main", "Dessert", "Uncategorized"].map((courseName) => {
           const courseItems = order.items.filter((item) => {
             const matchesCourse =
               (item.course || "Uncategorized") === courseName;
-            const matchesStatus = item.status === "Done" || item.status === "Completed" || item.status === "Ready";
+            const matchesStatus =
+              item.status === "Done" ||
+              item.status === "Completed" ||
+              item.status === "Ready";
             return matchesCourse && matchesStatus;
           });
           if (courseItems.length === 0) return null;
@@ -80,19 +98,13 @@ export function WaiterTicket({ order, onServeAll }) {
             <View key={courseName} style={styles.courseGroup}>
               {courseItems.map((item, i) => (
                 <View key={`${item.id}-${i}`} style={styles.itemContainer}>
-                  <View style={styles.itemRow}>
-                    <Text
-                      weight="regular"
-                      style={[styles.itemName, { flex: 1 }]}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      weight="semibold"
-                      style={[styles.itemQty, styles.itemsQtyCol]}
-                    >
-                      {item.qty}
-                    </Text>
+                  <View style={styles.orderItemRow}>
+                    <View style={styles.orderItemQtyBadge}>
+                      <Text weight="bold" style={styles.orderItemQtyText}>
+                        {item.qty}x
+                      </Text>
+                    </View>
+                    <Text style={styles.orderItemName}>{item.name}</Text>
                   </View>
 
                   {/* Modifiers */}
@@ -118,143 +130,125 @@ export function WaiterTicket({ order, onServeAll }) {
             <Text style={styles.notesText}>{order.notes}</Text>
           </View>
         ) : null}
+      </View>
 
-        {/* ── Main Action Button ──────────────────────── */}
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[styles.btnPrimary, { backgroundColor: ThemeColors.amber }]}
-            activeOpacity={0.8}
-            onPress={onServeAll}
-          >
-            <Text weight="bold" style={styles.btnPrimaryText}>
-              MARK ALL AS SERVED
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* ── Footer / Action Button ──────────────── */}
+      <View style={styles.cardFooter}>
+        <TouchableOpacity
+          style={styles.btnServeAll}
+          activeOpacity={0.8}
+          onPress={onServeAll}
+        >
+          <Text weight="bold" style={styles.btnServeAllText}>
+            SERVE ALL READY
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flex: 1,
+  orderCard: {
     backgroundColor: ThemeColors.surface,
-    borderRadius: ThemeRadius.lg,
-    padding: ThemeSpacing.lg,
-    shadowColor: ThemeColors.black,
-    shadowOffset: { width: 0, height: 1 },
+    borderRadius: ThemeRadius.xl,
+    marginBottom: ThemeSpacing.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 2,
+    flex: 1,
   },
   cardHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: ThemeSpacing.sm,
-    marginBottom: 4,
+    backgroundColor: ThemeColors.bg,
+    padding: ThemeSpacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.borderSubtle,
   },
-  cardHeaderMid: {
+  cardHeaderLeft: {
     flex: 1,
-    gap: 2,
-  },
-  customerName: {
-    fontSize: 16,
-    color: ThemeColors.textPrimary,
-  },
-  orderType: {
-    fontSize: 12,
-    color: ThemeColors.textMuted,
-  },
-  statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingHorizontal: ThemeSpacing.sm,
-    paddingVertical: 4,
-    borderRadius: ThemeRadius.xl,
+    gap: ThemeSpacing.md,
+    marginRight: ThemeSpacing.sm,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: ThemeRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  statusText: {
-    fontSize: 11,
-    letterSpacing: 0.2,
-    textTransform: "uppercase",
+  cardPlatform: {
+    fontSize: 18,
+    color: ThemeColors.textPrimary,
   },
-  dateTimeRow: {
+  cardTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  cardTime: {
+    fontSize: 13,
+    color: ThemeColors.textMuted,
+  },
+  orderItemsList: {
+    flex: 1,
+    padding: ThemeSpacing.lg,
+    gap: ThemeSpacing.md,
+  },
+  customerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: ThemeSpacing.sm,
+    marginBottom: ThemeSpacing.xs,
   },
-  timeText: {
-    fontSize: 13,
+  cardCustomer: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
   },
-  divider: {
-    height: 1,
-    backgroundColor: ThemeColors.borderSubtle,
-    marginVertical: ThemeSpacing.sm,
-  },
-  itemsHeader: {
-    flexDirection: "row",
-    paddingBottom: ThemeSpacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.borderSubtle,
-    marginBottom: ThemeSpacing.sm,
-  },
-  itemsHeaderText: {
+  stationText: {
     fontSize: 12,
     color: ThemeColors.textMuted,
-    textTransform: "uppercase",
-  },
-  itemsQtyCol: {
-    width: 30,
-    textAlign: "right",
-  },
-  actionCol: {
-    width: 100,
-    marginLeft: 12,
-  },
-  actionBtn: {
-    width: 100,
-    marginLeft: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionBtnText: {
-    color: ThemeColors.white,
-    fontSize: 12,
   },
   courseGroup: {
-    gap: 4,
-  },
-  courseHeader: {
-    fontSize: 11,
-    color: ThemeColors.textSecondary,
-    marginBottom: ThemeSpacing.xs,
-    letterSpacing: 0.5,
+    gap: ThemeSpacing.sm,
   },
   itemContainer: {
-    marginBottom: ThemeSpacing.sm,
+    gap: 4,
   },
-  itemRow: {
+  orderItemRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: ThemeSpacing.md,
   },
-  itemName: {
-    fontSize: 14,
+  orderItemQtyBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: ThemeColors.borderSubtle,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  orderItemQtyText: {
+    fontSize: 13,
     color: ThemeColors.textPrimary,
   },
-  itemQty: {
-    fontSize: 14,
-    color: ThemeColors.textPrimary,
+  orderItemName: {
+    fontSize: 15,
+    color: ThemeColors.textSecondary,
+    flex: 1,
   },
-  modifiersList: {},
+  modifiersList: {
+    paddingLeft: 44, // 28 (badge width) + 16 (gap)
+  },
   modifierText: {
     fontSize: 12,
     color: ThemeColors.textSecondary,
@@ -264,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     backgroundColor: ThemeColors.amberDim,
     padding: ThemeSpacing.sm,
-    marginTop: ThemeSpacing.sm,
+    marginTop: ThemeSpacing.xs,
     borderRadius: ThemeRadius.md,
     gap: ThemeSpacing.sm,
   },
@@ -273,19 +267,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ThemeColors.amber,
   },
-  actionsRow: {
+  cardFooter: {
     flexDirection: "row",
-    gap: ThemeSpacing.md,
-    marginTop: ThemeSpacing.xs,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: ThemeSpacing.lg,
+    paddingTop: ThemeSpacing.md,
+    borderTopWidth: 1,
+    borderTopColor: ThemeColors.borderSubtle,
+    backgroundColor: ThemeColors.bg + "50",
   },
-  btnPrimary: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: ThemeRadius.md,
+  btnServeAll: {
+    backgroundColor: ThemeColors.amber,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+    width: "100%",
     alignItems: "center",
   },
-  btnPrimaryText: {
+  btnServeAllText: {
     color: ThemeColors.white,
-    fontSize: 13,
+    fontSize: 14,
   },
 });

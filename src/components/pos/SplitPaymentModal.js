@@ -3,10 +3,10 @@ import { useKDS } from "@/context/KDSContext";
 import { useOrders } from "@/context/OrdersContext";
 import { usePOS } from "@/context/POSContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import { Minus, Plus, User, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
@@ -156,7 +156,7 @@ export function SplitPaymentModal({
 
   const handlePrintInvoice = () => {
     if (Math.abs(remaining) > 0.01) {
-      Alert.alert(
+      showAlert(
         "Invalid Amount",
         "Total split amounts must equal the grand total.",
       );
@@ -241,7 +241,7 @@ export function SplitPaymentModal({
           </View>
 
           <View style={styles.content}>
-            {orderType === "Takeaway" && (
+            {/* {orderType === "Takeaway" && (
               <View style={styles.customerFields}>
                 <Text weight="bold" style={styles.customerTitle}>
                   Customer Details (Takeaway)
@@ -270,7 +270,7 @@ export function SplitPaymentModal({
                   </View>
                 </View>
               </View>
-            )}
+            )} */}
 
             {splitMode === "equal" && (
               <View style={styles.equalSplitControls}>

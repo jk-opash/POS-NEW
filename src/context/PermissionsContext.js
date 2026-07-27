@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { showAlert } from '../utils/alert';
 
 const PermissionsContext = createContext();
 
@@ -166,7 +167,7 @@ export function PermissionsProvider({ children }) {
                 logAudit('MANAGER_OVERRIDE', action, 'Approved');
                 resolve(true);
               } else {
-                Alert.alert('Error', 'Invalid PIN.');
+                showAlert('Error', 'Invalid PIN.');
                 logAudit('MANAGER_OVERRIDE', action, 'Denied');
                 resolve(false);
               }

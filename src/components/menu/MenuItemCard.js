@@ -3,12 +3,12 @@ import { MENU_STATUS } from "@/constants/menu";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Edit2, Trash2 } from "lucide-react-native";
 import {
-  Alert,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 
 export function MenuItemCard({
   menuItem,
@@ -122,7 +122,7 @@ export function MenuItemCard({
                     menuItem.onDelete && menuItem.onDelete(menuItem.id);
                   }
                 } else {
-                  Alert.alert(
+                  showAlert(
                     "Delete Menu Item",
                     "Are you sure you want to delete this item?",
                     [

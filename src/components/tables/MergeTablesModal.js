@@ -50,33 +50,34 @@ export function MergeTablesModal({ visible, onClose, floorTables, onMerge }) {
               Select 2 or more tables to merge into a single large table.
             </Text>
             
-            <ScrollView style={styles.tableList}>
+            <ScrollView style={styles.tableList} contentContainerStyle={styles.tableGrid}>
               {floorTables.map((table) => {
                 const isSelected = selectedTableIds.includes(table.id);
                 return (
                   <TouchableOpacity
                     key={table.id}
                     style={[
-                      styles.tableItem,
-                      isSelected && styles.tableItemActive,
+                      styles.gridItem,
+                      isSelected && styles.gridItemActive,
                     ]}
                     onPress={() => toggleTableSelection(table.id)}
                   >
-                    <View style={styles.tableInfo}>
-                      <Text weight="bold" style={styles.tableName}>
+                    <View style={styles.gridHeader}>
+                      <Text weight="bold" style={styles.gridTableName}>
                         {table.name}
                       </Text>
-                      <Text style={styles.tableCapacity}>
-                        Capacity: {table.capacity} • {table.status}
-                      </Text>
-                    </View>
-                    <View style={styles.checkbox}>
                       {isSelected ? (
-                        <CheckSquare size={24} color={ThemeColors.emerald} />
+                        <CheckSquare size={18} color={ThemeColors.emerald} />
                       ) : (
-                        <Square size={24} color={ThemeColors.border} />
+                        <Square size={18} color={ThemeColors.border} />
                       )}
                     </View>
+                    <Text style={styles.gridTableCapacity}>
+                      Cap: {table.capacity}
+                    </Text>
+                    <Text style={styles.gridTableStatus} numberOfLines={1}>
+                      {table.status}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    maxWidth: 450,
+    maxWidth: 600,
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.xl,
     overflow: "hidden",
@@ -151,38 +152,47 @@ const styles = StyleSheet.create({
     marginBottom: ThemeSpacing.lg,
   },
   tableList: {
-    maxHeight: 300,
+    maxHeight: 350,
     marginBottom: ThemeSpacing.xl,
   },
-  tableItem: {
+  tableGrid: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: ThemeSpacing.lg,
+    flexWrap: "wrap",
+    gap: ThemeSpacing.md,
+  },
+  gridItem: {
+    width: "23%", // slightly less than 25% to account for gaps
+    minWidth: 100,
     backgroundColor: ThemeColors.bg,
     borderRadius: ThemeRadius.md,
-    marginBottom: ThemeSpacing.sm,
+    padding: ThemeSpacing.md,
     borderWidth: 2,
     borderColor: "transparent",
+    alignItems: "flex-start",
   },
-  tableItemActive: {
+  gridItemActive: {
     borderColor: ThemeColors.emerald,
     backgroundColor: ThemeColors.emeraldDim,
   },
-  tableInfo: {
-    flex: 1,
+  gridHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: ThemeSpacing.xs,
   },
-  tableName: {
-    fontSize: 18,
+  gridTableName: {
+    fontSize: 16,
     color: ThemeColors.textPrimary,
-    marginBottom: 4,
   },
-  tableCapacity: {
-    fontSize: 14,
+  gridTableCapacity: {
+    fontSize: 12,
     color: ThemeColors.textSecondary,
+    marginBottom: 2,
   },
-  checkbox: {
-    marginLeft: ThemeSpacing.md,
+  gridTableStatus: {
+    fontSize: 11,
+    color: ThemeColors.textMuted,
   },
   actions: {
     flexDirection: "row",

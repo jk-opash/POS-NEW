@@ -3,22 +3,27 @@ import { MergeTablesModal } from "@/components/tables/MergeTablesModal";
 import { TableActionModal } from "@/components/tables/TableActionModal";
 import { TableDetailsModal } from "@/components/tables/TableDetailsModal";
 import { TableOrderMenuModal } from "@/components/tables/TableOrderMenuModal";
-import { TablesFab } from "@/components/tables/TablesFab";
 import { TablesHeader } from "@/components/tables/TablesHeader";
 import { TablesLegend } from "@/components/tables/TablesLegend";
 import { TablesZoomControls } from "@/components/tables/TablesZoomControls";
 import { useKDS } from "@/context/KDSContext";
 import { useMenu } from "@/context/MenuContext";
 import { useOrders } from "@/context/OrdersContext";
-import { useTables } from "@/context/TablesContext";
 import { usePOS } from "@/context/POSContext";
+import { useTables } from "@/context/TablesContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useRouter } from "expo-router";
+import { Check, Edit2, Plus } from "lucide-react-native";
 import { useState } from "react";
-import { ScrollView, StyleSheet, View, TouchableOpacity, Text } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { ThemeColors, ThemeSpacing, ThemeRadius } from "@/theme/theme";
-import { Edit2, Check, Plus } from "lucide-react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -50,7 +55,8 @@ export default function TablesScreen() {
   const [showActionModal, setShowActionModal] = useState(false);
   const [showOrderMenuModal, setShowOrderMenuModal] = useState(false);
   const [actionTable, setActionTable] = useState(null);
-  const { isDesktop, isTablet, isMiniTab, isMobile , isWebDesktop } = useResponsive();
+  const { isDesktop, isTablet, isMiniTab, isMobile, isWebDesktop } =
+    useResponsive();
   const { setActiveTable, setOrderType } = usePOS();
   const router = useRouter();
 
@@ -88,13 +94,32 @@ export default function TablesScreen() {
 
   const floorTables = tables.filter((t) => t.floorId === activeFloor);
 
-  const availableCount = floorTables.filter(
-    (t) => t.status === "Available",
-  ).length;
-  const dineInCount = floorTables.filter((t) => t.status === "Occupied").length;
-  const reservedCount = floorTables.filter(
-    (t) => t.status === "Reserved",
-  ).length;
+  const availableCount = floorTables.filter((t) => {
+    const hasOrder =
+      t.order &&
+      (Array.isArray(t.order)
+        ? t.order.length > 0
+        : Object.keys(t.order).length > 0);
+    return !hasOrder && (!t.status || t.status === "Available");
+  }).length;
+
+  const dineInCount = floorTables.filter((t) => {
+    const hasOrder =
+      t.order &&
+      (Array.isArray(t.order)
+        ? t.order.length > 0
+        : Object.keys(t.order).length > 0);
+    return t.status === "Occupied" || hasOrder;
+  }).length;
+
+  const reservedCount = floorTables.filter((t) => {
+    const hasOrder =
+      t.order &&
+      (Array.isArray(t.order)
+        ? t.order.length > 0
+        : Object.keys(t.order).length > 0);
+    return t.status === "Reserved" && !hasOrder;
+  }).length;
 
   const isSmallScreen = isMobile || isMiniTab;
 
@@ -134,6 +159,12 @@ export default function TablesScreen() {
                       setActiveTable(table);
                       setOrderType("Dine-In");
                       router.push("/pos");
+                    }
+                  }}
+                  onLongPress={() => {
+                    if (!isEditMode) {
+                      setActionTable(table);
+                      setShowActionModal(true);
                     }
                   }}
                 />
@@ -231,10 +262,18 @@ export default function TablesScreen() {
         onUpdateStatus={(id, status) => updateTableDetails(id, { status })}
         onTakeOrder={() => setShowOrderMenuModal(true)}
         onCheckout={(id) =>
-          updateTableDetails(id, { order: null, status: "Available", orderId: null })
+          updateTableDetails(id, {
+            order: null,
+            status: "Available",
+            orderId: null,
+          })
         }
         onCancelOrder={(id) =>
-          updateTableDetails(id, { order: null, status: "Available", orderId: null })
+          updateTableDetails(id, {
+            order: null,
+            status: "Available",
+            orderId: null,
+          })
         }
         onUnmerge={(id) => {
           unmergeTable(id);
@@ -251,7 +290,8 @@ export default function TablesScreen() {
         onClose={() => setShowOrderMenuModal(false)}
         onPlaceOrder={(orderItems) => {
           const isExistingOrder = !!actionTable.orderId;
-          const orderId = actionTable.orderId || `ORD-${Date.now().toString().slice(-4)}`;
+          const orderId =
+            actionTable.orderId || `ORD-${Date.now().toString().slice(-4)}`;
 
           updateTableDetails(actionTable.id, {
             order: orderItems,
@@ -282,16 +322,29 @@ export default function TablesScreen() {
             status: "In Progress",
             type: "Dine In",
             table: actionTable.name,
-            date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' }),
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            date: new Date().toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }),
+            time: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
             items: cart.map((c) => ({
               name: c.product.name,
               qty: c.quantity,
               price: c.product.pricing?.sellingPrice || c.product.price || 0,
             })),
             total: cart.reduce(
-              (sum, item) => sum + (item.product.pricing?.sellingPrice || item.product.price || 0) * item.quantity,
-              0
+              (sum, item) =>
+                sum +
+                (item.product.pricing?.sellingPrice ||
+                  item.product.price ||
+                  0) *
+                  item.quantity,
+              0,
             ),
           };
 

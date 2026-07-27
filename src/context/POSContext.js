@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { Alert, Platform } from "react-native";
+import { showAlert } from "../utils/alert";
 import { useTables } from "./TablesContext";
 
 const POSContext = createContext();
@@ -28,6 +29,7 @@ export function POSProvider({ children }) {
   const [compoundingTaxes, setCompoundingTaxes] = useState([]); // [{name, rate, compoundsOn}]
   const [parkedSales, setParkedSales] = useState([]); // Saved/parked tickets
   const [voidLog, setVoidLog] = useState([]); // Audit log for voids
+  const [takeawayQueue, setTakeawayQueue] = useState([]); // Persistent list of active takeaway orders
   
   // Track sequential KOT number
   const [lastKOTNumber, setLastKOTNumber] = useState(0);
@@ -83,22 +85,15 @@ export function POSProvider({ children }) {
 
   const addToCart = (product, variant = null, addons = [], quantity = 1, notes = "") => {
     if (product.inventory?.currentStock <= 0) {
-      if (Platform.OS === "web") {
-        const confirmAdd = window.confirm(
-          `Low Stock Warning: ${product.name} is out of stock. Add anyway?`,
-        );
-        if (!confirmAdd) return;
-      } else {
-        Alert.alert(
-          "Low Stock Warning",
-          `${product.name} is out of stock. Add anyway?`,
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Add", onPress: () => performAddToCart(product, variant, addons, quantity, notes) },
-          ],
-        );
-        return;
-      }
+      showAlert(
+        "Low Stock Warning",
+        `${product.name} is out of stock. Add anyway?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Add", onPress: () => performAddToCart(product, variant, addons, quantity, notes) },
+        ],
+      );
+      return;
     }
     performAddToCart(product, variant, addons, quantity, notes);
   };
@@ -163,10 +158,19 @@ export function POSProvider({ children }) {
       items: [...cart],
       status: "Sent",
       table: activeTable,
-      orderType
+      orderType,
+      customer,
     };
     
     setKots(prev => [...prev, newKOT]);
+    
+    // Add to global takeaway queue if Takeaway order
+    if (orderType === "Takeaway") {
+      setTakeawayQueue(prev => [
+        ...prev,
+        { ...newKOT, customer }
+      ]);
+    }
     
     // Update table status if Dine-In
     if (activeTable) {
@@ -246,6 +250,11 @@ export function POSProvider({ children }) {
         delete next[activeTable.id];
         return next;
       });
+    }
+    // Remove any completed takeaway orders from the queue
+    const kotIds = new Set(kots.map(k => k.id));
+    if (kotIds.size > 0) {
+      setTakeawayQueue(prev => prev.filter(o => !kotIds.has(o.id)));
     }
     setCart([]);
     setRunningOrder([]);
@@ -511,6 +520,73 @@ export function POSProvider({ children }) {
     setOpenTabs((prev) => prev.filter((t) => t.id !== tabId));
   };
 
+  const loadKOTForPayment = (kotId) => {
+    // First try the persistent takeawayQueue, then fall back to live kots
+    const kot = takeawayQueue.find((k) => k.id === kotId) || kots.find((k) => k.id === kotId);
+    if (!kot) return;
+    setRunningOrder(kot.items.map(item => ({ ...item, kotId: kot.id, kotNumber: kot.kotNumber })));
+    setCart([]);
+    if (kot.customer) setCustomer(kot.customer);
+    setOrderType(kot.orderType || "Takeaway");
+    setActiveTableInternal(null); // Clear any active table
+  };
+
+  const removeTakeawayOrder = (kotId) => {
+    setTakeawayQueue(prev => prev.filter(o => o.id !== kotId));
+  };
+
+  const injectTableOrder = (tableId, orderObj) => {
+    setTableSessions((prev) => {
+      const session = prev[tableId] || {
+        cart: [],
+        runningOrder: [],
+        kots: [],
+        customer: null,
+        orderType: "Dine-In",
+        globalDiscount: { type: "none", value: 0 },
+        draftSplitState: null,
+      };
+
+      const newKOTNumber = (session.kots.length || 0) + 1;
+      const newKOT = {
+        id: `KOT-${Date.now()}`,
+        kotNumber: newKOTNumber,
+        time: new Date().toISOString(),
+        items: orderObj.items.map(i => ({
+          ...i,
+          product: { 
+            id: i.id || `prod_${Date.now()}`, 
+            name: i.name, 
+            price: i.price,
+            pricing: { sellingPrice: i.price } 
+          },
+          quantity: i.qty || 1,
+        })),
+        status: "Sent",
+        table: { id: tableId, name: orderObj.customer },
+        orderType: "Dine-In"
+      };
+
+      const taggedCart = newKOT.items.map(item => ({
+        ...item,
+        kotId: newKOT.id,
+        kotNumber: newKOT.kotNumber,
+        discount: { type: "none", value: 0 },
+        id: `cart_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      }));
+
+      return {
+        ...prev,
+        [tableId]: {
+          ...session,
+          customer: { name: orderObj.customer, phone: orderObj.phone },
+          runningOrder: [...session.runningOrder, ...taggedCart],
+          kots: [...session.kots, newKOT],
+        }
+      };
+    });
+  };
+
   const value = {
     cart,
     runningOrder,
@@ -524,6 +600,7 @@ export function POSProvider({ children }) {
     totals,
     openTabs,
     parkedSales,
+    takeawayQueue,
     voidLog,
     draftSplitState,
     setDraftSplitState,
@@ -542,11 +619,14 @@ export function POSProvider({ children }) {
     clearCart,
     holdCart,
     restoreTab,
+    loadKOTForPayment,
+    removeTakeawayOrder,
     parkSale,
     restoreParkedSale,
     deleteParkedSale,
     voidItem,
     voidEntireCart,
+    injectTableOrder,
   };
 
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;

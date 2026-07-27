@@ -15,13 +15,13 @@ import {
   X,
 } from "lucide-react-native";
 import {
-  Alert,
   Modal,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 import QRCode from "react-native-qrcode-svg";
 
 export function TableActionModal({
@@ -177,7 +177,7 @@ export function TableActionModal({
                   borderColor: ThemeColors.blue,
                 }}
                 onPress={() => {
-                  Alert.alert("Print QR", "QR code printed successfully!");
+                  showAlert("Print QR", "QR code printed successfully!");
                 }}
               >
                 <Printer size={14} color={ThemeColors.blue} />

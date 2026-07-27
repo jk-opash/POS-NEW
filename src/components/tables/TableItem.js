@@ -3,10 +3,11 @@ import { ThemeColors, ThemeRadius } from "@/theme/theme";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Eye } from "lucide-react-native";
 
-export function TableItem({ table, onPress }) {
-  const isAvailable = table.status === "Available";
-  const isReserved = table.status === "Reserved";
-  const isOccupied = table.status === "Occupied";
+export function TableItem({ table, onPress, onLongPress }) {
+  const hasOrder = table.order && (Array.isArray(table.order) ? table.order.length > 0 : Object.keys(table.order).length > 0);
+  const isOccupied = table.status === "Occupied" || hasOrder;
+  const isReserved = table.status === "Reserved" && !hasOrder;
+  const isAvailable = (!table.status || table.status === "Available") && !hasOrder;
 
   const isCircle = table.shape === "circle" || table.shape === "round";
   const isSquare = table.shape === "square";
@@ -41,11 +42,11 @@ export function TableItem({ table, onPress }) {
   let chairBorderColor = ThemeColors.border;
 
   if (isOccupied) {
-    textColor = ThemeColors.emerald;
-    bgColor = ThemeColors.emeraldDim;
-    borderColor = ThemeColors.emerald;
-    chairColor = ThemeColors.emerald;
-    chairBorderColor = ThemeColors.emerald;
+    textColor = ThemeColors.blue;
+    bgColor = ThemeColors.blueDim;
+    borderColor = ThemeColors.blue;
+    chairColor = ThemeColors.blue;
+    chairBorderColor = ThemeColors.blue;
   } else if (isReserved) {
     textColor = ThemeColors.red;
     bgColor = ThemeColors.redDim;
@@ -215,6 +216,7 @@ export function TableItem({ table, onPress }) {
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() => onPress && onPress(table)}
+      onLongPress={() => onLongPress && onLongPress(table)}
       style={[
         styles.container,
         {

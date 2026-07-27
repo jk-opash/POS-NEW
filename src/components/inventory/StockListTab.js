@@ -5,7 +5,6 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Package, Search, Settings2, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import {
-  Alert,
   FlatList,
   Image,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 import { InventoryActionModal } from "./InventoryActionModal";
 import { ProductInventoryModal } from "./ProductInventoryModal";
 
@@ -63,7 +63,7 @@ export function StockListTab() {
   };
 
   const handleDelete = (item) => {
-    Alert.alert(
+    showAlert(
       "Delete Item",
       `Are you sure you want to delete ${item.name}?`,
       [

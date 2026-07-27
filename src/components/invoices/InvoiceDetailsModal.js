@@ -7,6 +7,7 @@ import {
   MessageSquare,
   Printer,
   Receipt,
+  Smartphone,
   Store,
   Utensils,
   X,
@@ -129,6 +130,16 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                   <View style={styles.metaIconRow}>
                     <Store size={13} color={ThemeColors.textSecondary} />
                     <Text weight="bold" style={styles.metaValue}>{invoice.orderType}</Text>
+                  </View>
+                </View>
+              )}
+
+              {invoice.platform && (
+                <View style={styles.metaBox}>
+                  <Text style={styles.metaLabel}>Platform</Text>
+                  <View style={styles.metaIconRow}>
+                    <Smartphone size={13} color={ThemeColors.textSecondary} />
+                    <Text weight="bold" style={styles.metaValue}>{invoice.platform}</Text>
                   </View>
                 </View>
               )}

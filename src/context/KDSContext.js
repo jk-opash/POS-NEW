@@ -206,6 +206,35 @@ export const KDSProvider = ({ children }) => {
     setActiveOrders((prev) => [...prev, newTicket]);
   };
 
+  const addOnlineOrderToKDS = (onlineOrder) => {
+    if (!onlineOrder || !onlineOrder.items || onlineOrder.items.length === 0) return;
+
+    const items = onlineOrder.items.map((c, index) => ({
+      id: `${onlineOrder.id}-item-${index}`,
+      name: c.name,
+      qty: c.qty,
+      modifiers: [],
+      status: "Accepted",
+      note: "",
+    }));
+
+    const newTicket = {
+      id: `KDS-${onlineOrder.id}`,
+      orderNumber: `${onlineOrder.platform} #${onlineOrder.orderId}`,
+      type: "Online Delivery",
+      table: null,
+      customer: onlineOrder.customer || onlineOrder.platform,
+      status: "Accepted",
+      priority: "Normal",
+      station: "All",
+      startTime: new Date().toISOString(),
+      items: items,
+      notes: onlineOrder.instructions || "",
+    };
+
+    setActiveOrders((prev) => [...prev, newTicket]);
+  };
+
   const replaceTableOrderInKDS = (tableName, orderData) => {
     // Remove all existing tickets for this table
     setActiveOrders((prev) => prev.filter((o) => o.table !== `Table ${tableName}`));
@@ -229,6 +258,7 @@ export const KDSProvider = ({ children }) => {
         markReadyItemsAsServed,
         completeTableOrdersInKDS,
         completeOrderInKDS,
+        addOnlineOrderToKDS,
       }}
     >
       {children}
