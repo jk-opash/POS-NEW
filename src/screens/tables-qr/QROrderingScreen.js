@@ -4,11 +4,11 @@ import { useOrders } from "@/context/OrdersContext";
 import { useTables } from "@/context/TablesContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import { useNavigation } from "expo-router";
-import { Bell, Menu, QrCode, Smartphone } from "lucide-react-native";
+import { Bell, Menu } from "lucide-react-native";
 import { useRef, useState } from "react";
 import {
-  Alert,
   FlatList,
   Platform,
   StyleSheet,
@@ -17,7 +17,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { LiveQROrderCard } from "@/components/qr-ordering/LiveQROrderCard";
 import { QRPreviewModal } from "@/components/qr-ordering/QRPreviewModal";
 import { TableQRCard } from "@/components/qr-ordering/TableQRCard";
 
@@ -61,7 +60,7 @@ const formatDataForGrid = (data, numColumns) => {
   if (!data || data.length === 0) return [];
   const numberOfElementsLastRow = data.length % numColumns;
   if (numberOfElementsLastRow === 0) return data;
-  
+
   const paddingNeeded = numColumns - numberOfElementsLastRow;
   const paddedData = [...data];
   for (let i = 0; i < paddingNeeded; i++) {
@@ -137,7 +136,7 @@ export function QROrderingScreen() {
           link.download = `Table_${tableName}_QR.png`;
           link.click();
         } else {
-          Alert.alert("Success", "QR Code generated.");
+          showAlert("Success", "QR Code generated.");
         }
       });
     }
@@ -156,9 +155,7 @@ export function QROrderingScreen() {
                 <Menu size={24} color={ThemeColors.textPrimary} />
               </TouchableOpacity>
             )}
-            <Text style={styles.pageTitle}>
-              QR Ordering
-            </Text>
+            <Text style={styles.pageTitle}>QR Ordering</Text>
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity style={styles.notifBtn}>
@@ -166,37 +163,6 @@ export function QROrderingScreen() {
               <View style={styles.notifDot} />
             </TouchableOpacity>
           </View>
-        </View>
-        {/* Tabs */}
-        <View style={styles.tabRow}>
-          {[
-            { key: "qrcodes", label: "Table QR Codes", icon: QrCode },
-            { key: "orders", label: "Incoming Orders", icon: Smartphone },
-          ].map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <tab.icon
-                size={16}
-                color={
-                  activeTab === tab.key
-                    ? ThemeColors.accent
-                    : ThemeColors.textMuted
-                }
-              />
-              <Text
-                weight={activeTab === tab.key ? "semibold" : "regular"}
-                style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive,
-                ]}
-              >
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
         </View>
       </SafeAreaView>
 
@@ -225,35 +191,6 @@ export function QROrderingScreen() {
                   onPreview={setPreviewTable}
                   onDownload={handleDownloadQR}
                   qrRefs={qrRefs}
-                />
-              );
-            }}
-          />
-        </View>
-      )}
-      {activeTab === "orders" && (
-        <View style={styles.ordersContainer}>
-          <Text weight="semibold" style={styles.sectionTitle}>
-            Live QR Orders — Orders placed by customers via QR scan
-          </Text>
-          <FlatList
-            data={formatDataForGrid(qrOrders, numColumns2)}
-            keyExtractor={(item) => item.id}
-            key={numColumns2}
-            numColumns={numColumns2}
-            columnWrapperStyle={numColumns2 > 1 ? styles.rowGap : undefined}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              if (item.empty) {
-                return <View style={{ flex: 1 }} />;
-              }
-              return (
-                <LiveQROrderCard
-                  order={item}
-                  isDesktop={isDesktop}
-                  onAccept={handleAcceptOrder}
-                  onReject={handleRejectOrder}
                 />
               );
             }}

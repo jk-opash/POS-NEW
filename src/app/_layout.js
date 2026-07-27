@@ -16,6 +16,11 @@ import { StaffProvider, useStaff } from "@/context/StaffContext";
 import { SupplierProvider } from "@/context/SupplierContext";
 import { SupportProvider } from "@/context/SupportContext";
 import { TablesProvider } from "@/context/TablesContext";
+import { TaxProvider } from "@/context/TaxContext";
+import { DiscountProvider } from "@/context/DiscountContext";
+import { OnlineIntegrationProvider } from "@/context/OnlineIntegrationContext";
+import { BillingConfigProvider } from "@/context/BillingConfigContext";
+import { PrinterConfigProvider } from "@/context/PrinterConfigContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors } from "@/theme/theme";
 import {
@@ -88,7 +93,12 @@ export default function RootLayout() {
                                 <HardwareProvider>
                                   <ShiftProvider>
                                     <PermissionsProvider>
-                                      <AuthGuard>
+                                      <TaxProvider>
+                                        <DiscountProvider>
+                                          <OnlineIntegrationProvider>
+                                            <BillingConfigProvider>
+                                              <PrinterConfigProvider>
+                                                <AuthGuard>
                                         <View
                                           style={{
                                             flex: 1,
@@ -122,7 +132,12 @@ export default function RootLayout() {
                                             }}
                                           />
                                         </View>
-                                      </AuthGuard>
+                                                </AuthGuard>
+                                              </PrinterConfigProvider>
+                                            </BillingConfigProvider>
+                                          </OnlineIntegrationProvider>
+                                        </DiscountProvider>
+                                      </TaxProvider>
                                     </PermissionsProvider>
                                   </ShiftProvider>
                                 </HardwareProvider>

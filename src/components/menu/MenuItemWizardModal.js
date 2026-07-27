@@ -20,7 +20,6 @@ import {
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Image,
   Modal,
   ScrollView,
@@ -30,6 +29,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 
 export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
   const { isMobile, isMiniTab } = useResponsive();
@@ -83,7 +83,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
   })();
 
   const handleImageUpload = () => {
-    Alert.alert(
+    showAlert(
       "Upload Image",
       "In a real app, this would open the image picker.",
       [

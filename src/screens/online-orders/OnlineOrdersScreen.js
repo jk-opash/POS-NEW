@@ -1,20 +1,49 @@
+import { OnlineOrderCard } from "@/components/online-orders/OnlineOrderCard";
+import { OnlineOrderDetailPanel } from "@/components/online-orders/OnlineOrderDetailPanel";
+import { OnlineOrderPaymentModal } from "@/components/online-orders/OnlineOrderPaymentModal";
+import { SettlePaymentModal } from "@/components/pos/SettlePaymentModal";
 import { Text } from "@/components/ui/Text";
+import { useInvoices } from "@/context/InvoicesContext";
+import { useKDS } from "@/context/KDSContext";
+import { useTables } from "@/context/TablesContext";
+import { usePOS } from "@/context/POSContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { buildInvoiceFromOrder } from "@/utils/invoiceBuilder";
 import { useNavigation } from "expo-router";
 import {
   AlertCircle,
-  BadgeCheck,
+  BadgeBell,
+  Bell,
   Check,
   Clock,
   Menu,
-  RefreshCw,
-  Smartphone,
+  Truck,
   X,
 } from "lucide-react-native";
-import { useState } from "react";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  FlatList,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const formatDataForGrid = (data, numColumns) => {
+  if (!data || data.length === 0) return [];
+  const numberOfElementsLastRow = data.length % numColumns;
+  if (numberOfElementsLastRow === 0) return data;
+
+  const paddingNeeded = numColumns - numberOfElementsLastRow;
+  const paddedData = [...data];
+  for (let i = 0; i < paddingNeeded; i++) {
+    paddedData.push({ id: `blank-${i}`, empty: true });
+  }
+  return paddedData;
+};
 
 // ── Mock Online Orders Data ──────────────────────────────────────────────────
 const MOCK_ONLINE_ORDERS = [
@@ -67,84 +96,45 @@ const MOCK_ONLINE_ORDERS = [
   },
   {
     id: "OO-1003",
-    platform: "Swiggy",
-    orderId: "SWG-89235",
-    customer: "Amit Kumar",
-    phone: "+91 98765 43212",
+    platform: "QR Order",
+    orderId: "QR-12",
+    customer: "Table 12",
+    phone: "",
     items: [
-      { name: "Chicken Biryani", qty: 2, price: 350 },
-      { name: "Raita", qty: 2, price: 40 },
+      { name: "Cold Coffee", qty: 2, price: 120 },
+      { name: "Margherita Pizza", qty: 1, price: 300 },
+      { name: "French Fries", qty: 1, price: 110 },
     ],
-    subtotal: 780,
-    discount: 100,
-    packagingCharge: 30,
-    deliveryCharge: 0,
-    gst: 35.5,
-    total: 745.5,
-    status: "Accepted",
-    orderedAt: new Date(Date.now() - 600000).toISOString(),
-    deliveryAddress: "D-3, Navrangpura, Ahmedabad",
-    instructions: "",
-    estimatedDelivery: "20-25 min",
-  },
-  {
-    id: "OO-1004",
-    platform: "Direct",
-    orderId: "DIR-001",
-    customer: "Meena Shah",
-    phone: "+91 98765 43213",
-    items: [
-      { name: "Veg Thali Special", qty: 2, price: 350 },
-      { name: "Mango Lassi", qty: 2, price: 120 },
-    ],
-    subtotal: 940,
+    subtotal: 650,
     discount: 0,
     packagingCharge: 0,
-    deliveryCharge: 50,
-    gst: 47,
-    total: 1037,
-    status: "Preparing",
-    orderedAt: new Date(Date.now() - 900000).toISOString(),
-    deliveryAddress: "E-1, Paldi, Ahmedabad",
-    instructions: "Extra sweet gulab jamun",
-    estimatedDelivery: "35-40 min",
-  },
-  {
-    id: "OO-1005",
-    platform: "Zomato",
-    orderId: "ZMT-44522",
-    customer: "Vijay Singh",
-    phone: "+91 98765 43214",
-    items: [
-      { name: "Masala Dosa", qty: 3, price: 150 },
-      { name: "Masala Chai", qty: 3, price: 50 },
-    ],
-    subtotal: 600,
-    discount: 60,
-    packagingCharge: 20,
-    deliveryCharge: 25,
-    gst: 27,
-    total: 612,
-    status: "Ready",
-    orderedAt: new Date(Date.now() - 1200000).toISOString(),
-    deliveryAddress: "F-7, SG Highway, Ahmedabad",
-    instructions: "",
-    estimatedDelivery: "10-15 min",
+    deliveryCharge: 0,
+    gst: 32.5,
+    total: 682.5,
+    status: "New",
+    orderedAt: new Date(Date.now() - 30000).toISOString(),
+    deliveryAddress: "Dine-in",
+    instructions: "No sugar in one coffee",
+    estimatedDelivery: "15 min",
   },
 ];
 
-const PLATFORM_COLORS = {
-  Swiggy: ThemeColors.swiggy,
-  Zomato: ThemeColors.zomato,
-  Direct: ThemeColors.emerald,
+export const PLATFORM_COLORS = {
+  Swiggy: ThemeColors.swiggy || "#FC8019",
+  Zomato: ThemeColors.zomato || "#E23744",
+  Direct: ThemeColors.emerald || "#059669",
+  "QR Order": ThemeColors.violet || "#8B5CF6",
 };
 
-const STATUS_CONFIG = {
+const KANBAN_STAGES = ["New", "Accepted", "Preparing", "Ready", "Dispatched"];
+
+export const STATUS_CONFIG = {
   New: { color: ThemeColors.blue, bg: ThemeColors.blueDim, icon: AlertCircle },
   Accepted: {
     color: ThemeColors.violet,
     bg: ThemeColors.violetDim,
-    icon: BadgeCheck,
+    icon: BadgeBell,
+    Check,
   },
   Preparing: {
     color: ThemeColors.amber,
@@ -154,394 +144,328 @@ const STATUS_CONFIG = {
   Ready: {
     color: ThemeColors.emerald,
     bg: ThemeColors.emeraldDim,
-    icon: Check,
+    icon: Bell,
+    Check,
   },
   Dispatched: {
     color: ThemeColors.teal,
     bg: ThemeColors.tealDim,
-    icon: RefreshCw,
+    icon: Truck,
   },
   Rejected: { color: ThemeColors.red, bg: ThemeColors.redDim, icon: X },
 };
 
+export const getTimeSince = (isoDate) => {
+  const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 60000);
+  if (diff < 1) return "Just now";
+  if (diff < 60) return `${diff}m ago`;
+  return `${Math.floor(diff / 60)}h ${diff % 60}m ago`;
+};
+
 export function OnlineOrdersScreen() {
   const navigation = useNavigation();
-  const { isDesktop , isWebDesktop } = useResponsive();
+  const { addOnlineOrderToKDS, activeOrders } = useKDS();
+  const { tables, updateTableStatus } = useTables();
+  const { injectTableOrder } = usePOS();
+  const { addInvoice } = useInvoices();
+  const { isDesktop, isWebDesktop, isTablet, isMiniTab } = useResponsive();
+  const numColumns = isDesktop ? 4 : isTablet ? 3 : isMiniTab ? 2 : 1;
   const [orders, setOrders] = useState(MOCK_ONLINE_ORDERS);
-  const [activeFilter, setActiveFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const filters = [
-    "All",
-    "New",
-    "Accepted",
-    "Preparing",
-    "Ready",
-    "Dispatched",
-  ];
+  // Checkout Modals State
+  const [dispatchingOrder, setDispatchingOrder] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
-  const filteredOrders =
-    activeFilter === "All"
-      ? orders
-      : orders.filter((o) => o.status === activeFilter);
+  const slideAnim = useRef(new Animated.Value(450)).current;
+
+  useEffect(() => {
+    if (selectedOrder) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      slideAnim.setValue(450);
+    }
+  }, [selectedOrder]);
+
+  const handleClosePanel = () => {
+    Animated.timing(slideAnim, {
+      toValue: 450,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedOrder(null);
+    });
+  };
+
+  // Sync with KDS orders
+  useEffect(() => {
+    setOrders((prev) => {
+      let changed = false;
+      const newOrders = prev.map((o) => {
+        const kdsTicket = activeOrders.find((k) => k.id === `KDS-${o.id}`);
+        if (kdsTicket) {
+          if (
+            kdsTicket.status === "Completed" &&
+            (o.status === "Accepted" || o.status === "Preparing")
+          ) {
+            changed = true;
+            return { ...o, status: "Ready" };
+          }
+          if (kdsTicket.status === "Preparing" && o.status === "Accepted") {
+            changed = true;
+            return { ...o, status: "Preparing" };
+          }
+        }
+        return o;
+      });
+      return changed ? newOrders : prev;
+    });
+  }, [activeOrders]);
 
   const newOrderCount = orders.filter((o) => o.status === "New").length;
 
-  const handleAccept = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: "Accepted" } : o)),
-    );
+  const handleUpdateStatus = (orderId, newStatus) => {
+    if (newStatus === "Dispatched") {
+      const orderToDispatch = orders.find((o) => o.id === orderId);
+      if (orderToDispatch) {
+        setDispatchingOrder(orderToDispatch);
+        setShowPayment(true);
+      }
+      return;
+    }
+
+    const orderToUpdate = orders.find((o) => o.id === orderId);
+
+    setOrders((prev) => {
+      if (newStatus === "Accepted" && orderToUpdate?.platform === "QR Order") {
+        return prev.filter((o) => o.id !== orderId);
+      }
+      return prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o));
+    });
+
+    if (newStatus === "Accepted") {
+      if (orderToUpdate) {
+        addOnlineOrderToKDS({ ...orderToUpdate, status: newStatus });
+        
+        if (orderToUpdate.platform === "QR Order") {
+          const tableNameStr = orderToUpdate.customer.replace(/table /i, "").trim();
+          const matchedTable = tables.find(t => 
+            t.name.toLowerCase() === tableNameStr.toLowerCase() || 
+            t.name.toLowerCase() === orderToUpdate.customer.toLowerCase() ||
+            t.id === tableNameStr || 
+            t.id === `T${tableNameStr}`
+          );
+          if (matchedTable) {
+            updateTableStatus(matchedTable.id, "Occupied");
+            if (injectTableOrder) {
+              injectTableOrder(matchedTable.id, orderToUpdate);
+            }
+          }
+        }
+      }
+    }
   };
 
-  const handleReject = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: "Rejected" } : o)),
-    );
-  };
-
-  const handleMarkReady = (orderId) => {
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: "Ready" } : o)),
-    );
-  };
-
-  const getTimeSince = (isoDate) => {
-    const diff = Math.floor((Date.now() - new Date(isoDate).getTime()) / 60000);
-    if (diff < 1) return "Just now";
-    if (diff < 60) return `${diff}m ago`;
-    return `${Math.floor(diff / 60)}h ${diff % 60}m ago`;
-  };
-
+  // ── Render Components ────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
+      {/* ── Header ──────────────────────────── */}
       <SafeAreaView edges={["top"]} style={styles.headerSafe}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             {!isWebDesktop && (
               <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
+                onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
                 style={styles.menuBtn}
               >
-                <Menu size={22} color={ThemeColors.textPrimary} />
+                <Menu size={24} color={ThemeColors.textPrimary} />
               </TouchableOpacity>
             )}
-            <Smartphone size={22} color={ThemeColors.accent} />
-            <Text weight="bold" style={styles.pageTitle}>
-              Online Orders
-            </Text>
+            <Text style={styles.pageTitle}>Online Orders</Text>
             {newOrderCount > 0 && (
               <View style={styles.newBadge}>
                 <Text weight="bold" style={styles.newBadgeText}>
-                  {newOrderCount} NEW
+                  {newOrderCount} New
                 </Text>
               </View>
             )}
           </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.notifBtn}>
+              <Bell size={24} color={ThemeColors.textSecondary} />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+          </View>
         </View>
-        {/* Filter Tabs */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {filters.map((f) => {
-            const isActive = activeFilter === f;
-            const count =
-              f === "All"
-                ? orders.length
-                : orders.filter((o) => o.status === f).length;
-            return (
-              <TouchableOpacity
-                key={f}
-                style={[styles.filterTab, isActive && styles.filterTabActive]}
-                onPress={() => setActiveFilter(f)}
-              >
-                <Text
-                  weight={isActive ? "semibold" : "regular"}
-                  style={[
-                    styles.filterTabText,
-                    isActive && styles.filterTabTextActive,
-                  ]}
-                >
-                  {f} ({count})
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
       </SafeAreaView>
 
-      <View style={styles.body}>
-        {/* Order List */}
-        <ScrollView
-          style={styles.orderList}
-          contentContainerStyle={styles.orderListContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {filteredOrders.map((order) => {
-            const statusCfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.New;
-            const StatusIcon = statusCfg.icon;
-            return (
-              <TouchableOpacity
-                key={order.id}
-                style={[
-                  styles.orderCard,
-                  selectedOrder?.id === order.id && styles.orderCardSelected,
-                ]}
-                onPress={() => setSelectedOrder(order)}
-                activeOpacity={0.8}
-              >
-                {/* Platform Badge */}
-                <View style={styles.orderCardHeader}>
-                  <View
-                    style={[
-                      styles.platformBadge,
-                      {
-                        backgroundColor:
-                          PLATFORM_COLORS[order.platform] || ThemeColors.accent,
-                      },
-                    ]}
-                  >
-                    <Text weight="bold" style={styles.platformBadgeText}>
-                      {order.platform}
-                    </Text>
-                  </View>
-                  <Text style={styles.orderTime}>
-                    {getTimeSince(order.orderedAt)}
-                  </Text>
-                </View>
+      <OnlineOrderPaymentModal
+        visible={showPayment}
+        order={dispatchingOrder}
+        onClose={() => {
+          setShowPayment(false);
+          setDispatchingOrder(null);
+        }}
+        onComplete={(completedOrder) => {
+          setShowPayment(false);
+          // Update status to Dispatched
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === completedOrder.id
+                ? {
+                    ...o,
+                    status: "Dispatched",
+                    paymentMethods: completedOrder.paymentMethods,
+                  }
+                : o,
+            ),
+          );
+          setDispatchingOrder(completedOrder);
+          setShowReceipt(true);
+        }}
+      />
 
-                {/* Order ID & Customer */}
-                <View style={styles.orderMeta}>
-                  <Text weight="semibold" style={styles.orderId}>
-                    #{order.orderId}
-                  </Text>
-                  <Text style={styles.customerName}>{order.customer}</Text>
-                </View>
-
-                {/* Items Preview */}
-                <View style={styles.itemsPreview}>
-                  {order.items.slice(0, 3).map((item, i) => (
-                    <Text
-                      key={i}
-                      style={styles.itemPreviewText}
-                      numberOfLines={1}
-                    >
-                      {item.qty}x {item.name}
-                    </Text>
-                  ))}
-                  {order.items.length > 3 && (
-                    <Text style={styles.moreItems}>
-                      +{order.items.length - 3} more items
-                    </Text>
-                  )}
-                </View>
-
-                {/* Footer */}
-                <View style={styles.orderCardFooter}>
-                  <Text weight="bold" style={styles.orderTotal}>
-                    ₹{order.total.toFixed(0)}
-                  </Text>
-                  <View
-                    style={[
-                      styles.statusChip,
-                      { backgroundColor: statusCfg.bg },
-                    ]}
-                  >
-                    <StatusIcon size={12} color={statusCfg.color} />
-                    <Text
-                      weight="semibold"
-                      style={[styles.statusText, { color: statusCfg.color }]}
-                    >
-                      {order.status}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Action Buttons for New orders */}
-                {order.status === "New" && (
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.rejectBtn]}
-                      onPress={() => handleReject(order.id)}
-                    >
-                      <X size={14} color={ThemeColors.red} />
-                      <Text weight="semibold" style={styles.rejectBtnText}>
-                        Reject
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.acceptBtn]}
-                      onPress={() => handleAccept(order.id)}
-                    >
-                      <Check size={14} color={ThemeColors.white} />
-                      <Text weight="semibold" style={styles.acceptBtnText}>
-                        Accept
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {order.status === "Accepted" && (
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.acceptBtn, { flex: 1 }]}
-                      onPress={() =>
-                        setOrders((prev) =>
-                          prev.map((o) =>
-                            o.id === order.id
-                              ? { ...o, status: "Preparing" }
-                              : o,
-                          ),
-                        )
-                      }
-                    >
-                      <Text weight="semibold" style={styles.acceptBtnText}>
-                        Start Preparing
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {order.status === "Preparing" && (
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.readyBtn, { flex: 1 }]}
-                      onPress={() => handleMarkReady(order.id)}
-                    >
-                      <Check size={14} color={ThemeColors.white} />
-                      <Text weight="semibold" style={styles.acceptBtnText}>
-                        Mark Ready
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </TouchableOpacity>
+      <SettlePaymentModal
+        visible={showReceipt}
+        order={
+          dispatchingOrder
+            ? {
+                id: dispatchingOrder.id,
+                date: dispatchingOrder.orderedAt,
+                items: dispatchingOrder.items.map((item) => ({
+                  product: { name: item.name },
+                  quantity: item.qty,
+                  price: item.price,
+                })),
+                totals: {
+                  subtotal: dispatchingOrder.total,
+                  discountAmount: 0,
+                  taxAmount: 0,
+                  grandTotal: dispatchingOrder.total,
+                },
+                paymentMethods: dispatchingOrder.paymentMethods || [
+                  { method: "Prepaid", amount: dispatchingOrder.total },
+                ],
+              }
+            : null
+        }
+        onClose={() => {
+          setShowReceipt(false);
+          setDispatchingOrder(null);
+        }}
+        onSettle={() => {
+          if (dispatchingOrder) {
+            const formattedOrder = {
+              id: dispatchingOrder.id,
+              date: dispatchingOrder.orderedAt,
+              items: dispatchingOrder.items.map((item) => ({
+                product: { name: item.name },
+                quantity: item.qty,
+                price: item.price,
+              })),
+              totals: {
+                subtotal: dispatchingOrder.total,
+                discountAmount: 0,
+                taxAmount: 0,
+                grandTotal: dispatchingOrder.total,
+              },
+              paymentMethods: dispatchingOrder.paymentMethods || [
+                { method: "Prepaid", amount: dispatchingOrder.total },
+              ],
+            };
+            const invoice = buildInvoiceFromOrder(
+              formattedOrder,
+              {
+                orderType: "Online Delivery",
+                platform: dispatchingOrder.platform,
+                customer: {
+                  name: dispatchingOrder.customer,
+                  phone: dispatchingOrder.phone,
+                },
+              },
+              "print",
             );
-          })}
-          {filteredOrders.length === 0 && (
-            <View style={styles.emptyState}>
-              <Smartphone size={48} color={ThemeColors.textMuted} />
-              <Text weight="semibold" style={styles.emptyText}>
-                No {activeFilter === "All" ? "" : activeFilter.toLowerCase()}{" "}
-                orders
-              </Text>
-            </View>
-          )}
-        </ScrollView>
+            addInvoice(invoice);
+          }
+          setShowReceipt(false);
+          setDispatchingOrder(null);
+        }}
+      />
 
-        {/* Order Detail Panel (Desktop) */}
-        {isDesktop && selectedOrder && (
-          <View style={styles.detailPanel}>
-            <View style={styles.detailHeader}>
-              <View>
-                <Text weight="bold" style={styles.detailTitle}>
-                  #{selectedOrder.orderId}
-                </Text>
-                <Text style={styles.detailSubtitle}>
-                  {selectedOrder.customer} • {selectedOrder.phone}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.platformBadge,
-                  {
-                    backgroundColor:
-                      PLATFORM_COLORS[selectedOrder.platform] ||
-                      ThemeColors.accent,
-                  },
-                ]}
-              >
-                <Text weight="bold" style={styles.platformBadgeText}>
-                  {selectedOrder.platform}
-                </Text>
-              </View>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Items */}
-              <Text weight="semibold" style={styles.sectionLabel}>
-                ORDER ITEMS
-              </Text>
-              {selectedOrder.items.map((item, i) => (
-                <View key={i} style={styles.detailItem}>
-                  <Text style={styles.detailItemQty}>{item.qty}x</Text>
-                  <Text weight="medium" style={styles.detailItemName}>
-                    {item.name}
-                  </Text>
-                  <Text weight="semibold" style={styles.detailItemPrice}>
-                    ₹{(item.price * item.qty).toFixed(0)}
-                  </Text>
-                </View>
-              ))}
-
-              {/* Bill Summary */}
-              <View style={styles.billSummary}>
-                <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Subtotal</Text>
-                  <Text style={styles.billValue}>
-                    ₹{selectedOrder.subtotal}
-                  </Text>
-                </View>
-                {selectedOrder.discount > 0 && (
-                  <View style={styles.billRow}>
-                    <Text style={styles.billLabel}>Discount</Text>
-                    <Text
-                      style={[styles.billValue, { color: ThemeColors.emerald }]}
-                    >
-                      -₹{selectedOrder.discount}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Packaging</Text>
-                  <Text style={styles.billValue}>
-                    ₹{selectedOrder.packagingCharge}
-                  </Text>
-                </View>
-                <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>GST</Text>
-                  <Text style={styles.billValue}>₹{selectedOrder.gst}</Text>
-                </View>
-                <View style={[styles.billRow, styles.billTotal]}>
-                  <Text weight="bold" style={styles.billTotalLabel}>
-                    Total
-                  </Text>
-                  <Text weight="bold" style={styles.billTotalValue}>
-                    ₹{selectedOrder.total.toFixed(0)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Delivery Info */}
-              <Text weight="semibold" style={styles.sectionLabel}>
-                DELIVERY INFO
-              </Text>
-              <View style={styles.deliveryInfo}>
-                <Text style={styles.deliveryText}>
-                  📍 {selectedOrder.deliveryAddress}
-                </Text>
-                <Text style={styles.deliveryText}>
-                  ⏱ Est. {selectedOrder.estimatedDelivery}
-                </Text>
-                {selectedOrder.instructions ? (
-                  <Text style={styles.deliveryText}>
-                    📝 {selectedOrder.instructions}
-                  </Text>
-                ) : null}
-              </View>
-            </ScrollView>
-          </View>
-        )}
+      <View style={styles.body}>
+        <FlatList
+          data={formatDataForGrid(orders, numColumns)}
+          keyExtractor={(item) => item.id}
+          key={numColumns}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.rowGap : undefined}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => {
+            if (item.empty) {
+              return (
+                <View style={{ flex: 1, backgroundColor: "transparent" }} />
+              );
+            }
+            return (
+              <OnlineOrderCard
+                order={item}
+                isSelected={selectedOrder?.id === item.id}
+                onSelect={setSelectedOrder}
+                onUpdateStatus={handleUpdateStatus}
+              />
+            );
+          }}
+        />
       </View>
+
+      {/* Details Modal / Sidebar */}
+      <Modal
+        visible={!!selectedOrder}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleClosePanel}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={handleClosePanel}
+          />
+          <Animated.View
+            style={[
+              { height: "100%", width: "100%", maxWidth: 420 },
+              { transform: [{ translateX: slideAnim }] },
+            ]}
+          >
+            <OnlineOrderDetailPanel
+              selectedOrder={selectedOrder}
+              onClose={handleClosePanel}
+              onUpdateStatus={handleUpdateStatus}
+            />
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: ThemeColors.bg },
+  root: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
   headerSafe: {
     backgroundColor: ThemeColors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border,
+    borderColor: ThemeColors.border,
+    zIndex: 100,
+    elevation: 100,
   },
   header: {
     flexDirection: "row",
@@ -555,186 +479,378 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: ThemeSpacing.md,
   },
-  menuBtn: { padding: 4 },
-  pageTitle: { fontSize: 22, color: ThemeColors.textPrimary },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 26,
+    color: ThemeColors.textPrimary,
+  },
   newBadge: {
     backgroundColor: ThemeColors.red,
-    borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
+    borderRadius: ThemeRadius.full,
   },
-  newBadgeText: { color: ThemeColors.white, fontSize: 11 },
-  filterRow: {
-    flexDirection: "row",
-    gap: ThemeSpacing.sm,
-    paddingHorizontal: ThemeSpacing.xxl,
-    paddingBottom: ThemeSpacing.md,
+  newBadgeText: {
+    color: ThemeColors.white,
+    fontSize: 12,
   },
-  filterTab: {
-    paddingHorizontal: ThemeSpacing.lg,
-    paddingVertical: ThemeSpacing.sm,
-    borderRadius: ThemeRadius.xl,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
+  notifBtn: { position: "relative", padding: 4 },
+  notifDot: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ThemeColors.red,
+    borderWidth: 1.5,
+    borderColor: ThemeColors.surface,
   },
-  filterTabActive: {
-    backgroundColor: ThemeColors.accent,
-    borderColor: ThemeColors.accent,
+
+  body: {
+    flex: 1,
   },
-  filterTabText: { fontSize: 13, color: ThemeColors.textSecondary },
-  filterTabTextActive: { color: ThemeColors.white },
-  body: { flex: 1, flexDirection: "row" },
-  orderList: { flex: 1 },
-  orderListContent: {
+  listContent: {
     padding: ThemeSpacing.lg,
     gap: ThemeSpacing.md,
   },
+  rowGap: {
+    gap: ThemeSpacing.md,
+  },
+  // ── Order Card Styling ───────────────────────────────────────────────────
   orderCard: {
     backgroundColor: ThemeColors.surface,
-    borderRadius: ThemeRadius.lg,
-    padding: ThemeSpacing.lg,
+    borderRadius: ThemeRadius.xl,
+    marginBottom: ThemeSpacing.lg,
     borderWidth: 1,
-    borderColor: ThemeColors.border,
-    gap: ThemeSpacing.sm,
+    borderColor: ThemeColors.borderSubtle,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   orderCardSelected: {
-    borderColor: ThemeColors.accent,
-    borderWidth: 2,
+    borderColor: ThemeColors.primary,
+    shadowOpacity: 0.1,
   },
-  orderCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  platformBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  platformBadgeText: { color: ThemeColors.white, fontSize: 11 },
-  orderTime: { fontSize: 12, color: ThemeColors.textMuted },
-  orderMeta: { gap: 2 },
-  orderId: { fontSize: 15, color: ThemeColors.textPrimary },
-  customerName: { fontSize: 13, color: ThemeColors.textSecondary },
-  itemsPreview: { gap: 2 },
-  itemPreviewText: { fontSize: 13, color: ThemeColors.textSecondary },
-  moreItems: { fontSize: 12, color: ThemeColors.accent },
-  orderCardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: ThemeSpacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: ThemeColors.borderSubtle,
-  },
-  orderTotal: { fontSize: 18, color: ThemeColors.textPrimary },
-  statusChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  statusText: { fontSize: 12 },
-  actionRow: {
-    flexDirection: "row",
-    gap: ThemeSpacing.sm,
-    marginTop: ThemeSpacing.sm,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: ThemeRadius.md,
-  },
-  acceptBtn: { backgroundColor: ThemeColors.emerald },
-  readyBtn: { backgroundColor: ThemeColors.accent },
-  rejectBtn: {
-    backgroundColor: ThemeColors.redDim,
-    borderWidth: 1,
-    borderColor: ThemeColors.red,
-  },
-  acceptBtnText: { color: ThemeColors.white, fontSize: 13 },
-  rejectBtnText: { color: ThemeColors.red, fontSize: 13 },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 80,
-    gap: ThemeSpacing.md,
-  },
-  emptyText: { fontSize: 16, color: ThemeColors.textMuted },
-
-  // Detail Panel
-  detailPanel: {
-    width: 380,
-    backgroundColor: ThemeColors.surface,
-    borderLeftWidth: 1,
-    borderLeftColor: ThemeColors.border,
-    padding: ThemeSpacing.xl,
-  },
-  detailHeader: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: ThemeSpacing.xl,
-    paddingBottom: ThemeSpacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border,
-  },
-  detailTitle: { fontSize: 20, color: ThemeColors.textPrimary },
-  detailSubtitle: {
-    fontSize: 13,
-    color: ThemeColors.textSecondary,
-    marginTop: 4,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    color: ThemeColors.textMuted,
-    letterSpacing: 1,
-    marginTop: ThemeSpacing.xl,
-    marginBottom: ThemeSpacing.md,
-  },
-  detailItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
+    backgroundColor: ThemeColors.bg,
+    padding: ThemeSpacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: ThemeColors.borderSubtle,
   },
-  detailItemQty: {
+  cardHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
+  platformIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: ThemeRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardPlatform: {
+    fontSize: 18,
+    color: ThemeColors.textPrimary,
+  },
+  cardTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  cardTime: {
     fontSize: 13,
-    color: ThemeColors.accent,
+    color: ThemeColors.textMuted,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: ThemeRadius.full,
+  },
+  statusBadgeText: {
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  orderItemsList: {
+    padding: ThemeSpacing.lg,
+    gap: ThemeSpacing.md,
+  },
+  customerRow: {
+    marginBottom: ThemeSpacing.xs,
+  },
+  cardCustomer: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
+  },
+  orderItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
+  orderItemQtyBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: ThemeColors.borderSubtle,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  orderItemQtyText: {
+    fontSize: 13,
+    color: ThemeColors.textPrimary,
+  },
+  orderItemName: {
+    fontSize: 15,
+    color: ThemeColors.textSecondary,
+  },
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: ThemeSpacing.lg,
+    paddingTop: ThemeSpacing.md,
+    borderTopWidth: 1,
+    borderTopColor: ThemeColors.borderSubtle,
+    backgroundColor: ThemeColors.bg + "50",
+  },
+  cardTotalLabel: {
+    fontSize: 12,
+    color: ThemeColors.textMuted,
+    marginBottom: 2,
+  },
+  cardTotal: {
+    fontSize: 20,
+    color: ThemeColors.textPrimary,
+  },
+  cardActions: {
+    flexDirection: "row",
+    gap: ThemeSpacing.md,
+  },
+  rejectBtnSmall: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+    backgroundColor: ThemeColors.roseDim,
+  },
+  rejectBtnSmallText: { color: ThemeColors.rose, fontSize: 14 },
+  acceptBtnSmall: {
+    backgroundColor: ThemeColors.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+  },
+  acceptBtnSmallText: { color: ThemeColors.white, fontSize: 14 },
+  btnPrimarySmall: {
+    backgroundColor: ThemeColors.violet,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+  },
+  btnReadySmall: {
+    backgroundColor: ThemeColors.amber,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+  },
+  btnDispatchSmall: {
+    backgroundColor: ThemeColors.teal,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+  },
+  // ── Detail Modal / Receipt Styling ───────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  receiptContainer: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: ThemeColors.white,
+    height: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: -4, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 20,
+    borderLeftWidth: 1,
+    borderLeftColor: ThemeColors.border,
+  },
+  receiptHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: ThemeSpacing.lg,
+    paddingVertical: ThemeSpacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.border,
+    backgroundColor: "#FAFAFA",
+  },
+  receiptCloseBtn: {
+    padding: 4,
+  },
+  receiptTitle: {
+    fontSize: 18,
+    color: ThemeColors.textPrimary,
+  },
+  receiptScroll: {
+    paddingBottom: 100,
+  },
+  receiptTopInfo: {
+    alignItems: "center",
+    padding: ThemeSpacing.xxl,
+    backgroundColor: "#FAFAFA",
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.border,
+  },
+  receiptPlatformBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: ThemeRadius.full,
+    marginBottom: ThemeSpacing.md,
+  },
+  receiptPlatformDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  receiptOrderId: {
+    fontSize: 28,
+    color: ThemeColors.textPrimary,
+    marginBottom: 4,
+  },
+  receiptOrderTime: {
+    fontSize: 13,
+    color: ThemeColors.textSecondary,
+  },
+  receiptSection: {
+    padding: ThemeSpacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.borderSubtle,
+  },
+  receiptRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  receiptCustomerName: {
+    fontSize: 16,
+    color: ThemeColors.textPrimary,
+  },
+  receiptCustomerPhone: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+    marginTop: 2,
+  },
+  receiptSectionTitle: {
+    fontSize: 12,
+    color: ThemeColors.textMuted,
+    letterSpacing: 1.2,
+    marginBottom: ThemeSpacing.lg,
+  },
+  receiptItemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: ThemeSpacing.md,
+  },
+  receiptItemLeft: {
+    flexDirection: "row",
+    flex: 1,
+    paddingRight: ThemeSpacing.md,
+  },
+  receiptItemQty: {
+    fontSize: 14,
+    color: ThemeColors.primary,
     width: 30,
   },
-  detailItemName: { flex: 1, fontSize: 14, color: ThemeColors.textPrimary },
-  detailItemPrice: { fontSize: 14, color: ThemeColors.textPrimary },
-  billSummary: {
-    marginTop: ThemeSpacing.lg,
-    backgroundColor: ThemeColors.bg,
-    borderRadius: ThemeRadius.md,
-    padding: ThemeSpacing.lg,
-    gap: 8,
+  receiptItemName: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+    flex: 1,
   },
-  billRow: { flexDirection: "row", justifyContent: "space-between" },
-  billLabel: { fontSize: 13, color: ThemeColors.textSecondary },
-  billValue: { fontSize: 13, color: ThemeColors.textPrimary },
-  billTotal: {
+  receiptItemPrice: {
+    fontSize: 14,
+    color: ThemeColors.textPrimary,
+  },
+  receiptTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: ThemeSpacing.sm,
+  },
+  receiptTotalLabel: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+  },
+  receiptTotalValue: {
+    fontSize: 14,
+    color: ThemeColors.textPrimary,
+  },
+  receiptDivider: {
     borderTopWidth: 1,
     borderTopColor: ThemeColors.border,
-    paddingTop: 8,
-    marginTop: 4,
+    borderStyle: "dashed",
+    marginVertical: ThemeSpacing.md,
   },
-  billTotalLabel: { fontSize: 15, color: ThemeColors.textPrimary },
-  billTotalValue: { fontSize: 15, color: ThemeColors.accent },
-  deliveryInfo: {
-    backgroundColor: ThemeColors.bg,
-    borderRadius: ThemeRadius.md,
-    padding: ThemeSpacing.lg,
-    gap: 8,
+  receiptGrandTotalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  deliveryText: { fontSize: 13, color: ThemeColors.textSecondary },
+  receiptGrandTotalLabel: {
+    fontSize: 18,
+    color: ThemeColors.textPrimary,
+  },
+  receiptGrandTotalValue: {
+    fontSize: 18,
+    color: ThemeColors.textPrimary,
+  },
+  instructionBox: {
+    backgroundColor: ThemeColors.amber + "15",
+    padding: ThemeSpacing.md,
+    borderRadius: ThemeRadius.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: ThemeColors.amber,
+  },
+  instructionLabel: {
+    fontSize: 12,
+    color: ThemeColors.amber,
+    marginBottom: 4,
+  },
+  instructionText: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+  },
+  receiptDeliveryAddress: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+    lineHeight: 20,
+  },
+  receiptFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: ThemeSpacing.xl,
+    backgroundColor: ThemeColors.white,
+    borderTopWidth: 1,
+    borderTopColor: ThemeColors.border,
+  },
 });

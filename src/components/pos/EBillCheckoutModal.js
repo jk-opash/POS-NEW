@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Alert,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import {
@@ -73,19 +73,19 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
 
   const handleCompleteAndSend = () => {
     if (Math.abs(remaining) > 0.01) {
-      Alert.alert("Invalid Amount", "Total paid must equal the grand total.");
+      showAlert("Invalid Amount", "Total paid must equal the grand total.");
       return;
     }
     if (!validatePhone(phone)) {
-      Alert.alert("Invalid Number", "Please enter a valid phone number or leave it empty.");
+      showAlert("Invalid Number", "Please enter a valid phone number or leave it empty.");
       return;
     }
     if (!validateEmail(email)) {
-      Alert.alert("Invalid Email", "Please enter a valid email address or leave it empty.");
+      showAlert("Invalid Email", "Please enter a valid email address or leave it empty.");
       return;
     }
     if (!phone.trim() && !email.trim()) {
-      Alert.alert("Contact Required", "Please enter at least a phone number or email to send the eBill.");
+      showAlert("Contact Required", "Please enter at least a phone number or email to send the eBill.");
       return;
     }
 

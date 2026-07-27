@@ -38,7 +38,7 @@ export function TablesLegend({
         <View
           style={[styles.legendDot, { backgroundColor: ThemeColors.blue }]}
         />
-        <Text style={styles.legendText}>Dine in: {dineInCount}</Text>
+        <Text style={styles.legendText}>Occupied: {dineInCount}</Text>
       </View>
     </View>
   );

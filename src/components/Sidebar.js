@@ -3,15 +3,13 @@ import { useBranches } from "@/context/BranchesContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { usePathname, useRouter } from "expo-router";
 import {
-  BellRing,
-  BookOpen,
   Check,
   ChevronRight,
   LayoutGrid,
   MonitorPlay,
-  QrCode,
   Receipt,
   Settings,
+  Smartphone,
   Store,
   UtensilsCrossed,
   X,
@@ -39,6 +37,12 @@ const MENU_SECTIONS = [
   {
     title: "KITCHEN",
     items: [
+      {
+        key: "online-orders",
+        label: "Online Orders",
+        Icon: Smartphone,
+        badge: true,
+      },
       { key: "kds", label: "KOT / KDS", Icon: MonitorPlay },
       { key: "waiter", label: "Waiter / Serve", Icon: UtensilsCrossed },
     ],
@@ -46,18 +50,11 @@ const MENU_SECTIONS = [
   {
     title: "BUSINESS",
     items: [
-      { key: "menu", label: "Menu Management", Icon: BookOpen },
       { key: "invoices", label: "Invoices", Icon: Receipt },
-      { key: "qr-ordering", label: "QR Ordering", Icon: QrCode },
+      { key: "operations", label: "Operations", Icon: LayoutGrid },
     ],
   },
   /*
-  {
-    title: "ONLINE",
-    items: [
-      { key: "online-orders", label: "Online Orders", Icon: Smartphone, badge: true },
-    ],
-  },
   {
     title: "BUSINESS",
     items: [
@@ -110,36 +107,43 @@ export function Sidebar({ isCollapsed }) {
     support: "/support",
     recipes: "/recipes",
     "online-orders": "/online-orders",
-    "qr-ordering": "/qr-ordering",
+    "tables-qr": "/tables-qr",
     crm: "/crm",
     feedback: "/feedback",
     "day-end": "/day-end",
+    operations: "/operations",
   };
 
   const getActiveKey = () => {
-    if (pathname === "/" || pathname === "/index") return "tables";
-    if (pathname?.startsWith("/time")) return "time";
-    if (pathname === "/orders") return "orders";
-
-    if (pathname?.startsWith("/menu")) return "menu";
-    if (pathname?.startsWith("/tables")) return "tables";
-    if (pathname?.startsWith("/kds")) return "kds";
-    if (pathname?.startsWith("/waiter")) return "waiter";
-    if (pathname?.startsWith("/inventory")) return "inventory";
-    if (pathname?.startsWith("/invoices")) return "invoices";
-    if (pathname?.startsWith("/staff")) return "staff";
-    if (pathname?.startsWith("/pos")) return "pos";
-    if (pathname?.startsWith("/suppliers")) return "suppliers";
-    if (pathname?.startsWith("/branches")) return "branches";
-    if (pathname?.startsWith("/reports")) return "reports";
-    if (pathname?.startsWith("/settings")) return "settings";
-    if (pathname?.startsWith("/support")) return "support";
-    if (pathname?.startsWith("/recipes")) return "recipes";
-    if (pathname?.startsWith("/online-orders")) return "online-orders";
-    if (pathname?.startsWith("/qr-ordering")) return "qr-ordering";
-    if (pathname?.startsWith("/crm")) return "crm";
-    if (pathname?.startsWith("/feedback")) return "feedback";
-    if (pathname?.startsWith("/day-end")) return "day-end";
+    if (!pathname || pathname === "/" || pathname === "/index") return "tables";
+    // Use exact match first to avoid prefix collisions
+    const exactMap = {
+      "/tables": "tables",
+      "/pos": "pos",
+      "/kds": "kds",
+      "/waiter": "waiter",
+      "/menu": "menu",
+      "/invoices": "invoices",
+      "/qr-ordering": "qr-ordering",
+      "/online-orders": "online-orders",
+      "/inventory": "inventory",
+      "/staff": "staff",
+      "/suppliers": "suppliers",
+      "/branches": "branches",
+      "/reports": "reports",
+      "/settings": "settings",
+      "/support": "support",
+      "/recipes": "recipes",
+      "/crm": "crm",
+      "/feedback": "feedback",
+      "/day-end": "day-end",
+      "/operations": "operations",
+      "/time": "time",
+      "/orders": "orders",
+    };
+    for (const [prefix, key] of Object.entries(exactMap)) {
+      if (pathname === prefix || pathname.startsWith(prefix + "/")) return key;
+    }
     return "tables";
   };
 
@@ -149,7 +153,7 @@ export function Sidebar({ isCollapsed }) {
 
   const handleNavigate = (key) => {
     const route = routeMap[key] || "/tables";
-    router.push(route);
+    router.replace(route);
   };
 
   // ── Render a single menu item ─────────────────────────────────────
@@ -239,53 +243,35 @@ export function Sidebar({ isCollapsed }) {
 
       {/* ── Branch Indicator ─────────────────────── */}
       <TouchableOpacity
-        style={styles.branchIndicator}
+        style={[
+          styles.branchIndicator,
+          isCollapsed && styles.branchIndicatorCollapsed,
+        ]}
         onPress={() => setShowBranchModal(true)}
         activeOpacity={0.7}
       >
         <View style={styles.branchDot} />
-        <Text weight="semibold" style={styles.branchLabel} numberOfLines={1}>
-          {currentBranchObj?.name || "Select Branch"}
-        </Text>
-        <ChevronRight size={14} color={ThemeColors.textMuted} />
+        {!isCollapsed && (
+          <>
+            <Text
+              weight="semibold"
+              style={styles.branchLabel}
+              numberOfLines={1}
+            >
+              {currentBranchObj?.name || "Select Branch"}
+            </Text>
+            <ChevronRight size={14} color={ThemeColors.textMuted} />
+          </>
+        )}
       </TouchableOpacity>
 
-      {/* ── Bottom: Settings & Support ────────────── */}
+      {/* ── Bottom: Settings ────────────── */}
       <View style={styles.bottomSection}>
         <TouchableOpacity
           style={[
             styles.bottomBtn,
-            activeItem === "support" && styles.bottomBtnActive,
-          ]}
-          onPress={() => handleNavigate("support")}
-          activeOpacity={0.7}
-        >
-          <BellRing
-            size={18}
-            color={
-              activeItem === "support"
-                ? ThemeColors.accent
-                : ThemeColors.textMuted
-            }
-            strokeWidth={1.8}
-          />
-          {!isCollapsed && (
-            <Text
-              weight="medium"
-              style={[
-                styles.bottomBtnLabel,
-                activeItem === "support" && styles.bottomBtnLabelActive,
-              ]}
-            >
-              Support
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.bottomBtn,
             activeItem === "settings" && styles.bottomBtnActive,
+            isCollapsed && styles.bottomBtnCollapsed,
           ]}
           onPress={() => handleNavigate("settings")}
           activeOpacity={0.7}
@@ -499,6 +485,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.08)",
   },
+  branchIndicatorCollapsed: {
+    justifyContent: "center",
+    paddingHorizontal: 0,
+  },
   branchDot: {
     width: 8,
     height: 8,
@@ -513,29 +503,30 @@ const styles = StyleSheet.create({
 
   // ── Bottom Section ────────────────────
   bottomSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.08)",
-    gap: 4,
   },
   bottomBtn: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginHorizontal: 8,
+    borderRadius: 8,
+    gap: 12,
+  },
+  bottomBtnCollapsed: {
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 0,
+    marginHorizontal: 8,
   },
   bottomBtnActive: {
     backgroundColor: "rgba(255,107,53,0.12)",
   },
   bottomBtnLabel: {
     color: ThemeColors.textMuted,
-    fontSize: 13,
+    fontSize: 15,
   },
   bottomBtnLabelActive: {
     color: ThemeColors.accent,

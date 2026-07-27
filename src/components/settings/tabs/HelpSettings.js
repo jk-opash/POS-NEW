@@ -1,62 +1,116 @@
-import React from "react";
-import { View, TouchableOpacity, Linking, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Text } from "@/components/ui/Text";
-import { styles as commonStyles } from "./BusinessSettings"; 
-import { LifeBuoy, FileText, Mail, MessageSquare } from "lucide-react-native";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 
-import { ThemeColors } from "@/theme/theme";
+// Tabs
+import { HelpCenterTab } from "@/components/support/HelpCenterTab";
+import { FaqTab } from "@/components/support/FaqTab";
+import { MyTicketsTab } from "@/components/support/MyTicketsTab";
+import { ContactSupportTab } from "@/components/support/ContactSupportTab";
+
+const TABS = [
+  { key: "help_center", label: "Help Center" },
+  { key: "faq", label: "FAQs" },
+  { key: "my_tickets", label: "My Tickets" },
+  { key: "contact", label: "Contact Support" },
+];
+
 export function HelpSettings() {
-  const options = [
-    { title: "Documentation", desc: "Read our comprehensive guides.", icon: FileText },
-    { title: "Live Chat Support", desc: "Chat with our support team.", icon: MessageSquare },
-    { title: "Email Support", desc: "support@posmanager.com", icon: Mail },
-    { title: "Community Forum", desc: "Join the discussion.", icon: LifeBuoy },
-  ];
+  const [activeTab, setActiveTab] = useState("help_center");
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "help_center": return <HelpCenterTab />;
+      case "faq": return <FaqTab />;
+      case "my_tickets": return <MyTicketsTab />;
+      case "contact": return <ContactSupportTab />;
+      default: return null;
+    }
+  };
 
   return (
-    <View style={commonStyles.container}>
-      <Text weight="bold" style={commonStyles.headerTitle}>Help Center</Text>
-      <Text style={commonStyles.headerSubtitle}>Get support and answers to your questions.</Text>
-
-      <View style={commonStyles.card}>
-        <View style={localStyles.grid}>
-          {options.map((opt, i) => (
-            <TouchableOpacity key={i} style={localStyles.item} activeOpacity={0.7}>
-              <opt.icon size={24} color={ThemeColors.textSecondary} />
-              <View style={localStyles.textContainer}>
-                <Text weight="semibold" style={localStyles.title}>{opt.title}</Text>
-                <Text style={localStyles.desc}>{opt.desc}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+    <View style={styles.root}>
+      {/* ── Toolbar & Tabs ─────────────────────── */}
+      <View style={styles.toolbarRow}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterTabs}
+        >
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
+                style={[
+                  styles.filterTab,
+                  isActive && {
+                    backgroundColor: ThemeColors.emerald,
+                    borderColor: ThemeColors.emerald,
+                  },
+                ]}
+                activeOpacity={0.8}
+              >
+                <Text
+                  weight={isActive ? "semibold" : "regular"}
+                  style={[
+                    styles.filterTabText,
+                    isActive && styles.filterTabTextActive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Tab Content */}
+        <View style={styles.contentSection}>{renderContent()}</View>
+      </ScrollView>
     </View>
   );
 }
 
-const localStyles = StyleSheet.create({
-  grid: {
-    gap: 16,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: ThemeColors.surfaceElevated,
-    borderRadius: 8,
-    gap: 16,
-  },
-  textContainer: {
+const styles = StyleSheet.create({
+  root: {
     flex: 1,
   },
-  title: {
-    color: ThemeColors.textPrimary,
-    fontSize: 16,
-    marginBottom: 4,
+  toolbarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingBottom: ThemeSpacing.md,
   },
-  desc: {
-    color: ThemeColors.textMuted,
-    fontSize: 14,
+  filterTabs: {
+    flexDirection: "row",
+    gap: ThemeSpacing.sm,
+  },
+  filterTab: {
+    paddingHorizontal: ThemeSpacing.lg,
+    paddingVertical: ThemeSpacing.sm,
+    borderRadius: ThemeRadius.xl,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
+  },
+  filterTabText: {
+    fontSize: 13,
+    color: ThemeColors.textSecondary,
+  },
+  filterTabTextActive: {
+    color: ThemeColors.white,
+  },
+  scrollContent: {
+    paddingTop: ThemeSpacing.md,
+    paddingBottom: 40,
+  },
+  contentSection: {
+    minHeight: 400,
   },
 });

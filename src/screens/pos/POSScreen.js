@@ -13,6 +13,7 @@ import { POSHeader } from "@/components/pos/POSHeader";
 import { SettlePaymentModal } from "@/components/pos/SettlePaymentModal";
 import { SplitPaymentModal } from "@/components/pos/SplitPaymentModal";
 import { VariantSelectorModal } from "@/components/pos/VariantSelectorModal";
+import { TakeawayOrdersDrawer } from "@/components/pos/TakeawayOrdersDrawer";
 import { SUBCATEGORY_ICONS } from "@/constants/menu";
 import { useInvoices } from "@/context/InvoicesContext";
 import { useKDS } from "@/context/KDSContext";
@@ -31,13 +32,13 @@ import { buildInvoiceFromOrder } from "@/utils/invoiceBuilder";
 import { useNavigation, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   FlatList,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
+import { showAlert } from "@/utils/alert";
 
 const formatDataForGrid = (data, numColumns) => {
   if (!data || data.length === 0) return [];
@@ -82,6 +83,10 @@ export default function POSScreen() {
     updateCartItem,
     draftSplitState,
     clearCart,
+    setCustomer,
+    kots,
+    loadKOTForPayment,
+    takeawayQueue,
   } = usePOS();
 
   const { tables, floors } = useTables();
@@ -106,8 +111,17 @@ export default function POSScreen() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
   const [showParkedSales, setShowParkedSales] = useState(false);
+  const [showTakeawayDrawer, setShowTakeawayDrawer] = useState(false);
   const [selectedServiceItem, setSelectedServiceItem] = useState(null); // stores productId for employee assignment
   const [variantSelectorItem, setVariantSelectorItem] = useState(null);
+
+  // takeawayKots is now driven by the persistent takeawayQueue from POSContext
+
+  const takeawayOrders = useMemo(() => {
+    return activeOrders.filter(
+      (o) => o.type === "Takeaway" && o.status !== "Completed" && o.status !== "Cancelled"
+    );
+  }, [activeOrders]);
   const [isCartVisible, setIsCartVisible] = useState(false);
   const [kotReceipt, setKotReceipt] = useState(null); // Store KOT data for receipt printing
   const [checkoutAction, setCheckoutAction] = useState("none"); // "print", "email", or "none"
@@ -121,7 +135,7 @@ export default function POSScreen() {
   const handlePrintBill = () => {
     const combinedCart = [...runningOrder, ...cart];
     if (combinedCart.length === 0) {
-      Alert.alert("Empty Order", "No items to print.");
+      showAlert("Empty Order", "No items to print.");
       return;
     }
     const tempOrder = {
@@ -152,7 +166,7 @@ export default function POSScreen() {
       });
     }
 
-    Alert.alert("Payment Successful", "Order has been completed successfully.");
+    showAlert("Payment Successful", "Order has been completed successfully.");
     addInvoice(
       buildInvoiceFromOrder(
         order,
@@ -257,7 +271,7 @@ export default function POSScreen() {
   const handleVoidItem = (productId) => {
     const runningItem = runningOrder.find((i) => i.id === productId);
     if (runningItem) {
-      Alert.alert(
+      showAlert(
         "Remove Sent Item?",
         "This item has already been sent to the kitchen. Are you sure you want to remove it?",
         [
@@ -282,7 +296,7 @@ export default function POSScreen() {
     const runningItem = runningOrder.find((i) => i.id === cartItemId);
 
     if (runningItem && qty < runningItem.quantity) {
-      Alert.alert(
+      showAlert(
         "Reduce Sent Item?",
         "This item has already been sent to the kitchen. Are you sure you want to reduce its quantity?",
         [
@@ -326,6 +340,8 @@ export default function POSScreen() {
         isRetail={isRetail}
         isScannerConnected={isScannerConnected}
         onSimulateScan={() => simulateScan("SKU001")}
+        onTakeawayOrdersPress={() => setShowTakeawayDrawer(true)}
+        takeawayCount={takeawayQueue.length}
       />
 
       <View
@@ -442,23 +458,26 @@ export default function POSScreen() {
             }}
             onParkSale={() => {
               if (cart.length === 0 && runningOrder.length === 0) {
-                Alert.alert("Empty Cart", "Cannot park an empty sale.");
+                showAlert("Empty Cart", "Cannot park an empty sale.");
                 return;
               }
               parkSale();
-              Alert.alert(
+              showAlert(
                 "Sale Parked",
                 "The sale has been successfully parked.",
               );
             }}
             onSendToKitchen={(options = { print: false }) => {
+              if (options?.customer) {
+                setCustomer(options.customer);
+              }
               const kot = generateKOT();
               if (kot) {
                 addOrderToKDS(kot);
                 if (options.print) {
                   setKotReceipt(kot);
                 } else {
-                  Alert.alert(
+                  showAlert(
                     "Sent to Kitchen",
                     "Order has been sent to KDS successfully.",
                     [{ text: "OK", onPress: () => router.push("/tables") }],
@@ -468,6 +487,9 @@ export default function POSScreen() {
             }}
             onCheckout={(options) => {
               if (isSmallScreen) setIsCartVisible(false);
+              if (options?.customer) {
+                setCustomer(options.customer);
+              }
               const action = options?.action || "none";
               if (action === "ebill") {
                 setShowEBillCheckout(true);
@@ -539,24 +561,27 @@ export default function POSScreen() {
           }}
           onParkSale={() => {
             if (cart.length === 0 && runningOrder.length === 0) {
-              Alert.alert("Empty Cart", "Cannot park an empty sale.");
+              showAlert("Empty Cart", "Cannot park an empty sale.");
               return;
             }
             parkSale();
             if (isSmallScreen) setIsCartVisible(false);
-            Alert.alert(
+            showAlert(
               "Sale Parked",
               "The sale has been successfully parked.",
             );
           }}
           onSendToKitchen={(options = { print: false }) => {
+            if (options?.customer) {
+              setCustomer(options.customer);
+            }
             const kot = generateKOT();
             if (kot) {
               addOrderToKDS(kot);
               if (options.print) {
                 setKotReceipt(kot);
               } else {
-                Alert.alert(
+                showAlert(
                   "Sent to Kitchen",
                   "Order has been sent to KDS successfully.",
                 );
@@ -565,6 +590,9 @@ export default function POSScreen() {
           }}
           onCheckout={(options) => {
             if (isSmallScreen) setIsCartVisible(false);
+            if (options?.customer) {
+              setCustomer(options.customer);
+            }
             const action = options?.action || "none";
             if (action === "ebill") {
               setShowEBillCheckout(true);
@@ -639,6 +667,16 @@ export default function POSScreen() {
           }}
         />
       )}
+
+      <TakeawayOrdersDrawer
+        visible={showTakeawayDrawer}
+        onClose={() => setShowTakeawayDrawer(false)}
+        orders={takeawayQueue}
+        onSelectOrder={(kotId) => {
+          loadKOTForPayment(kotId);
+          setShowTakeawayDrawer(false);
+        }}
+      />
 
       {showSettlePayment && (
         <SettlePaymentModal

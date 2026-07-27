@@ -1,6 +1,6 @@
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { AlertCircle, Clock } from "lucide-react-native";
+import { AlertCircle, Clock, Utensils } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -35,49 +35,6 @@ export function OrderTicket({ order, onAction, onItemAction }) {
     return ThemeColors.red;
   };
 
-  const getStatusConfig = () => {
-    switch (order.status) {
-      case "New":
-        return {
-          bg: ThemeColors.statusNew + "20",
-          color: ThemeColors.statusNew,
-        };
-      case "Accepted":
-        return {
-          bg: ThemeColors.statusAccepted + "20",
-          color: ThemeColors.statusAccepted,
-        };
-      case "Preparing":
-        return {
-          bg: ThemeColors.statusPreparing + "20",
-          color: ThemeColors.statusPreparing,
-        };
-      case "Done":
-      case "Ready":
-        return {
-          bg: ThemeColors.statusReady + "20",
-          color: ThemeColors.statusReady,
-        };
-      case "Served":
-        return {
-          bg: ThemeColors.statusServed + "20",
-          color: ThemeColors.statusServed,
-        };
-      case "Completed":
-        return {
-          bg: ThemeColors.statusCompleted + "20",
-          color: ThemeColors.statusCompleted,
-        };
-      case "Cancelled":
-        return {
-          bg: ThemeColors.statusCancelled + "20",
-          color: ThemeColors.statusCancelled,
-        };
-      default:
-        return { bg: ThemeColors.bg, color: ThemeColors.textSecondary };
-    }
-  };
-
   const getNextItemAction = (status) => {
     switch (status) {
       case "Accepted":
@@ -93,110 +50,80 @@ export function OrderTicket({ order, onAction, onItemAction }) {
           color: ThemeColors.statusPreparing,
         };
       case "Done":
-        return null;
       case "Served":
-        return null; // No action needed for Served
+        return null;
       default:
         return null;
     }
   };
-  const statusCfg = getStatusConfig();
+  
   const isUrgent = order.priority === "High";
   const isOverdue = elapsed >= 15 * 60;
 
   const cardDynamicStyle = {
     backgroundColor: isOverdue ? ThemeColors.red + "15" : ThemeColors.surface,
-    borderWidth: isOverdue ? 2 : 1,
     borderColor: isOverdue ? ThemeColors.red : ThemeColors.borderSubtle,
   };
 
   return (
-    <View style={[styles.card, cardDynamicStyle]}>
+    <View style={[styles.orderCard, cardDynamicStyle]}>
       {/* ── Card Header ─────────────────────────── */}
       <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderMid}>
-          <Text weight="bold" style={styles.customerName}>
-            #{order.orderNumber} - {order.table || order.customer}
-          </Text>
+        <View style={styles.cardHeaderLeft}>
           <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: ThemeSpacing.sm,
-            }}
+            style={[
+              styles.iconBox,
+              { backgroundColor: ThemeColors.primary + "15" },
+            ]}
           >
-            <Text weight="regular" style={styles.orderType}>
-              {order.type} | Station: {order.station}
-            </Text>
+            <Utensils size={18} color={ThemeColors.primary} />
           </View>
-        </View>
-        <View
-          style={{
-            justifyContent: "center",
-            gap: 3,
-          }}
-        >
-          {order.status !== "Served" &&
-            order.status !== "Completed" &&
-            order.status !== "Cancelled" && (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <Clock size={16} color={getTimerColor()} />
-                <Text
-                  weight="bold"
-                  style={[
-                    styles.timeText,
-                    { color: getTimerColor(), fontSize: 15 },
-                  ]}
-                >
-                  {formatTime(elapsed)}
+          <View style={{ flex: 1 }}>
+            <Text weight="bold" style={styles.cardPlatform} numberOfLines={1}>
+              #{order.orderNumber} - {order.type}
+            </Text>
+            
+            {(order.status !== "Served" && order.status !== "Completed" && order.status !== "Cancelled") ? (
+              <View style={styles.cardTimeRow}>
+                <Clock size={12} color={getTimerColor()} />
+                <Text style={[styles.cardTime, { color: getTimerColor() }]} numberOfLines={1}>
+                  {formatTime(elapsed)} {isOverdue && " (Overdue)"}
                 </Text>
               </View>
-            )}
-          {(isUrgent || isOverdue) && (
-            <View
+            ) : null}
+          </View>
+        </View>
+
+        {(isUrgent || isOverdue) && (
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: ThemeColors.redDim },
+            ]}
+          >
+            <Text
               style={[
-                styles.statusBadge,
-                { backgroundColor: ThemeColors.redDim, paddingVertical: 2 },
+                styles.statusText,
+                { color: ThemeColors.red, fontWeight: "bold" },
               ]}
             >
-              <Text
-                style={[
-                  styles.statusText,
-                  { color: ThemeColors.red, fontWeight: "bold" },
-                ]}
-              >
-                {isOverdue ? "OVERDUE" : "URGENT"}
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* ── Items Header ────────────────────────── */}
-      <View style={styles.itemsHeader}>
-        <Text weight="semibold" style={[styles.itemsHeaderText, { flex: 1 }]}>
-          Items
-        </Text>
-        <Text
-          weight="semibold"
-          style={[
-            styles.itemsHeaderText,
-            styles.itemsQtyCol,
-            { flex: 1, textAlign: "left" },
-          ]}
-        >
-          Qty
-        </Text>
+              {isOverdue ? "OVERDUE" : "URGENT"}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* ── Items List ──────────────────────────── */}
-      <View style={{ flex: 1 }}>
+      <View style={styles.orderItemsList}>
+        <View style={styles.customerRow}>
+          <Text weight="medium" style={styles.cardCustomer}>
+            Table: {order.table || order.customer || "N/A"}
+          </Text>
+          <Text style={styles.stationText}>
+            Station: {order.station}
+          </Text>
+        </View>
+
         {["Starter", "Main", "Dessert", "Uncategorized"].map((courseName) => {
           const courseItems = order.items.filter(
             (item) => (item.course || "Uncategorized") === courseName,
@@ -205,27 +132,19 @@ export function OrderTicket({ order, onAction, onItemAction }) {
 
           return (
             <View key={courseName} style={styles.courseGroup}>
-              {courseItems.map((item, i) => (
-                <View key={`${item.id}-${i}`} style={styles.itemContainer}>
-                  <View style={styles.itemRow}>
-                    <Text
-                      weight="regular"
-                      style={[styles.itemName, { flex: 1 }]}
-                    >
-                      {item.name}
-                    </Text>
-                    <Text
-                      weight="semibold"
-                      style={[styles.itemQty, styles.itemsQtyCol]}
-                    >
-                      {item.qty}
-                    </Text>
-                    {(() => {
-                      const itemAction = getNextItemAction(
-                        item.status || "Accepted",
-                      );
-                      if (!itemAction) return <View style={styles.actionCol} />;
-                      return (
+              {courseItems.map((item, i) => {
+                const itemAction = getNextItemAction(item.status || "Accepted");
+                return (
+                  <View key={`${item.id}-${i}`} style={styles.itemContainer}>
+                    <View style={styles.orderItemRow}>
+                      <View style={styles.orderItemQtyBadge}>
+                        <Text weight="bold" style={styles.orderItemQtyText}>
+                          {item.qty}x
+                        </Text>
+                      </View>
+                      <Text style={styles.orderItemName}>{item.name}</Text>
+                      
+                      {itemAction ? (
                         <TouchableOpacity
                           style={[
                             styles.actionBtn,
@@ -240,29 +159,29 @@ export function OrderTicket({ order, onAction, onItemAction }) {
                             {itemAction.label}
                           </Text>
                         </TouchableOpacity>
-                      );
-                    })()}
+                      ) : null}
+                    </View>
+
+                    {/* Modifiers */}
+                    {item.modifiers && item.modifiers.length > 0 && (
+                      <View style={styles.modifiersList}>
+                        {item.modifiers.map((mod, mIdx) => (
+                          <Text key={mIdx} style={styles.modifierText}>
+                            + {mod}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Item Notes */}
+                    {item.note ? (
+                      <View style={styles.itemNoteBox}>
+                        <Text style={styles.itemNoteText}>Note: {item.note}</Text>
+                      </View>
+                    ) : null}
                   </View>
-
-                  {/* Modifiers */}
-                  {item.modifiers && item.modifiers.length > 0 && (
-                    <View style={styles.modifiersList}>
-                      {item.modifiers.map((mod, mIdx) => (
-                        <Text key={mIdx} style={styles.modifierText}>
-                          + {mod}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Item Notes */}
-                  {item.note ? (
-                    <View style={styles.itemNoteBox}>
-                      <Text style={styles.itemNoteText}>Note: {item.note}</Text>
-                    </View>
-                  ) : null}
-                </View>
-              ))}
+                );
+              })}
             </View>
           );
         })}
@@ -276,191 +195,180 @@ export function OrderTicket({ order, onAction, onItemAction }) {
         ) : null}
       </View>
 
-      {/* ── Actions ─────────────────────────────── */}
-      <View style={styles.actionsRow}>
-        {(() => {
-          if (order.status === "Completed" || order.status === "Cancelled")
-            return null;
+      {/* ── Footer / Action Button ──────────────── */}
+      {(() => {
+        if (order.status === "Completed" || order.status === "Cancelled")
+          return null;
 
-          const isAccepted = order.status === "Accepted";
-          const btnLabel = isAccepted ? "START PREP" : "BUMP TICKET";
-          const actionVal = isAccepted ? "Preparing" : "Completed";
-          const btnColor = isAccepted
-            ? ThemeColors.statusNew
-            : ThemeColors.statusReady;
+        const isAccepted = order.status === "Accepted";
+        const btnLabel = isAccepted ? "START PREP" : "BUMP TICKET";
+        const actionVal = isAccepted ? "Preparing" : "Completed";
+        const btnColor = isAccepted
+          ? ThemeColors.statusNew
+          : ThemeColors.statusReady;
 
-          return (
+        return (
+          <View style={styles.cardFooter}>
             <TouchableOpacity
-              style={{
-                paddingVertical: 10,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: btnColor,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-              }}
+              style={[styles.btnAction, { backgroundColor: btnColor }]}
+              activeOpacity={0.8}
               onPress={() => onAction(order.id, actionVal)}
             >
-              <Text
-                weight="bold"
-                style={[
-                  styles.actionBtnText,
-                  {
-                    fontSize: 14,
-                  },
-                ]}
-              >
+              <Text weight="bold" style={styles.btnActionText}>
                 {btnLabel}
               </Text>
             </TouchableOpacity>
-          );
-        })()}
-      </View>
+          </View>
+        );
+      })()}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    flex: 1,
+  orderCard: {
     backgroundColor: ThemeColors.surface,
-    borderRadius: ThemeRadius.lg,
-    padding: ThemeSpacing.lg,
-    shadowColor: ThemeColors.black,
-    shadowOffset: { width: 0, height: 1 },
+    borderRadius: ThemeRadius.xl,
+    marginBottom: ThemeSpacing.lg,
+    borderWidth: 1,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 2,
-    maxWidth: 400,
+    flex: 1,
   },
   cardHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: ThemeSpacing.sm,
-    marginBottom: 4,
+    backgroundColor: ThemeColors.bg,
+    padding: ThemeSpacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.borderSubtle,
   },
-  cardHeaderMid: {
+  cardHeaderLeft: {
     flex: 1,
-    gap: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+    marginRight: ThemeSpacing.sm,
   },
-  customerName: {
-    fontSize: 16,
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: ThemeRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardPlatform: {
+    fontSize: 18,
     color: ThemeColors.textPrimary,
   },
-  orderType: {
-    fontSize: 12,
+  cardTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  cardTime: {
+    fontSize: 13,
     color: ThemeColors.textMuted,
   },
   statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: ThemeSpacing.sm,
-    paddingVertical: 4,
-    borderRadius: ThemeRadius.xl,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: ThemeRadius.full,
   },
   statusText: {
-    fontSize: 11,
-    letterSpacing: 0.2,
+    fontSize: 12,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  dateTimeRow: {
+  orderItemsList: {
+    flex: 1,
+    padding: ThemeSpacing.lg,
+    gap: ThemeSpacing.md,
+  },
+  customerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: ThemeSpacing.sm,
+    marginBottom: ThemeSpacing.xs,
   },
-  timeText: {
-    fontSize: 13,
+  cardCustomer: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
   },
-  divider: {
-    height: 1,
-    backgroundColor: ThemeColors.borderSubtle,
-    marginVertical: ThemeSpacing.sm,
-  },
-  itemsHeader: {
-    flexDirection: "row",
-    paddingBottom: ThemeSpacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.borderSubtle,
-    marginBottom: ThemeSpacing.sm,
-  },
-  itemsHeaderText: {
+  stationText: {
     fontSize: 12,
     color: ThemeColors.textMuted,
-    textTransform: "uppercase",
   },
-  itemsQtyCol: {
-    width: 30,
-    textAlign: "right",
+  courseGroup: {
+    gap: ThemeSpacing.sm,
   },
-  actionCol: {
-    width: 100,
-    marginLeft: 12,
+  itemContainer: {
+    gap: 4,
+  },
+  orderItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
+  orderItemQtyBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: ThemeColors.borderSubtle,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  orderItemQtyText: {
+    fontSize: 13,
+    color: ThemeColors.textPrimary,
+  },
+  orderItemName: {
+    fontSize: 15,
+    color: ThemeColors.textSecondary,
+    flex: 1,
   },
   actionBtn: {
-    width: 100,
-    marginLeft: 12,
-    paddingVertical: 8,
-    borderRadius: 18,
+    width: 80,
+    paddingVertical: 6,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
   actionBtnText: {
     color: ThemeColors.white,
-    fontSize: 12,
-  },
-  courseGroup: {
-    gap: 4,
-  },
-  courseHeader: {
     fontSize: 11,
-    color: ThemeColors.textMuted,
-    marginTop: ThemeSpacing.xs,
+  },
+  modifiersList: {
+    paddingLeft: 44, // 28 (badge width) + 16 (gap)
+  },
+  modifierText: {
+    fontSize: 12,
+    color: ThemeColors.textSecondary,
   },
   itemNoteBox: {
-    marginTop: 4,
+    marginTop: 2,
     paddingLeft: ThemeSpacing.sm,
     borderLeftWidth: 2,
     borderLeftColor: ThemeColors.amber,
+    marginLeft: 44,
   },
   itemNoteText: {
     fontSize: 12,
     fontStyle: "italic",
     color: ThemeColors.amber,
   },
-  itemContainer: {
-    marginBottom: ThemeSpacing.sm,
-  },
-  itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  itemName: {
-    fontSize: 14,
-    color: ThemeColors.textPrimary,
-  },
-  itemQty: {
-    fontSize: 14,
-    color: ThemeColors.textPrimary,
-  },
-  modifiersList: {},
-  modifierText: {
-    fontSize: 12,
-    color: ThemeColors.textSecondary,
-  },
   notesBox: {
     flexDirection: "row",
     alignItems: "flex-start",
     backgroundColor: ThemeColors.amberDim,
     padding: ThemeSpacing.sm,
-    marginTop: ThemeSpacing.sm,
+    marginTop: ThemeSpacing.xs,
     borderRadius: ThemeRadius.md,
     gap: ThemeSpacing.sm,
   },
@@ -469,17 +377,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ThemeColors.amber,
   },
-  actionsRow: {
-    marginTop: ThemeSpacing.xs,
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: ThemeSpacing.lg,
+    paddingTop: ThemeSpacing.md,
+    borderTopWidth: 1,
+    borderTopColor: ThemeColors.borderSubtle,
+    backgroundColor: ThemeColors.bg + "50",
   },
-  btnPrimary: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: ThemeRadius.md,
+  btnAction: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.full,
+    width: "100%",
     alignItems: "center",
   },
-  btnPrimaryText: {
+  btnActionText: {
     color: ThemeColors.white,
-    fontSize: 13,
+    fontSize: 14,
   },
 });

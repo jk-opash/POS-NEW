@@ -7,7 +7,7 @@
  * @param {string} billingType - "print" | "ebill" | "none"
  */
 export function buildInvoiceFromOrder(order, posContext = {}, billingType = "none") {
-  const { activeTable, orderType, customer: posCustomer } = posContext;
+  const { activeTable, orderType, customer: posCustomer, platform } = posContext;
 
   const customer = order.customer ||
     posCustomer || { name: "Walk-in", phone: "", email: "" };
@@ -62,6 +62,7 @@ export function buildInvoiceFromOrder(order, posContext = {}, billingType = "non
     cashier: "Current User",
     table: activeTable ? activeTable.name : null,
     orderType: orderType || order.orderType || "Dine-In",
+    platform: platform || order.platform || null,
     customer,
     ebillContact: order.ebillContact || null,
     paymentMethod: paymentMethodStr,
