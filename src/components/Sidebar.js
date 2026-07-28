@@ -4,7 +4,6 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { usePathname, useRouter } from "expo-router";
 import {
   Check,
-  ChevronRight,
   LayoutGrid,
   MonitorPlay,
   Receipt,
@@ -240,30 +239,6 @@ export function Sidebar({ isCollapsed }) {
               </View>
             ))}
       </ScrollView>
-
-      {/* ── Branch Indicator ─────────────────────── */}
-      <TouchableOpacity
-        style={[
-          styles.branchIndicator,
-          isCollapsed && styles.branchIndicatorCollapsed,
-        ]}
-        onPress={() => setShowBranchModal(true)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.branchDot} />
-        {!isCollapsed && (
-          <>
-            <Text
-              weight="semibold"
-              style={styles.branchLabel}
-              numberOfLines={1}
-            >
-              {currentBranchObj?.name || "Select Branch"}
-            </Text>
-            <ChevronRight size={14} color={ThemeColors.textMuted} />
-          </>
-        )}
-      </TouchableOpacity>
 
       {/* ── Bottom: Settings ────────────── */}
       <View style={styles.bottomSection}>

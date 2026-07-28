@@ -12,8 +12,8 @@ import { POSCard } from "@/components/pos/POSCard";
 import { POSHeader } from "@/components/pos/POSHeader";
 import { SettlePaymentModal } from "@/components/pos/SettlePaymentModal";
 import { SplitPaymentModal } from "@/components/pos/SplitPaymentModal";
+import { TakeawayOrdersPanel } from "@/components/pos/TakeawayOrdersPanel";
 import { VariantSelectorModal } from "@/components/pos/VariantSelectorModal";
-import { TakeawayOrdersDrawer } from "@/components/pos/TakeawayOrdersDrawer";
 import { SUBCATEGORY_ICONS } from "@/constants/menu";
 import { useInvoices } from "@/context/InvoicesContext";
 import { useKDS } from "@/context/KDSContext";
@@ -83,10 +83,8 @@ export default function POSScreen() {
     updateCartItem,
     draftSplitState,
     clearCart,
-    setCustomer,
-    kots,
-    loadKOTForPayment,
-    takeawayQueue,
+    createNewTakeaway,
+    takeawaySessions,
   } = usePOS();
 
   const { tables, floors } = useTables();
@@ -111,17 +109,8 @@ export default function POSScreen() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
   const [showParkedSales, setShowParkedSales] = useState(false);
-  const [showTakeawayDrawer, setShowTakeawayDrawer] = useState(false);
   const [selectedServiceItem, setSelectedServiceItem] = useState(null); // stores productId for employee assignment
   const [variantSelectorItem, setVariantSelectorItem] = useState(null);
-
-  // takeawayKots is now driven by the persistent takeawayQueue from POSContext
-
-  const takeawayOrders = useMemo(() => {
-    return activeOrders.filter(
-      (o) => o.type === "Takeaway" && o.status !== "Completed" && o.status !== "Cancelled"
-    );
-  }, [activeOrders]);
   const [isCartVisible, setIsCartVisible] = useState(false);
   const [kotReceipt, setKotReceipt] = useState(null); // Store KOT data for receipt printing
   const [checkoutAction, setCheckoutAction] = useState("none"); // "print", "email", or "none"
@@ -131,6 +120,7 @@ export default function POSScreen() {
   const [showEBillCheckout, setShowEBillCheckout] = useState(false);
   const [completedOrder, setCompletedOrder] = useState(null);
   const [isBillOnly, setIsBillOnly] = useState(false);
+  const [isTakeawayPanelOpen, setIsTakeawayPanelOpen] = useState(false);
 
   const handlePrintBill = () => {
     const combinedCart = [...runningOrder, ...cart];
@@ -324,6 +314,30 @@ export default function POSScreen() {
     }
   };
 
+  const handleSendToKitchen = (options = { print: false }, isMobile = false) => {
+    if (orderType === "Takeaway") {
+      if (!customer || !customer.name || !customer.phone) {
+        showAlert("Customer Required", "Please enter customer name and phone number for takeaway orders before generating KOT.");
+        return;
+      }
+    }
+
+    const kot = generateKOT();
+    if (kot) {
+      addOrderToKDS(kot);
+      if (options.print) {
+        setKotReceipt(kot);
+      } else {
+        if (isMobile) setIsCartVisible(false);
+        showAlert(
+          "Sent to Kitchen",
+          "Order has been sent to KDS successfully.",
+          [{ text: "OK", onPress: () => !isMobile && router.push("/tables") }]
+        );
+      }
+    }
+  };
+
   return (
     <View style={styles.root}>
       <POSHeader
@@ -340,8 +354,8 @@ export default function POSScreen() {
         isRetail={isRetail}
         isScannerConnected={isScannerConnected}
         onSimulateScan={() => simulateScan("SKU001")}
-        onTakeawayOrdersPress={() => setShowTakeawayDrawer(true)}
-        takeawayCount={takeawayQueue.length}
+        onTakeawayOrdersPress={() => setIsTakeawayPanelOpen(true)}
+        activeTakeawaysCount={Object.keys(takeawaySessions || {}).length}
       />
 
       <View
@@ -441,6 +455,7 @@ export default function POSScreen() {
             onSelectTable={setActiveTable}
             orderType={orderType}
             onOrderTypeChange={setOrderType}
+            onNewTakeaway={createNewTakeaway}
             totals={totals}
             parkedSales={parkedSales}
             taxRate={usePOS().taxRate}
@@ -467,29 +482,9 @@ export default function POSScreen() {
                 "The sale has been successfully parked.",
               );
             }}
-            onSendToKitchen={(options = { print: false }) => {
-              if (options?.customer) {
-                setCustomer(options.customer);
-              }
-              const kot = generateKOT();
-              if (kot) {
-                addOrderToKDS(kot);
-                if (options.print) {
-                  setKotReceipt(kot);
-                } else {
-                  showAlert(
-                    "Sent to Kitchen",
-                    "Order has been sent to KDS successfully.",
-                    [{ text: "OK", onPress: () => router.push("/tables") }],
-                  );
-                }
-              }
-            }}
+            onSendToKitchen={(options) => handleSendToKitchen(options, false)}
             onCheckout={(options) => {
               if (isSmallScreen) setIsCartVisible(false);
-              if (options?.customer) {
-                setCustomer(options.customer);
-              }
               const action = options?.action || "none";
               if (action === "ebill") {
                 setShowEBillCheckout(true);
@@ -544,6 +539,7 @@ export default function POSScreen() {
           onSelectTable={setActiveTable}
           orderType={orderType}
           onOrderTypeChange={setOrderType}
+          onNewTakeaway={createNewTakeaway}
           totals={totals}
           parkedSales={parkedSales}
           taxRate={usePOS().taxRate}
@@ -571,28 +567,9 @@ export default function POSScreen() {
               "The sale has been successfully parked.",
             );
           }}
-          onSendToKitchen={(options = { print: false }) => {
-            if (options?.customer) {
-              setCustomer(options.customer);
-            }
-            const kot = generateKOT();
-            if (kot) {
-              addOrderToKDS(kot);
-              if (options.print) {
-                setKotReceipt(kot);
-              } else {
-                showAlert(
-                  "Sent to Kitchen",
-                  "Order has been sent to KDS successfully.",
-                );
-              }
-            }
-          }}
+          onSendToKitchen={(options) => handleSendToKitchen(options, true)}
           onCheckout={(options) => {
             if (isSmallScreen) setIsCartVisible(false);
-            if (options?.customer) {
-              setCustomer(options.customer);
-            }
             const action = options?.action || "none";
             if (action === "ebill") {
               setShowEBillCheckout(true);
@@ -667,16 +644,6 @@ export default function POSScreen() {
           }}
         />
       )}
-
-      <TakeawayOrdersDrawer
-        visible={showTakeawayDrawer}
-        onClose={() => setShowTakeawayDrawer(false)}
-        orders={takeawayQueue}
-        onSelectOrder={(kotId) => {
-          loadKOTForPayment(kotId);
-          setShowTakeawayDrawer(false);
-        }}
-      />
 
       {showSettlePayment && (
         <SettlePaymentModal
@@ -763,6 +730,10 @@ export default function POSScreen() {
             assignEmployeeToItem(selectedServiceItem, emp);
           }
         }}
+      />
+      <TakeawayOrdersPanel 
+        visible={isTakeawayPanelOpen}
+        onClose={() => setIsTakeawayPanelOpen(false)}
       />
     </View>
   );

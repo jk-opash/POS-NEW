@@ -14,6 +14,8 @@ const POSContext = createContext();
 export function POSProvider({ children }) {
   const { updateTableStatus } = useTables();
   const [tableSessions, setTableSessions] = useState({}); // Stores states per table
+  const [takeawaySessions, setTakeawaySessions] = useState({}); // Stores multiple takeaway sessions
+  const [activeTakeawayId, setActiveTakeawayId] = useState(null);
   const [cart, setCart] = useState([]); // { id: uniqueId, product, quantity, discount, notes, variant, addons: [] }
   const [runningOrder, setRunningOrder] = useState([]); // items already sent to KDS (KOT generated)
   const [kots, setKots] = useState([]); // [{ kotNumber, time, items, status }]
@@ -29,12 +31,11 @@ export function POSProvider({ children }) {
   const [compoundingTaxes, setCompoundingTaxes] = useState([]); // [{name, rate, compoundsOn}]
   const [parkedSales, setParkedSales] = useState([]); // Saved/parked tickets
   const [voidLog, setVoidLog] = useState([]); // Audit log for voids
-  const [takeawayQueue, setTakeawayQueue] = useState([]); // Persistent list of active takeaway orders
   
   // Track sequential KOT number
   const [lastKOTNumber, setLastKOTNumber] = useState(0);
 
-  const setActiveTable = useCallback((newTable) => {
+  const saveCurrentSession = useCallback(() => {
     if (activeTable) {
       setTableSessions((prev) => ({
         ...prev,
@@ -48,7 +49,74 @@ export function POSProvider({ children }) {
           draftSplitState,
         },
       }));
+    } else if (activeTakeawayId) {
+      setTakeawaySessions((prev) => ({
+        ...prev,
+        [activeTakeawayId]: {
+          cart,
+          runningOrder,
+          kots,
+          customer,
+          orderType,
+          globalDiscount,
+          draftSplitState,
+          createdAt: prev[activeTakeawayId]?.createdAt || new Date().toISOString(),
+        },
+      }));
     }
+  }, [
+    activeTable,
+    activeTakeawayId,
+    cart,
+    runningOrder,
+    kots,
+    customer,
+    orderType,
+    globalDiscount,
+    draftSplitState,
+  ]);
+
+  const createNewTakeaway = useCallback(() => {
+    saveCurrentSession();
+    setActiveTableInternal(null);
+    setActiveTakeawayId(null);
+    setCart([]);
+    setRunningOrder([]);
+    setKots([]);
+    setCustomer(null);
+    setOrderType("Takeaway");
+    setGlobalDiscount({ type: "none", value: 0 });
+    setDraftSplitState(null);
+  }, [saveCurrentSession]);
+
+  const setActiveTakeaway = useCallback((id) => {
+    saveCurrentSession();
+    setActiveTableInternal(null);
+    setActiveTakeawayId(id);
+    setTakeawaySessions((prev) => {
+      const session = prev[id] || {
+        cart: [],
+        runningOrder: [],
+        kots: [],
+        customer: null,
+        orderType: "Takeaway",
+        globalDiscount: { type: "none", value: 0 },
+        draftSplitState: null,
+      };
+      setCart(session.cart);
+      setRunningOrder(session.runningOrder);
+      setKots(session.kots);
+      setCustomer(session.customer);
+      setOrderType(session.orderType);
+      setGlobalDiscount(session.globalDiscount);
+      setDraftSplitState(session.draftSplitState);
+      return prev;
+    });
+  }, [saveCurrentSession]);
+
+  const setActiveTable = useCallback((newTable) => {
+    saveCurrentSession();
+    setActiveTakeawayId(null);
 
     if (newTable) {
       setTableSessions((prev) => {
@@ -79,9 +147,8 @@ export function POSProvider({ children }) {
       setGlobalDiscount({ type: "none", value: 0 });
       setDraftSplitState(null);
     }
-
     setActiveTableInternal(newTable);
-  }, [activeTable, cart, runningOrder, kots, customer, orderType, globalDiscount, draftSplitState]);
+  }, [saveCurrentSession]);
 
   const addToCart = (product, variant = null, addons = [], quantity = 1, notes = "") => {
     if (product.inventory?.currentStock <= 0) {
@@ -158,19 +225,10 @@ export function POSProvider({ children }) {
       items: [...cart],
       status: "Sent",
       table: activeTable,
-      orderType,
-      customer,
+      orderType
     };
     
     setKots(prev => [...prev, newKOT]);
-    
-    // Add to global takeaway queue if Takeaway order
-    if (orderType === "Takeaway") {
-      setTakeawayQueue(prev => [
-        ...prev,
-        { ...newKOT, customer }
-      ]);
-    }
     
     // Update table status if Dine-In
     if (activeTable) {
@@ -183,7 +241,26 @@ export function POSProvider({ children }) {
       kotId: newKOT.id,
       kotNumber: newKOT.kotNumber
     }));
+    
     setRunningOrder(prev => [...prev, ...taggedCart]);
+
+    if (orderType === "Takeaway" && !activeTakeawayId) {
+      const newId = customer?.name ? `Takeaway-${customer.name.replace(/\s+/g, '-')}` : `Takeaway-${Math.floor(Date.now() / 1000)}`;
+      setActiveTakeawayId(newId);
+      setTakeawaySessions(prev => ({
+        ...prev,
+        [newId]: {
+          cart: [],
+          runningOrder: [...runningOrder, ...taggedCart],
+          kots: [...kots, newKOT],
+          customer,
+          orderType: "Takeaway",
+          globalDiscount,
+          draftSplitState,
+          createdAt: new Date().toISOString()
+        }
+      }));
+    }
     
     // Clear current cart (unplaced items)
     setCart([]);
@@ -250,17 +327,19 @@ export function POSProvider({ children }) {
         delete next[activeTable.id];
         return next;
       });
-    }
-    // Remove any completed takeaway orders from the queue
-    const kotIds = new Set(kots.map(k => k.id));
-    if (kotIds.size > 0) {
-      setTakeawayQueue(prev => prev.filter(o => !kotIds.has(o.id)));
+    } else if (activeTakeawayId) {
+      setTakeawaySessions((prev) => {
+        const next = { ...prev };
+        delete next[activeTakeawayId];
+        return next;
+      });
     }
     setCart([]);
     setRunningOrder([]);
     setKots([]);
     setCustomer(null);
     setActiveTableInternal(null);
+    setActiveTakeawayId(null);
     setGlobalDiscount({ type: "none", value: 0 });
     setOrderType("Takeaway");
     setDraftSplitState(null);
@@ -407,6 +486,11 @@ export function POSProvider({ children }) {
         kots: [...kots],
         customer,
         activeTable,
+        setActiveTable,
+        takeawaySessions,
+        activeTakeawayId,
+        createNewTakeaway,
+        setActiveTakeaway,
         orderType,
         globalDiscount,
         totals,
@@ -520,21 +604,6 @@ export function POSProvider({ children }) {
     setOpenTabs((prev) => prev.filter((t) => t.id !== tabId));
   };
 
-  const loadKOTForPayment = (kotId) => {
-    // First try the persistent takeawayQueue, then fall back to live kots
-    const kot = takeawayQueue.find((k) => k.id === kotId) || kots.find((k) => k.id === kotId);
-    if (!kot) return;
-    setRunningOrder(kot.items.map(item => ({ ...item, kotId: kot.id, kotNumber: kot.kotNumber })));
-    setCart([]);
-    if (kot.customer) setCustomer(kot.customer);
-    setOrderType(kot.orderType || "Takeaway");
-    setActiveTableInternal(null); // Clear any active table
-  };
-
-  const removeTakeawayOrder = (kotId) => {
-    setTakeawayQueue(prev => prev.filter(o => o.id !== kotId));
-  };
-
   const injectTableOrder = (tableId, orderObj) => {
     setTableSessions((prev) => {
       const session = prev[tableId] || {
@@ -593,6 +662,8 @@ export function POSProvider({ children }) {
     kots,
     customer,
     activeTable,
+    takeawaySessions,
+    activeTakeawayId,
     orderType,
     globalDiscount,
     taxRate,
@@ -600,12 +671,13 @@ export function POSProvider({ children }) {
     totals,
     openTabs,
     parkedSales,
-    takeawayQueue,
     voidLog,
     draftSplitState,
     setDraftSplitState,
     setCustomer,
     setActiveTable,
+    createNewTakeaway,
+    setActiveTakeaway,
     setOrderType,
     setGlobalDiscount,
     setTaxRate,
@@ -619,8 +691,6 @@ export function POSProvider({ children }) {
     clearCart,
     holdCart,
     restoreTab,
-    loadKOTForPayment,
-    removeTakeawayOrder,
     parkSale,
     restoreParkedSale,
     deleteParkedSale,
