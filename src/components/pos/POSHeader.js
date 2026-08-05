@@ -1,9 +1,13 @@
-import { Dropdown } from "@/components/ui/Dropdown";
-import { Text } from "@/components/ui/Text";
-import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Bell, Menu, ScanLine, Search, ShoppingBag } from "lucide-react-native";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Bell, Menu, ScanLine, ShoppingBag } from "lucide-react-native";
+import { Text } from "@/components/ui/Text";
+import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
+import { Dropdown } from "@/components/ui/Dropdown";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { Search } from "lucide-react-native";
+import { TextInput } from "react-native";
 
 export function POSHeader({
   isDesktop,
@@ -17,7 +21,7 @@ export function POSHeader({
   isScannerConnected,
   onSimulateScan,
   onTakeawayOrdersPress,
-  takeawayCount = 0,
+  activeTakeawaysCount = 0,
 }) {
   return (
     <SafeAreaView edges={["top"]} style={styles.headerSafe}>
@@ -32,6 +36,15 @@ export function POSHeader({
         </View>
 
         <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.takeawayBtn} onPress={onTakeawayOrdersPress}>
+            <ShoppingBag size={20} color={ThemeColors.textPrimary} />
+            <Text style={styles.takeawayBtnText} weight="medium">Takeaways</Text>
+            {activeTakeawaysCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText} weight="bold">{activeTakeawaysCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={24} color={ThemeColors.textSecondary} />
             <View style={styles.notifDot} />
@@ -78,39 +91,6 @@ export function POSHeader({
             />
           </TouchableOpacity>
         )}
-
-        <TouchableOpacity
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: ThemeColors.primary,
-            paddingHorizontal: ThemeSpacing.md,
-            paddingVertical: 10,
-            borderRadius: ThemeRadius.md,
-          }}
-          onPress={onTakeawayOrdersPress}
-        >
-          <ShoppingBag size={18} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={{ color: "#fff", fontWeight: "bold" }}>
-            Takeaway Orders
-          </Text>
-          {takeawayCount > 0 && (
-            <View style={{
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              minWidth: 20,
-              height: 20,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginLeft: 6,
-              paddingHorizontal: 4,
-            }}>
-              <Text style={{ color: ThemeColors.primary, fontSize: 11, fontWeight: 'bold' }}>
-                {takeawayCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -147,6 +127,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: ThemeSpacing.lg,
+  },
+  takeawayBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.sm,
+    backgroundColor: ThemeColors.background,
+    paddingHorizontal: ThemeSpacing.md,
+    paddingVertical: ThemeSpacing.sm,
+    borderRadius: ThemeRadius.md,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
+    position: "relative",
+  },
+  takeawayBtnText: {
+    color: ThemeColors.textPrimary,
+    fontSize: 14,
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: ThemeColors.red,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: ThemeColors.surface,
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 10,
   },
   notifBtn: { position: "relative", padding: 4 },
   notifDot: {

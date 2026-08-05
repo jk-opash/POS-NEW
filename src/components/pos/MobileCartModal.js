@@ -18,6 +18,7 @@ export function MobileCartModal({
   onSelectTable,
   orderType,
   onOrderTypeChange,
+  onNewTakeaway,
   totals,
   openTabs,
   parkedSales,
@@ -52,6 +53,7 @@ export function MobileCartModal({
           onSelectTable={onSelectTable}
           orderType={orderType}
           onOrderTypeChange={onOrderTypeChange}
+          onNewTakeaway={onNewTakeaway}
           totals={totals}
           openTabs={openTabs}
           parkedSales={parkedSales}

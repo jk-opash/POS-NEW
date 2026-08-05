@@ -1,28 +1,10 @@
 import { Sidebar } from "@/components/Sidebar";
-import { BranchesProvider } from "@/context/BranchesContext";
-import { HardwareProvider } from "@/context/HardwareContext";
-import { InventoryProvider } from "@/context/InventoryContext";
-import { InvoicesProvider } from "@/context/InvoicesContext";
-import { KDSProvider } from "@/context/KDSContext";
-import { MenuProvider } from "@/context/MenuContext";
-import { OrdersProvider } from "@/context/OrdersContext";
-import { PermissionsProvider } from "@/context/PermissionsContext";
-import { POSProvider } from "@/context/POSContext";
-
-import { PurchaseOrderProvider } from "@/context/PurchaseOrderContext";
-import { SettingsProvider } from "@/context/SettingsContext";
-import { ShiftProvider } from "@/context/ShiftContext";
-import { StaffProvider, useStaff } from "@/context/StaffContext";
-import { SupplierProvider } from "@/context/SupplierContext";
-import { SupportProvider } from "@/context/SupportContext";
-import { TablesProvider } from "@/context/TablesContext";
-import { TaxProvider } from "@/context/TaxContext";
-import { DiscountProvider } from "@/context/DiscountContext";
-import { OnlineIntegrationProvider } from "@/context/OnlineIntegrationContext";
-import { BillingConfigProvider } from "@/context/BillingConfigContext";
-import { PrinterConfigProvider } from "@/context/PrinterConfigContext";
+import { useStaff } from "@/context/StaffContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors } from "@/theme/theme";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor } from "@/store";
 import {
   Outfit_400Regular,
   Outfit_500Medium,
@@ -76,85 +58,47 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <MenuProvider>
-        <OrdersProvider>
-          <TablesProvider>
-            <BranchesProvider>
-              <KDSProvider>
-                <POSProvider>
-                  <StaffProvider>
-                    <SettingsProvider>
-                      <SupplierProvider>
-                        <PurchaseOrderProvider>
-                          <InventoryProvider>
-                            <SupportProvider>
-                              <InvoicesProvider>
-                                <HardwareProvider>
-                                  <ShiftProvider>
-                                    <PermissionsProvider>
-                                      <TaxProvider>
-                                        <DiscountProvider>
-                                          <OnlineIntegrationProvider>
-                                            <BillingConfigProvider>
-                                              <PrinterConfigProvider>
-                                                <AuthGuard>
-                                        <View
-                                          style={{
-                                            flex: 1,
-                                            backgroundColor: ThemeColors.bg,
-                                          }}
-                                        >
-                                          <Drawer
-                                            drawerContent={(props) => (
-                                              <Sidebar
-                                                {...props}
-                                                isCollapsed={false}
-                                              />
-                                            )}
-                                            screenOptions={{
-                                              headerShown: false,
-                                              drawerType: drawerType,
-                                              drawerStyle: hideDrawer
-                                                ? { display: "none", width: 0 }
-                                                : {
-                                                    width: drawerWidth,
-                                                    backgroundColor:
-                                                      "transparent",
-                                                    borderRightWidth: 0,
-                                                    elevation: 0,
-                                                    shadowOpacity: 0,
-                                                  },
-                                              sceneContainerStyle: {
-                                                backgroundColor: ThemeColors.bg,
-                                              },
-                                              overlayColor: "rgba(0,0,0,0.5)",
-                                            }}
-                                          />
-                                        </View>
-                                                </AuthGuard>
-                                              </PrinterConfigProvider>
-                                            </BillingConfigProvider>
-                                          </OnlineIntegrationProvider>
-                                        </DiscountProvider>
-                                      </TaxProvider>
-                                    </PermissionsProvider>
-                                  </ShiftProvider>
-                                </HardwareProvider>
-                              </InvoicesProvider>
-                            </SupportProvider>
-                          </InventoryProvider>
-                        </PurchaseOrderProvider>
-                      </SupplierProvider>
-                    </SettingsProvider>
-                  </StaffProvider>
-                </POSProvider>
-              </KDSProvider>
-            </BranchesProvider>
-          </TablesProvider>
-        </OrdersProvider>
-      </MenuProvider>
-    </GestureHandlerRootView>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <AuthGuard>
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: ThemeColors.bg,
+              }}
+            >
+              <Drawer
+                drawerContent={(props) => (
+                  <Sidebar
+                    {...props}
+                    isCollapsed={false}
+                  />
+                )}
+                screenOptions={{
+                  headerShown: false,
+                  drawerType: drawerType,
+                  drawerStyle: hideDrawer
+                    ? { display: "none", width: 0 }
+                    : {
+                        width: drawerWidth,
+                        backgroundColor:
+                          "transparent",
+                        borderRightWidth: 0,
+                        elevation: 0,
+                        shadowOpacity: 0,
+                      },
+                  sceneContainerStyle: {
+                    backgroundColor: ThemeColors.bg,
+                  },
+                  overlayColor: "rgba(0,0,0,0.5)",
+                }}
+              />
+            </View>
+          </AuthGuard>
+        </GestureHandlerRootView>
+      </PersistGate>
+    </Provider>
   );
 }
 

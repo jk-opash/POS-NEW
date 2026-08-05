@@ -1,79 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { openShift as openShiftAction, closeShift as closeShiftAction, addCashTransaction as addCashTransactionAction } from '../store/slices/shiftSlice';
 
-const ShiftContext = createContext();
+export function useShift() {
+  const dispatch = useDispatch();
+  const { activeShift, shiftHistory } = useSelector(state => state.shift);
 
-export function ShiftProvider({ children }) {
-  const [activeShift, setActiveShift] = useState(null);
-  
-  // Historical shifts can be saved here
-  const [shiftHistory, setShiftHistory] = useState([]);
+  const openShift = (startingCash, employee) => dispatch(openShiftAction({ startingCash, employee }));
+  const closeShift = (actualCash, notes = "") => dispatch(closeShiftAction({ actualCash, notes }));
+  const addCashTransaction = (amount, type = 'sale') => dispatch(addCashTransactionAction({ amount, type }));
 
-  const openShift = (startingCash, employee) => {
-    setActiveShift({
-      id: `SHIFT-${Date.now()}`,
-      employee: employee?.firstName || 'Staff',
-      openedAt: new Date().toISOString(),
-      startingCash: startingCash,
-      expectedCash: startingCash,
-      cashSales: 0,
-      cashRefunds: 0,
-      payInsOuts: 0,
-    });
-  };
-
-  const closeShift = (actualCash, notes = "") => {
-    if (!activeShift) return;
-    
-    const closedShift = {
-      ...activeShift,
-      closedAt: new Date().toISOString(),
-      actualCash,
-      discrepancy: actualCash - activeShift.expectedCash,
-      notes
-    };
-    
-    setShiftHistory(prev => [...prev, closedShift]);
-    setActiveShift(null);
-  };
-
-  const addCashTransaction = (amount, type = 'sale') => {
-    if (!activeShift) return;
-
-    setActiveShift(prev => {
-      let newExpected = prev.expectedCash;
-      let newSales = prev.cashSales;
-      let newRefunds = prev.cashRefunds;
-
-      if (type === 'sale') {
-        newExpected += amount;
-        newSales += amount;
-      } else if (type === 'refund') {
-        newExpected -= amount;
-        newRefunds += amount;
-      }
-
-      return {
-        ...prev,
-        expectedCash: newExpected,
-        cashSales: newSales,
-        cashRefunds: newRefunds,
-      };
-    });
-  };
-
-  return (
-    <ShiftContext.Provider
-      value={{
-        activeShift,
-        shiftHistory,
-        openShift,
-        closeShift,
-        addCashTransaction
-      }}
-    >
-      {children}
-    </ShiftContext.Provider>
-  );
+  return { activeShift, shiftHistory, openShift, closeShift, addCashTransaction };
 }
-
-export const useShift = () => useContext(ShiftContext);

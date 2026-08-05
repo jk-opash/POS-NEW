@@ -1,36 +1,28 @@
-import React, { createContext, useContext, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { 
+  setOrders as setOrdersAction, 
+  addOrder as addOrderAction, 
+  updateOrderStatus as updateOrderStatusAction, 
+  updateOrder as updateOrderAction, 
+  voidItem as voidItemAction 
+} from '../store/slices/ordersSlice';
 
-const OrdersContext = createContext();
+export function useOrders() {
+  const dispatch = useDispatch();
+  const orders = useSelector(state => state.orders.orders);
 
-export function OrdersProvider({ children }) {
-  const [orders, setOrders] = useState([]);
+  const setOrders = (ordersData) => dispatch(setOrdersAction(ordersData));
+  const addOrder = (orderData) => dispatch(addOrderAction(orderData));
+  const updateOrderStatus = (orderId, newStatus) => dispatch(updateOrderStatusAction({ orderId, newStatus }));
+  const updateOrder = (orderId, updatedFields) => dispatch(updateOrderAction({ orderId, updatedFields }));
+  const voidItem = (orderId, itemIndex) => dispatch(voidItemAction({ orderId, itemIndex }));
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+  return {
+    orders,
+    setOrders,
+    updateOrderStatus,
+    voidItem,
+    addOrder,
+    updateOrder
   };
-
-  const addOrder = (orderData) => {
-    setOrders(prev => [orderData, ...prev]);
-  };
-
-  const updateOrder = (orderId, updatedFields) => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, ...updatedFields } : o));
-  };
-
-  const voidItem = (orderId, itemIndex) => {
-    setOrders(prev => prev.map(o => {
-      if (o.id !== orderId) return o;
-      const newItems = [...o.items];
-      newItems[itemIndex] = { ...newItems[itemIndex], voided: true };
-      return { ...o, items: newItems };
-    }));
-  };
-
-  return (
-    <OrdersContext.Provider value={{ orders, setOrders, updateOrderStatus, voidItem, addOrder, updateOrder }}>
-      {children}
-    </OrdersContext.Provider>
-  );
 }
-
-export const useOrders = () => useContext(OrdersContext);

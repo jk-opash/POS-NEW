@@ -1,41 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
-
-const PrinterConfigContext = createContext();
+import { useSelector, useDispatch } from 'react-redux';
+import { updatePrinterConfig as updatePrinterConfigAction } from '../store/slices/hardwareSlice';
 
 export function usePrinterConfig() {
-  const context = useContext(PrinterConfigContext);
-  if (!context) {
-    throw new Error('usePrinterConfig must be used within a PrinterConfigProvider');
-  }
-  return context;
-}
-
-const DEFAULT_PRINTER_CONFIG = {
-  paperSize: '80mm', // '58mm' | '80mm'
-  headerText: 'MY AWESOME CAFE\n123 Coffee Street, Bean City\nGST: 22AAAAA0000A1Z5',
-  footerText: 'Thank you for your visit!\nPlease come again.',
-  printKot: true,
-  kotRouting: false, // Category-based routing (e.g., drinks to bar printer)
-};
-
-export function PrinterConfigProvider({ children }) {
-  const [printerConfig, setPrinterConfig] = useState(DEFAULT_PRINTER_CONFIG);
+  const dispatch = useDispatch();
+  const config = useSelector(state => state.hardware.printerConfig);
 
   const updateConfig = (key, value) => {
-    setPrinterConfig((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    dispatch(updatePrinterConfigAction({ key, value }));
   };
 
-  return (
-    <PrinterConfigContext.Provider
-      value={{
-        config: printerConfig,
-        updateConfig,
-      }}
-    >
-      {children}
-    </PrinterConfigContext.Provider>
-  );
+  return { config, updateConfig };
 }

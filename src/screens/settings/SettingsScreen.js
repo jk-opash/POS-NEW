@@ -16,6 +16,7 @@ import {
   MapPin,
   Menu,
   Package,
+  Percent,
   Printer,
   Receipt,
   Settings,
@@ -25,19 +26,12 @@ import {
 } from "lucide-react-native";
 
 // ── Tab screens ───────────────────────────────────────────────────────────────
-import { BranchSettings } from "@/components/settings/tabs/BranchSettings";
 import { BusinessSettings } from "@/components/settings/tabs/BusinessSettings";
-import { DataManagementSettings } from "@/components/settings/tabs/DataManagementSettings";
-import { HelpSettings } from "@/components/settings/tabs/HelpSettings";
-import { InventorySettings } from "@/components/settings/tabs/InventorySettings";
-import { NotificationSettings } from "@/components/settings/tabs/NotificationSettings";
-import { ProductSettings } from "@/components/settings/tabs/ProductSettings";
 import { ReceiptInvoiceSettings } from "@/components/settings/tabs/ReceiptInvoiceSettings";
 import { RestaurantSettings } from "@/components/settings/tabs/RestaurantSettings";
 import { RolesPermissionsSettings } from "@/components/settings/tabs/RolesPermissionsSettings";
-import { SecuritySettings } from "@/components/settings/tabs/SecuritySettings";
-import { SubscriptionSettings } from "@/components/settings/tabs/SubscriptionSettings";
 import { SystemPreferences } from "@/components/settings/tabs/SystemPreferences";
+import { TaxesSettings } from "@/components/settings/tabs/TaxesSettings";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const GROUPS = [
@@ -51,28 +45,16 @@ const GROUPS = [
         description: "Store name, logo & contact",
       },
       {
-        id: "branch",
-        label: "Branch",
-        icon: MapPin,
-        description: "Manage locations",
+        id: "taxes",
+        label: "Taxes & Fees",
+        icon: Percent,
+        description: "Tax rates & charges",
       },
       {
         id: "receipt",
-        label: "Receipts",
+        label: "Receipt & Hardware",
         icon: Printer,
-        description: "Receipt & invoice layout",
-      },
-      {
-        id: "inventory",
-        label: "Inventory",
-        icon: Package,
-        description: "Stock & warehouse",
-      },
-      {
-        id: "product",
-        label: "Products",
-        icon: Box,
-        description: "Catalog & variants",
+        description: "Printers & invoice layout",
       },
       {
         id: "restaurant",
@@ -86,46 +68,16 @@ const GROUPS = [
     name: "System",
     items: [
       {
-        id: "notification",
-        label: "Notifications",
-        icon: Bell,
-        description: "Alerts & push",
-      },
-      {
         id: "roles",
         label: "Roles & Perms",
         icon: Shield,
-        description: "Access control",
-      },
-      {
-        id: "security",
-        label: "Security",
-        icon: Shield,
-        description: "Password & 2FA",
-      },
-      {
-        id: "subscription",
-        label: "Subscription",
-        icon: CreditCard,
-        description: "Plan & billing",
-      },
-      {
-        id: "data",
-        label: "Data",
-        icon: Database,
-        description: "Import, export & clean",
+        description: "Staff access control",
       },
       {
         id: "system",
         label: "System",
         icon: Settings,
         description: "App preferences",
-      },
-      {
-        id: "help",
-        label: "Help Center",
-        icon: HelpCircle,
-        description: "Docs & support",
       },
     ],
   },
@@ -138,30 +90,16 @@ function renderContent(activeTab) {
   switch (activeTab) {
     case "business":
       return <BusinessSettings />;
-    case "branch":
-      return <BranchSettings />;
+    case "taxes":
+      return <TaxesSettings />;
     case "receipt":
       return <ReceiptInvoiceSettings />;
-    case "inventory":
-      return <InventorySettings />;
-    case "product":
-      return <ProductSettings />;
     case "restaurant":
       return <RestaurantSettings />;
-    case "notification":
-      return <NotificationSettings />;
     case "roles":
       return <RolesPermissionsSettings />;
-    case "security":
-      return <SecuritySettings />;
-    case "subscription":
-      return <SubscriptionSettings />;
-    case "data":
-      return <DataManagementSettings />;
     case "system":
       return <SystemPreferences />;
-    case "help":
-      return <HelpSettings />;
     default:
       return null;
   }

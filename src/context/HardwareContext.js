@@ -1,33 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { setHardwareStatus } from '../store/slices/hardwareSlice';
 import hardwareManager from "@/hardware/HardwareManager";
 
-const HardwareContext = createContext();
-
 export function useHardware() {
-  const context = useContext(HardwareContext);
-  if (!context) {
-    throw new Error("useHardware must be used within a HardwareProvider");
-  }
-  return context;
-}
-
-export function HardwareProvider({ children }) {
-  const [hardwareStatus, setHardwareStatus] = useState(hardwareManager.status);
-
-  useEffect(() => {
-    // Subscribe to hardware manager state changes
-    const unsubscribe = hardwareManager.subscribe((status) => {
-      setHardwareStatus({ ...status });
-    });
-
-    // Auto-connect mocks on startup
-    hardwareManager.connectAll();
-
-    return () => {
-      unsubscribe();
-      hardwareManager.disconnectAll();
-    };
-  }, []);
+  const dispatch = useDispatch();
+  const hardwareStatus = useSelector(state => state.hardware.hardwareStatus);
 
   const printReceipt = async (receiptData) => {
     return await hardwareManager.printReceipt(receiptData);
@@ -41,18 +19,30 @@ export function HardwareProvider({ children }) {
     hardwareManager.simulateScan(barcode);
   };
 
-  return (
-    <HardwareContext.Provider
-      value={{
-        hardwareStatus,
-        printReceipt,
-        openCashDrawer,
-        simulateBarcodeScan,
-        // Optional: raw manager access if needed
-        manager: hardwareManager,
-      }}
-    >
-      {children}
-    </HardwareContext.Provider>
-  );
+  return {
+    hardwareStatus,
+    printReceipt,
+    openCashDrawer,
+    simulateBarcodeScan,
+    manager: hardwareManager,
+  };
+}
+
+export function HardwareSync() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const unsubscribe = hardwareManager.subscribe((status) => {
+      dispatch(setHardwareStatus({ ...status }));
+    });
+
+    hardwareManager.connectAll();
+
+    return () => {
+      unsubscribe();
+      hardwareManager.disconnectAll();
+    };
+  }, [dispatch]);
+
+  return null;
 }

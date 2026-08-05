@@ -1,5 +1,6 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
+import { usePOS } from "@/context/POSContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
 import {
@@ -9,6 +10,7 @@ import {
   Info,
   PauseCircle,
   Percent,
+  Plus,
   Printer,
   Utensils,
   User,
@@ -55,6 +57,7 @@ export function CartPanel({
   onSendToKitchen,
   onCheckout,
   onUpdateCartItem,
+  onNewTakeaway,
   onPrintBill,
 }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
@@ -62,8 +65,7 @@ export function CartPanel({
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [selectedItemForNote, setSelectedItemForNote] = useState(null);
   const [taxDetailsVisible, setTaxDetailsVisible] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerContact, setCustomerContact] = useState("");
+  const { customer, setCustomer } = usePOS();
 
   const [expandedSections, setExpandedSections] = useState({
     "header-cart": true,
@@ -218,19 +220,6 @@ export function CartPanel({
     );
   };
 
-  const validateTakeawayCustomer = () => {
-    if (orderType === "Takeaway") {
-      if (!customerName.trim() || !customerContact.trim()) {
-        showAlert(
-          "Missing Information",
-          "Please enter Customer Name and Mobile Number for Takeaway orders.",
-        );
-        return false;
-      }
-    }
-    return true;
-  };
-
   return (
     <View style={[styles.rightPanel, isSmallScreen && styles.rightPanelMobile]}>
       {isSmallScreen && (
@@ -258,9 +247,18 @@ export function CartPanel({
               style={[
                 styles.orderTypeBtn,
                 orderType === "Takeaway" && styles.orderTypeBtnActive,
+                {
+                  // paddingHorizontal: ThemeSpacing.sm,
+                  // marginLeft: 2,
+                  // marginRight: 2,
+                  gap: ThemeSpacing.xs,
+                  flexDirection: "row",
+                },
               ]}
-              onPress={() => onOrderTypeChange?.("Takeaway")}
+              // onPress={() => onOrderTypeChange?.("Takeaway")}
+              onPress={onNewTakeaway}
             >
+              <Plus size={16} color={ThemeColors.textSecondary} />
               <Text
                 weight="bold"
                 style={[
@@ -268,9 +266,35 @@ export function CartPanel({
                   orderType === "Takeaway" && styles.orderTypeTextActive,
                 ]}
               >
-                Takeaway
+                New Takeaway
               </Text>
             </TouchableOpacity>
+            {/* {orderType === "Takeaway" && (
+              <TouchableOpacity
+                style={[
+                  styles.orderTypeBtn,
+                  styles.orderTypeBtnActive,
+                  {
+                    paddingHorizontal: ThemeSpacing.sm,
+                    marginLeft: 2,
+                    marginRight: 2,
+                    flexDirection: "row",
+                  },
+                ]}
+                onPress={onNewTakeaway}
+              >
+                <Plus size={16} color={ThemeColors.surface} />
+                <Text
+                  weight="bold"
+                  style={[
+                    styles.orderTypeText,
+                    orderType === "Takeaway" && styles.orderTypeTextActive,
+                  ]}
+                >
+                  New Takeaway
+                </Text>
+              </TouchableOpacity>
+            )} */}
             <TouchableOpacity
               style={[
                 styles.orderTypeBtn,
@@ -377,6 +401,33 @@ export function CartPanel({
 
       {/* Cart Totals & Actions */}
       <View style={styles.totalsContainer}>
+        {/* // add here name and mobile number field when select the takeaway option  */}
+        {orderType === "Takeaway" && (
+          <View style={{ flexDirection: "row", gap: ThemeSpacing.sm, marginBottom: ThemeSpacing.sm }}>
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: ThemeColors.background, borderWidth: 1, borderColor: ThemeColors.border, borderRadius: ThemeRadius.md, paddingHorizontal: ThemeSpacing.sm }}>
+              <User size={16} color={ThemeColors.textSecondary} style={{ marginRight: ThemeSpacing.xs }} />
+              <TextInput
+                style={{ flex: 1, paddingVertical: ThemeSpacing.sm, color: ThemeColors.textPrimary, fontSize: 14 }}
+                placeholder="Customer Name"
+                placeholderTextColor={ThemeColors.textSecondary}
+                value={customer?.name || ""}
+                onChangeText={(text) => setCustomer({ ...customer, name: text })}
+              />
+            </View>
+            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: ThemeColors.background, borderWidth: 1, borderColor: ThemeColors.border, borderRadius: ThemeRadius.md, paddingHorizontal: ThemeSpacing.sm }}>
+              <Phone size={16} color={ThemeColors.textSecondary} style={{ marginRight: ThemeSpacing.xs }} />
+              <TextInput
+                style={{ flex: 1, paddingVertical: ThemeSpacing.sm, color: ThemeColors.textPrimary, fontSize: 14 }}
+                placeholder="Phone Number"
+                placeholderTextColor={ThemeColors.textSecondary}
+                value={customer?.phone || ""}
+                keyboardType="phone-pad"
+                onChangeText={(text) => setCustomer({ ...customer, phone: text })}
+              />
+            </View>
+          </View>
+        )}
+
         <View style={styles.modifierRow}>
           <View style={{ flexDirection: "row", gap: ThemeSpacing.md }}>
             {["BOGO Offer", "Sales Return"].map((mod) => {
@@ -419,33 +470,6 @@ export function CartPanel({
               );
             })}
           </View>
-
-          {orderType === "Takeaway" && (
-            <View style={styles.customerInputs}>
-              <View style={styles.inputWrapper}>
-                <User size={14} color={ThemeColors.textMuted} />
-                <TextInput
-                  style={styles.inputCompact}
-                  placeholder="Customer Name"
-                  placeholderTextColor={ThemeColors.textMuted}
-                  value={customerName}
-                  onChangeText={setCustomerName}
-                />
-              </View>
-              <View style={styles.inputWrapper}>
-                <Phone size={14} color={ThemeColors.textMuted} />
-                <TextInput
-                  style={styles.inputCompact}
-                  placeholder="Mobile Number"
-                  placeholderTextColor={ThemeColors.textMuted}
-                  keyboardType="phone-pad"
-                  value={customerContact}
-                  onChangeText={setCustomerContact}
-                />
-              </View>
-            </View>
-          )}
-          {/* Modifiers (BOGO, Split, Sales Return) */}
         </View>
 
         <View style={styles.divider} />
@@ -507,8 +531,8 @@ export function CartPanel({
                       paymentMethod: selectedPaymentMethod,
                       modifiers: selectedModifiers,
                       customer: {
-                        name: customerName,
-                        contact: customerContact,
+                        name: customer?.name || "",
+                        contact: customer?.phone || "",
                       },
                       action: "print",
                     });
@@ -558,7 +582,6 @@ export function CartPanel({
                       "Please add items to hold this order.",
                     );
                   } else {
-                    if (!validateTakeawayCustomer()) return;
                     onParkSale();
                   }
                 }}
@@ -586,14 +609,7 @@ export function CartPanel({
                       "Please add new items to send to the Kitchen.",
                     );
                   } else {
-                    if (!validateTakeawayCustomer()) return;
-                    onSendToKitchen?.({
-                      print: false,
-                      customer: orderType === "Takeaway" ? {
-                        name: customerName,
-                        contact: customerContact,
-                      } : undefined,
-                    });
+                    onSendToKitchen?.({ print: false });
                   }
                 }}
               >
@@ -644,35 +660,41 @@ export function CartPanel({
               <TouchableOpacity
                 style={[styles.payBtn, { flex: 1 }]}
                 onPress={() => {
-                  if (orderType === "Takeaway") {
-                    if (cart.length === 0 && runningOrder.length === 0) {
-                      showAlert(
-                        "Checkout",
-                        "Please add items before proceeding to checkout.",
-                      );
-                      return;
-                    }
+                  // if (orderType === "Takeaway") {
+                  //   if (cart.length === 0) {
+                  //     showAlert(
+                  //       "Checkout",
+                  //       "Please add items before proceeding to checkout.",
+                  //     );
+                  //   } else {
+                  //     onCheckout?.({
+                  //       paymentMethod: selectedPaymentMethod,
+                  //       modifiers: selectedModifiers,
+                  //       customer: {
+                  //         name: customer?.name || "",
+                  //         contact: customer?.phone || "",
+                  //       },
+                  //       action: "pay",
+                  //     });
+                  //   }
+                  // } else {
+                  if (runningOrder.length === 0) {
+                    showAlert(
+                      "No KOT Found",
+                      "Please create a KOT before proceeding to checkout.",
+                    );
                   } else {
-                    if (runningOrder.length === 0) {
-                      showAlert(
-                        "No KOT Found",
-                        "Please create a KOT before proceeding to checkout.",
-                      );
-                      return;
-                    }
+                    onCheckout?.({
+                      paymentMethod: selectedPaymentMethod,
+                      modifiers: selectedModifiers,
+                      customer: {
+                        name: customer?.name || "",
+                        contact: customer?.phone || "",
+                      },
+                      action: "pay",
+                    });
                   }
-
-                  if (!validateTakeawayCustomer()) return;
-
-                  onCheckout?.({
-                    paymentMethod: selectedPaymentMethod,
-                    modifiers: selectedModifiers,
-                    customer: {
-                      name: customerName,
-                      contact: customerContact,
-                    },
-                    action: "pay",
-                  });
+                  // }
                 }}
               >
                 <Text weight="semibold" style={styles.payBtnText}>
@@ -690,12 +712,21 @@ export function CartPanel({
                 ]}
                 onPress={() => {
                   if (orderType === "Takeaway") {
-                    if (cart.length === 0 && runningOrder.length === 0) {
+                    if (cart.length === 0) {
                       showAlert(
                         "Checkout",
                         "Please add items before proceeding to checkout.",
                       );
-                      return;
+                    } else {
+                      onCheckout?.({
+                        paymentMethod: selectedPaymentMethod,
+                        modifiers: selectedModifiers,
+                        customer: {
+                          name: customer?.name || "",
+                          contact: customer?.phone || "",
+                        },
+                        action: "ebill",
+                      });
                     }
                   } else {
                     if (runningOrder.length === 0) {
@@ -703,21 +734,18 @@ export function CartPanel({
                         "No KOT Found",
                         "Please create a KOT before proceeding to checkout.",
                       );
-                      return;
+                    } else {
+                      onCheckout?.({
+                        paymentMethod: selectedPaymentMethod,
+                        modifiers: selectedModifiers,
+                        customer: {
+                          name: customer?.name || "",
+                          contact: customer?.phone || "",
+                        },
+                        action: "ebill",
+                      });
                     }
                   }
-
-                  if (!validateTakeawayCustomer()) return;
-
-                  onCheckout?.({
-                    paymentMethod: selectedPaymentMethod,
-                    modifiers: selectedModifiers,
-                    customer: {
-                      name: customerName,
-                      contact: customerContact,
-                    },
-                    action: "ebill",
-                  });
                 }}
               >
                 <Text weight="semibold" style={styles.payBtnText}>
@@ -1007,35 +1035,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   totalsContainer: {
-    padding: ThemeSpacing.lg,
+    padding: ThemeSpacing.md,
     backgroundColor: ThemeColors.surface,
     borderTopWidth: 1,
-    borderTopColor: ThemeColors.border,
-  },
-  customerInputs: {
-    gap: ThemeSpacing.sm,
-    flexDirection: "row",
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ThemeColors.bg,
-    borderWidth: 1,
-    borderColor: ThemeColors.borderSubtle,
-    borderRadius: ThemeRadius.md,
-    paddingHorizontal: ThemeSpacing.sm,
-    height: 36,
-    flex: 1,
-    maxWidth: 160,
-  },
-  inputCompact: {
-    flex: 1,
-    paddingVertical: 0,
-    paddingHorizontal: ThemeSpacing.xs,
-    fontSize: 13,
-    color: ThemeColors.textPrimary,
+    borderTopColor: ThemeColors.borderSubtle,
+    shadowColor: ThemeColors.black,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 10,
   },
   modifierRow: {
     flexDirection: "row",

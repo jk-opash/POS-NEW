@@ -43,7 +43,7 @@ const FeatureCard = ({ icon: Icon, title, description }) => (
 );
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("rajesh@spicegarden.in");
+  const [email, setEmail] = useState("anand@dailygrind.co");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
