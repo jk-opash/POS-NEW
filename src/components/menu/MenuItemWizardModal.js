@@ -9,6 +9,7 @@ import {
 import { useMenu } from "@/context/MenuContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -29,7 +30,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { showAlert } from "@/utils/alert";
 
 export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
   const { isMobile, isMiniTab } = useResponsive();
@@ -58,14 +58,17 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
 
   const subCategoryOptions = (() => {
     if (!formData.category) {
-      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({ label: sub, value: sub }));
+      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({
+        label: sub,
+        value: sub,
+      }));
     }
 
     const related = new Set(
       menuItems
         .filter((item) => item.category === formData.category)
         .map((item) => item.subCategory)
-        .filter(Boolean)
+        .filter(Boolean),
     );
 
     if (formData.subCategory) {
@@ -73,7 +76,10 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
     }
 
     if (related.size === 0) {
-      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({ label: sub, value: sub }));
+      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({
+        label: sub,
+        value: sub,
+      }));
     }
 
     return Array.from(related).map((sub) => ({
@@ -234,6 +240,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
       transparent
       animationType={isMobile || isMiniTab ? "slide" : "fade"}
     >
+      {console.log("visible", initialData)}
       <View style={styles.overlay}>
         <View style={[styles.container, { width: modalWidth }]}>
           {/* Header */}
@@ -320,7 +327,11 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                       options={categoryOptions}
                       value={formData.category}
                       onChange={(val) =>
-                        setFormData({ ...formData, category: val, subCategory: "" })
+                        setFormData({
+                          ...formData,
+                          category: val,
+                          subCategory: "",
+                        })
                       }
                       placeholder="Select Category"
                     />
@@ -351,13 +362,27 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                       const isActive = formData.foodType === type;
                       let typeColor = ThemeColors.primary;
                       switch (type) {
-                        case "Veg": typeColor = ThemeColors.veg; break;
-                        case "Non-Veg": typeColor = ThemeColors.nonVeg; break;
-                        case "Egg": typeColor = ThemeColors.egg; break;
-                        case "Vegan": typeColor = ThemeColors.vegan; break;
-                        case "Jain": typeColor = ThemeColors.jain; break;
-                        case "Dessert": typeColor = ThemeColors.blue; break;
-                        case "Beverage": typeColor = ThemeColors.violet; break;
+                        case "Veg":
+                          typeColor = ThemeColors.veg;
+                          break;
+                        case "Non-Veg":
+                          typeColor = ThemeColors.nonVeg;
+                          break;
+                        case "Egg":
+                          typeColor = ThemeColors.egg;
+                          break;
+                        case "Vegan":
+                          typeColor = ThemeColors.vegan;
+                          break;
+                        case "Jain":
+                          typeColor = ThemeColors.jain;
+                          break;
+                        case "Dessert":
+                          typeColor = ThemeColors.blue;
+                          break;
+                        case "Beverage":
+                          typeColor = ThemeColors.violet;
+                          break;
                       }
 
                       return (

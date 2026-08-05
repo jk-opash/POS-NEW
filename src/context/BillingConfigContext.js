@@ -1,41 +1,14 @@
-import React, { createContext, useContext, useState } from 'react';
-
-const BillingConfigContext = createContext();
+import { useSelector, useDispatch } from 'react-redux';
+import { updateBillingConfig as updateBillingConfigAction } from '../store/slices/billingSlice';
 
 export function useBillingConfig() {
-  const context = useContext(BillingConfigContext);
-  if (!context) {
-    throw new Error('useBillingConfig must be used within a BillingConfigProvider');
-  }
-  return context;
-}
+  const dispatch = useDispatch();
+  const config = useSelector(state => state.billing.billingConfig);
 
-const DEFAULT_BILLING_CONFIG = {
-  showItemImages: true,
-  defaultCategoryView: 'grid', // 'grid' | 'list'
-  autoPrintBill: false,
-  quickCashButtons: true,
-  requirePasscodeForVoid: true,
-};
+  const updateConfig = (key, value) => dispatch(updateBillingConfigAction({ key, value }));
 
-export function BillingConfigProvider({ children }) {
-  const [billingConfig, setBillingConfig] = useState(DEFAULT_BILLING_CONFIG);
-
-  const updateConfig = (key, value) => {
-    setBillingConfig((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  return {
+    config,
+    updateConfig,
   };
-
-  return (
-    <BillingConfigContext.Provider
-      value={{
-        config: billingConfig,
-        updateConfig,
-      }}
-    >
-      {children}
-    </BillingConfigContext.Provider>
-  );
 }
