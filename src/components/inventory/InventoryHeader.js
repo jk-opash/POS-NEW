@@ -3,6 +3,7 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Bell, Menu } from "lucide-react-native";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export const TABS = [
   { key: "stock", label: "Stock List" },
@@ -32,6 +33,7 @@ export function InventoryHeader({
           <Text style={styles.pageTitle}>Inventory</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <Text style={styles.headerDate}>{dateString}</Text>
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />

@@ -1,11 +1,11 @@
 import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
 import { Text } from "@/components/ui/Text";
-import { MENU_CATEGORIES } from "@/constants/menu";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useNavigation } from "expo-router";
 import { Bell, CheckSquare, Menu, Square } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 // Removed FILTER_TABS as filtering is now handled by the sidebar
 
@@ -39,6 +39,7 @@ export function MenuHeader({
           <Text style={styles.pageTitle}>Menu Items</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />
             <View style={styles.notifDot} />
@@ -62,7 +63,11 @@ export function MenuHeader({
             }}
           >
             {isSelectMode ? (
-              <CheckSquare size={18} color={ThemeColors.white} style={{ marginRight: 6 }} />
+              <CheckSquare
+                size={18}
+                color={ThemeColors.white}
+                style={{ marginRight: 6 }}
+              />
             ) : (
               <Square
                 size={18}
@@ -74,7 +79,11 @@ export function MenuHeader({
               weight="bold"
               style={[
                 styles.btnPrimaryText,
-                { color: isSelectMode ? ThemeColors.white : ThemeColors.textPrimary },
+                {
+                  color: isSelectMode
+                    ? ThemeColors.white
+                    : ThemeColors.textPrimary,
+                },
               ]}
             >
               Select

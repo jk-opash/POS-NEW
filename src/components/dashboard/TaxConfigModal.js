@@ -1,20 +1,34 @@
-import React, { useState } from "react";
+import { AddTaxModal } from "@/components/tax/AddTaxModal";
+import { Text } from "@/components/ui/Text";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import {
+  Check,
+  Edit2,
+  Percent,
+  Plus,
+  Settings2,
+  ShieldCheck,
+  Trash2,
+  X,
+} from "lucide-react-native";
+import { useState } from "react";
 import {
   Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
   ScrollView,
+  StyleSheet,
   Switch,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Text } from "@/components/ui/Text";
-import { ThemeColors, ThemeSpacing, ThemeRadius } from "@/theme/theme";
-import { Plus, Percent, Settings2, ShieldCheck, Check, Edit2, Trash2, X } from "lucide-react-native";
-import { useTax } from "@/context/TaxContext";
-import { AddTaxModal } from "@/components/tax/AddTaxModal";
 
 export function TaxConfigModal({ visible, onClose }) {
-  const { taxRules, taxSettings, updateTaxSetting, deleteTaxRule, updateTaxRule } = useTax();
+  const {
+    taxRules = [],
+    taxSettings = {},
+    updateTaxSetting = () => {},
+    deleteTaxRule = () => {},
+    updateTaxRule = () => {},
+  } = {};
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
 
@@ -41,23 +55,37 @@ export function TaxConfigModal({ visible, onClose }) {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text weight="bold" style={styles.title}>Tax Configuration</Text>
-              <Text style={styles.subtitle}>Manage taxes and application rules</Text>
+              <Text weight="bold" style={styles.title}>
+                Tax Configuration
+              </Text>
+              <Text style={styles.subtitle}>
+                Manage taxes and application rules
+              </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textSecondary} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.sectionHeaderRow}>
               <View>
-                <Text weight="bold" style={styles.sectionTitle}>Active Tax Rules</Text>
-                <Text style={styles.sectionSubtitle}>Manage the taxes applied to orders in your restaurant.</Text>
+                <Text weight="bold" style={styles.sectionTitle}>
+                  Active Tax Rules
+                </Text>
+                <Text style={styles.sectionSubtitle}>
+                  Manage the taxes applied to orders in your restaurant.
+                </Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={handleAddPress}>
                 <Plus size={18} color={ThemeColors.white} />
-                <Text weight="semibold" style={styles.addBtnText}>Add Tax Rule</Text>
+                <Text weight="semibold" style={styles.addBtnText}>
+                  Add Tax Rule
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -65,14 +93,18 @@ export function TaxConfigModal({ visible, onClose }) {
               {taxRules.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Percent size={40} color={ThemeColors.borderSubtle} />
-                  <Text style={styles.emptyStateText}>No tax rules configured yet.</Text>
+                  <Text style={styles.emptyStateText}>
+                    No tax rules configured yet.
+                  </Text>
                 </View>
               ) : (
                 taxRules.map((rule) => (
                   <View key={rule.id} style={styles.ruleCard}>
                     <View style={styles.ruleInfo}>
                       <View style={styles.ruleTitleRow}>
-                        <Text weight="bold" style={styles.ruleName}>{rule.name}</Text>
+                        <Text weight="bold" style={styles.ruleName}>
+                          {rule.name}
+                        </Text>
                         {rule.active && (
                           <View style={styles.activeBadge}>
                             <Check size={12} color={ThemeColors.emerald} />
@@ -87,14 +119,24 @@ export function TaxConfigModal({ visible, onClose }) {
                     <View style={styles.ruleActions}>
                       <Switch
                         value={rule.active}
-                        onValueChange={() => toggleRuleActive(rule.id, rule.active)}
-                        style={{ transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }] }}
+                        onValueChange={() =>
+                          toggleRuleActive(rule.id, rule.active)
+                        }
+                        style={{
+                          transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }],
+                        }}
                       />
                       <View style={styles.actionDivider} />
-                      <TouchableOpacity style={styles.iconBtn} onPress={() => handleEditPress(rule)}>
+                      <TouchableOpacity
+                        style={styles.iconBtn}
+                        onPress={() => handleEditPress(rule)}
+                      >
                         <Edit2 size={16} color={ThemeColors.textSecondary} />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.iconBtn} onPress={() => deleteTaxRule(rule.id)}>
+                      <TouchableOpacity
+                        style={styles.iconBtn}
+                        onPress={() => deleteTaxRule(rule.id)}
+                      >
                         <Trash2 size={16} color={ThemeColors.red} />
                       </TouchableOpacity>
                     </View>
@@ -106,17 +148,25 @@ export function TaxConfigModal({ visible, onClose }) {
             <View style={styles.sectionSeparator} />
 
             <View style={styles.settingsSection}>
-              <Text weight="bold" style={styles.sectionTitle}>Tax Application Rules</Text>
-              <Text style={styles.sectionSubtitle}>Global settings that dictate how taxes behave at checkout.</Text>
-              
+              <Text weight="bold" style={styles.sectionTitle}>
+                Tax Application Rules
+              </Text>
+              <Text style={styles.sectionSubtitle}>
+                Global settings that dictate how taxes behave at checkout.
+              </Text>
+
               <View style={styles.settingsGrid}>
                 <View style={styles.settingCard}>
                   <View style={styles.settingIconBox}>
                     <Settings2 size={24} color={ThemeColors.primary} />
                   </View>
                   <View style={styles.settingContent}>
-                    <Text weight="bold" style={styles.settingLabel}>Inclusive Pricing</Text>
-                    <Text style={styles.settingDesc}>Menu item prices already include all active taxes.</Text>
+                    <Text weight="bold" style={styles.settingLabel}>
+                      Inclusive Pricing
+                    </Text>
+                    <Text style={styles.settingDesc}>
+                      Menu item prices already include all active taxes.
+                    </Text>
                   </View>
                   <Switch
                     value={taxSettings.inclusive}
@@ -129,8 +179,12 @@ export function TaxConfigModal({ visible, onClose }) {
                     <ShieldCheck size={24} color={ThemeColors.primary} />
                   </View>
                   <View style={styles.settingContent}>
-                    <Text weight="bold" style={styles.settingLabel}>Compound Taxes</Text>
-                    <Text style={styles.settingDesc}>Apply secondary taxes on top of primary tax subtotals.</Text>
+                    <Text weight="bold" style={styles.settingLabel}>
+                      Compound Taxes
+                    </Text>
+                    <Text style={styles.settingDesc}>
+                      Apply secondary taxes on top of primary tax subtotals.
+                    </Text>
                   </View>
                   <Switch
                     value={taxSettings.compound}
@@ -143,23 +197,31 @@ export function TaxConfigModal({ visible, onClose }) {
                     <Percent size={24} color={ThemeColors.primary} />
                   </View>
                   <View style={styles.settingContent}>
-                    <Text weight="bold" style={styles.settingLabel}>Allow Tax Exemptions</Text>
-                    <Text style={styles.settingDesc}>Give cashiers the ability to remove tax on the billing screen.</Text>
+                    <Text weight="bold" style={styles.settingLabel}>
+                      Allow Tax Exemptions
+                    </Text>
+                    <Text style={styles.settingDesc}>
+                      Give cashiers the ability to remove tax on the billing
+                      screen.
+                    </Text>
                   </View>
                   <Switch
                     value={taxSettings.exemptionsEnabled}
-                    onValueChange={(val) => updateTaxSetting("exemptionsEnabled", val)}
+                    onValueChange={(val) =>
+                      updateTaxSetting("exemptionsEnabled", val)
+                    }
                   />
                 </View>
               </View>
             </View>
-
           </ScrollView>
 
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.doneBtn} onPress={onClose}>
-              <Text weight="bold" style={styles.doneText}>Done</Text>
+              <Text weight="bold" style={styles.doneText}>
+                Done
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

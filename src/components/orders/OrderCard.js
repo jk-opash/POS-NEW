@@ -1,10 +1,19 @@
 import { Text } from "@/components/ui/Text";
-import { STATUS_CONFIG } from "@/constants/orders";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
+const STATUS_COLORS = {
+  Pending: { bg: ThemeColors.amber + "20", color: ThemeColors.amber },
+  Accepted: { bg: ThemeColors.blue + "20", color: ThemeColors.blue },
+  Preparing: { bg: ThemeColors.orange + "20", color: ThemeColors.orange },
+  Done: { bg: ThemeColors.teal + "20", color: ThemeColors.teal },
+  Served: { bg: ThemeColors.green + "20", color: ThemeColors.green },
+  Completed: { bg: ThemeColors.green + "20", color: ThemeColors.green },
+  Cancelled: { bg: ThemeColors.red + "20", color: ThemeColors.red },
+};
+
 export function StatusBadge({ status }) {
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG["In Progress"];
+  const cfg = STATUS_COLORS[status] || STATUS_COLORS.Pending;
   return (
     <View style={[styles.statusBadge, { backgroundColor: cfg.bg }]}>
       <View style={[styles.statusDot, { backgroundColor: cfg.color }]} />
@@ -121,15 +130,18 @@ export function OrderCard({ order, onPayBills, onSeeDetails }) {
             See Details
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.btnPrimary}
-          activeOpacity={0.8}
-          onPress={() => onPayBills(order)}
-        >
-          <Text weight="bold" style={styles.btnPrimaryText}>
-            Pay Bills
-          </Text>
-        </TouchableOpacity>
+        
+        {order.payment_status !== "Paid" && order.status !== "Completed" && order.status !== "Cancelled" && (
+          <TouchableOpacity
+            style={styles.btnPrimary}
+            activeOpacity={0.8}
+            onPress={() => onPayBills(order)}
+          >
+            <Text weight="bold" style={styles.btnPrimaryText}>
+              Pay Bills
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

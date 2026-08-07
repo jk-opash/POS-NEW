@@ -20,7 +20,8 @@ export function TableQRCard({
   onDownload,
   qrRefs,
 }) {
-  const url = `https://spicegarden.in/order?table=${table.name}`;
+  const baseUrl = process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://your-ordering-site.com/order";
+  const url = `${baseUrl}?table=${table.name}`;
   const analytics = getMockAnalytics(table.name);
 
   return (

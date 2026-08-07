@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function SupplierHeader({
   isDesktop,
@@ -38,6 +39,7 @@ export function SupplierHeader({
           <Text style={styles.pageTitle}>Supplier Management</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />
             <View style={styles.notifDot} />

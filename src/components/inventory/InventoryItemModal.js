@@ -1,55 +1,77 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, Modal, Image } from 'react-native';
-import { showAlert } from '@/utils/alert';
-import { Text } from '@/components/ui/Text';
-import { ThemeColors, ThemeSpacing, ThemeRadius } from '@/theme/theme';
-import { useResponsive } from '@/hooks/useResponsive';
-import { Dropdown } from '@/components/ui/Dropdown';
-import { X, Save, Upload } from 'lucide-react-native';
-import { useInventoryContext } from '@/context/InventoryContext';
+import { Dropdown } from "@/components/ui/Dropdown";
+import { Text } from "@/components/ui/Text";
+import { useResponsive } from "@/hooks/useResponsive";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
+import { Save, Upload, X } from "lucide-react-native";
+import React, { useState } from "react";
+import {
+  Image,
+  Modal,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-export function InventoryItemModal({ visible, onClose }) {
+import { useDispatch } from "react-redux";
+import { createInventoryItem, updateInventoryItem } from "@/store/slices/inventorySlice";
+
+export function InventoryItemModal({ visible, onClose, branchId, initialData }) {
   const { isMobile } = useResponsive();
-  const { addInventoryItem, logStockMovement } = useInventoryContext();
+  const dispatch = useDispatch();
 
-  const [name, setName] = useState('');
-  const [sku, setSku] = useState('');
-  const [category, setCategory] = useState('');
-  const [stock, setStock] = useState('');
-  const [unit, setUnit] = useState('pcs');
-  const [price, setPrice] = useState('');
+  const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
+  const [category, setCategory] = useState("");
+  const [stock, setStock] = useState("");
+  const [unit, setUnit] = useState("pcs");
+  const [price, setPrice] = useState("");
+  const [reorderLevel, setReorderLevel] = useState("");
   const [image, setImage] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   React.useEffect(() => {
     if (visible) {
-      setName('');
-      setSku('');
-      setCategory('');
-      setStock('');
-      setUnit('pcs');
-      setPrice('');
-      setImage(null);
-      setError('');
+      if (initialData) {
+        setName(initialData.name || "");
+        setSku(initialData.sku || "");
+        setCategory(initialData.category || "");
+        setStock(initialData.in_stock != null ? String(initialData.in_stock) : "");
+        setUnit(initialData.unit || "pcs");
+        setPrice(initialData.price != null ? String(initialData.price) : "");
+        setReorderLevel(initialData.reorder_level != null ? String(initialData.reorder_level) : "10");
+        setImage(initialData.image_url || null);
+      } else {
+        setName("");
+        setSku("");
+        setCategory("");
+        setStock("");
+        setUnit("pcs");
+        setPrice("");
+        setReorderLevel("10");
+        setImage(null);
+      }
+      setError("");
     }
-  }, [visible]);
+  }, [visible, initialData]);
 
   const INVENTORY_CATEGORIES = [
-    { label: 'Raw Materials', value: 'Raw Materials' },
-    { label: 'Packaging', value: 'Packaging' },
-    { label: 'Ingredients', value: 'Ingredients' },
-    { label: 'Beverages', value: 'Beverages' },
-    { label: 'Equipment', value: 'Equipment' },
-    { label: 'Other', value: 'Other' },
+    { label: "Raw Materials", value: "Raw Materials" },
+    { label: "Packaging", value: "Packaging" },
+    { label: "Ingredients", value: "Ingredients" },
+    { label: "Beverages", value: "Beverages" },
+    { label: "Equipment", value: "Equipment" },
+    { label: "Other", value: "Other" },
   ];
 
   const UNIT_OPTIONS = [
-    { label: 'Pieces (pcs)', value: 'pcs' },
-    { label: 'Kilograms (kg)', value: 'kg' },
-    { label: 'Grams (g)', value: 'g' },
-    { label: 'Liters (L)', value: 'L' },
-    { label: 'Milliliters (ml)', value: 'ml' },
-    { label: 'Box/Carton', value: 'box' },
+    { label: "Pieces (pcs)", value: "pcs" },
+    { label: "Kilograms (kg)", value: "kg" },
+    { label: "Grams (g)", value: "g" },
+    { label: "Liters (L)", value: "L" },
+    { label: "Milliliters (ml)", value: "ml" },
+    { label: "Box/Carton", value: "box" },
   ];
 
   const handleImageUpload = () => {
@@ -59,51 +81,50 @@ export function InventoryItemModal({ visible, onClose }) {
       "In a real app, this would open the image picker.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Mock Upload", onPress: () => setImage("https://picsum.photos/200") }
-      ]
+        {
+          text: "Mock Upload",
+          onPress: () => setImage("https://picsum.photos/200"),
+        },
+      ],
     );
   };
 
   const handleSubmit = () => {
-    setError('');
+    setError("");
     const pName = name.trim();
     const pSku = sku.trim();
     const pCat = category.trim();
-    const stockNum = parseInt(stock, 10);
+    const stockNum = parseFloat(stock);
     const priceNum = parseFloat(price);
+    const reorderNum = parseFloat(reorderLevel);
 
     if (!pName) return setError("Item name is required.");
     if (!pSku) return setError("SKU is required.");
-    if (!pCat) return setError("Category is required.");
-    if (isNaN(stockNum) || stockNum < 0) return setError("Valid initial stock is required.");
-    if (isNaN(priceNum) || priceNum < 0) return setError("Valid price is required.");
+    if (isNaN(stockNum) || stockNum < 0)
+      return setError("Valid initial stock is required.");
+    if (isNaN(priceNum) || priceNum < 0)
+      return setError("Valid price is required.");
+    if (isNaN(reorderNum) || reorderNum < 0)
+      return setError("Valid low stock alert is required.");
 
-    const newItem = {
-      id: `INV-${Date.now().toString().slice(-4)}`,
+    const payload = {
+      branch_id: branchId,
       name: pName,
       sku: pSku,
-      category: pCat,
-      inStock: stockNum,
-      reserved: 0,
-      reorderLevel: 10, // Default mock value
+      category: pCat || null,
+      in_stock: stockNum,
+      reserved: initialData ? initialData.reserved : 0,
+      reorder_level: reorderNum,
       unit: unit.trim(),
       price: priceNum,
-      image: image,
-      status: stockNum > 10 ? 'Normal' : (stockNum === 0 ? 'Out of Stock' : 'Low'),
-      lastCounted: new Date().toISOString().split('T')[0]
+      status: stockNum > reorderNum ? "Normal" : stockNum === 0 ? "Out of Stock" : "Low",
     };
 
-    addInventoryItem(newItem);
-    
-    // Log creation
-    logStockMovement({
-      type: 'ITEM_CREATED',
-      itemId: newItem.id,
-      itemName: newItem.name,
-      quantityChange: stockNum,
-      reason: 'Initial setup',
-      performedBy: 'Admin'
-    });
+    if (initialData && initialData.id) {
+      dispatch(updateInventoryItem({ id: initialData.id, payload }));
+    } else {
+      dispatch(createInventoryItem(payload));
+    }
 
     onClose();
   };
@@ -113,7 +134,9 @@ export function InventoryItemModal({ visible, onClose }) {
       <View style={styles.overlay}>
         <View style={[styles.modal, isMobile && styles.modalMobile]}>
           <View style={styles.header}>
-            <Text weight="bold" style={styles.title}>Add Inventory Item</Text>
+            <Text weight="bold" style={styles.title}>
+              {initialData ? "Edit Inventory Item" : "Add Inventory Item"}
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textMuted} />
             </TouchableOpacity>
@@ -136,7 +159,7 @@ export function InventoryItemModal({ visible, onClose }) {
                 placeholderTextColor={ThemeColors.textMuted}
               />
             </View>
-            
+
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.label}>SKU</Text>
@@ -180,6 +203,9 @@ export function InventoryItemModal({ visible, onClose }) {
                   placeholder="Select Unit"
                 />
               </View>
+            </View>
+
+            <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
                 <Text style={styles.label}>Unit Price (₹)</Text>
                 <TextInput
@@ -191,13 +217,35 @@ export function InventoryItemModal({ visible, onClose }) {
                   placeholderTextColor={ThemeColors.textMuted}
                 />
               </View>
+              <View style={[styles.inputGroup, { flex: 1 }]}>
+                <Text style={styles.label}>Low Stock Alert</Text>
+                <TextInput
+                  style={styles.input}
+                  value={reorderLevel}
+                  onChangeText={setReorderLevel}
+                  placeholder="10"
+                  keyboardType="numeric"
+                  placeholderTextColor={ThemeColors.textMuted}
+                />
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Item Image</Text>
-              <TouchableOpacity style={styles.imageUpload} onPress={handleImageUpload}>
+              <TouchableOpacity
+                style={styles.imageUpload}
+                onPress={handleImageUpload}
+              >
                 {image ? (
-                  <Image source={{ uri: image }} style={{ width: '100%', height: 120, borderRadius: ThemeRadius.md }} resizeMode="cover" />
+                  <Image
+                    source={{ uri: image }}
+                    style={{
+                      width: "100%",
+                      height: 120,
+                      borderRadius: ThemeRadius.md,
+                    }}
+                    resizeMode="cover"
+                  />
                 ) : (
                   <>
                     <Upload size={24} color={ThemeColors.textSecondary} />
@@ -206,8 +254,13 @@ export function InventoryItemModal({ visible, onClose }) {
                 )}
               </TouchableOpacity>
               {image && (
-                <TouchableOpacity onPress={() => setImage(null)} style={{ marginTop: 8 }}>
-                  <Text style={{ color: ThemeColors.red, fontSize: 13 }}>Remove Image</Text>
+                <TouchableOpacity
+                  onPress={() => setImage(null)}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ color: ThemeColors.red, fontSize: 13 }}>
+                    Remove Image
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -218,8 +271,14 @@ export function InventoryItemModal({ visible, onClose }) {
               <Text style={styles.btnCancelText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btnPrimary} onPress={handleSubmit}>
-              <Save size={16} color={ThemeColors.white} style={{ marginRight: 8 }} />
-              <Text weight="bold" style={styles.btnPrimaryText}>Save Item</Text>
+              <Save
+                size={16}
+                color={ThemeColors.white}
+                style={{ marginRight: 8 }}
+              />
+              <Text weight="bold" style={styles.btnPrimaryText}>
+                {initialData ? "Save Changes" : "Save Item"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,16 +290,16 @@ export function InventoryItemModal({ visible, onClose }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modal: {
-    width: '90%',
+    width: "90%",
     maxWidth: 500,
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.xl,
-    overflow: 'hidden',
+    overflow: "hidden",
     shadowColor: ThemeColors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
@@ -248,12 +307,12 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   modalMobile: {
-    width: '95%',
+    width: "95%",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: ThemeSpacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: ThemeColors.border,
@@ -274,7 +333,7 @@ const styles = StyleSheet.create({
     padding: ThemeSpacing.md,
     borderRadius: ThemeRadius.md,
     borderWidth: 1,
-    borderColor: ThemeColors.red + '30',
+    borderColor: ThemeColors.red + "30",
   },
   errorText: {
     color: ThemeColors.red,
@@ -284,13 +343,13 @@ const styles = StyleSheet.create({
     gap: ThemeSpacing.sm,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: ThemeSpacing.md,
   },
   label: {
     fontSize: 13,
     color: ThemeColors.textSecondary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   input: {
     backgroundColor: ThemeColors.bg,
@@ -301,7 +360,7 @@ const styles = StyleSheet.create({
     paddingVertical: ThemeSpacing.sm,
     fontSize: 14,
     color: ThemeColors.textPrimary,
-    outlineStyle: 'none',
+    outlineStyle: "none",
   },
   imageUpload: {
     backgroundColor: ThemeColors.bg,
@@ -319,8 +378,8 @@ const styles = StyleSheet.create({
     color: ThemeColors.textSecondary,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: ThemeSpacing.md,
     padding: ThemeSpacing.xl,
     borderTopWidth: 1,
@@ -340,8 +399,8 @@ const styles = StyleSheet.create({
     color: ThemeColors.textPrimary,
   },
   btnPrimary: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: ThemeSpacing.lg,
     paddingVertical: ThemeSpacing.md,
     borderRadius: ThemeRadius.md,

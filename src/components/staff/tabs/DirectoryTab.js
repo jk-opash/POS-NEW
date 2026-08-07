@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useStaff } from "@/context/StaffContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Building, Search, Trash2 } from "lucide-react-native";
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useStaff } from "@/hooks/useStaff";
 
 export default function DirectoryTab({ onEditEmployee }) {
   const { employees, deleteEmployee } = useStaff();

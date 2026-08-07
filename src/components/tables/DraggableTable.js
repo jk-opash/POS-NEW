@@ -84,7 +84,11 @@ export function DraggableTable({
     <Animated.View style={animatedStyle}>
       <GestureDetector gesture={panGesture}>
         <View>
-          <TableItem table={table} onPress={isEditMode ? undefined : onPress} onLongPress={isEditMode ? undefined : onLongPress} />
+          <TableItem
+            table={table}
+            onPress={isEditMode ? undefined : onPress}
+            onLongPress={isEditMode ? undefined : onLongPress}
+          />
         </View>
       </GestureDetector>
 

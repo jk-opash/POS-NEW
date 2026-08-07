@@ -8,6 +8,7 @@ import { Dropdown } from "@/components/ui/Dropdown";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Search } from "lucide-react-native";
 import { TextInput } from "react-native";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function POSHeader({
   isDesktop,
@@ -36,6 +37,7 @@ export function POSHeader({
         </View>
 
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.takeawayBtn} onPress={onTakeawayOrdersPress}>
             <ShoppingBag size={20} color={ThemeColors.textPrimary} />
             <Text style={styles.takeawayBtnText} weight="medium">Takeaways</Text>

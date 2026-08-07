@@ -20,8 +20,14 @@ import {
   MessageSquare,
   ChevronRight,
 } from "lucide-react-native";
+import { useSelector } from "react-redux";
 
-export function EBillModal({ visible, order, onClose }) {
+export function EBillModal({
+  visible,
+  order,
+  onClose,
+}) {
+  const taxRate = useSelector((state) => state.pos.taxRate) || 0;
   const [step, setStep] = useState("contact"); // "contact" | "sent"
   const [contactType, setContactType] = useState("Phone");
   const [phone, setPhone] = useState(
@@ -115,9 +121,19 @@ export function EBillModal({ visible, order, onClose }) {
                   </View>
                 )}
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Tax</Text>
+                  <Text style={styles.summaryLabel}>
+                    SGST ({(taxRate / 2).toFixed(1)}%)
+                  </Text>
                   <Text weight="semibold" style={styles.summaryValue}>
-                    ₹{(totals.taxAmount || 0).toFixed(2)}
+                    ₹{((totals.taxAmount || 0) / 2).toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>
+                    CGST ({(taxRate / 2).toFixed(1)}%)
+                  </Text>
+                  <Text weight="semibold" style={styles.summaryValue}>
+                    ₹{((totals.taxAmount || 0) / 2).toFixed(2)}
                   </Text>
                 </View>
                 <View style={[styles.summaryRow, styles.totalRow]}>

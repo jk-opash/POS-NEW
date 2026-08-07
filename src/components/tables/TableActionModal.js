@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/Text";
-import { useMenu } from "@/context/MenuContext";
 
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import {
   Ban,
   CalendarDays,
@@ -21,7 +21,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { showAlert } from "@/utils/alert";
 import QRCode from "react-native-qrcode-svg";
 
 export function TableActionModal({
@@ -34,8 +33,6 @@ export function TableActionModal({
   onCancelOrder,
   onUnmerge,
 }) {
-
-  const { menuItems } = useMenu();
   if (!table) return null;
 
   const isAvailable = table.status === "Available";
@@ -84,7 +81,8 @@ export function TableActionModal({
   const orderItemsList = [];
   let totalAmount = 0;
 
-  const allAvailableItems = [...(menuItems || [])];
+  // const allAvailableItems = [...(menuItems || [])];
+  const allAvailableItems = [];
 
   if (hasOrder) {
     if (Array.isArray(table.order)) {

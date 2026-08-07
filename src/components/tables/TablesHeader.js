@@ -4,6 +4,7 @@ import { useNavigation } from "expo-router";
 import { Check, Edit2, Menu } from "lucide-react-native";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function TablesHeader({
   isDesktop,
@@ -32,6 +33,7 @@ export function TablesHeader({
         </View>
 
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
             {!isEditMode && (
               <TouchableOpacity
                 style={styles.mergeActionBtn}

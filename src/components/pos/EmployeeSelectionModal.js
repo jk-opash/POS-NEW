@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { CheckCircle2, Search, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   Modal,
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
   ScrollView,
+  StyleSheet,
+  Text,
   TextInput,
-} from 'react-native';
-import { X, Search, CheckCircle2 } from 'lucide-react-native';
-import { ThemeColors, ThemeRadius, ThemeSpacing } from '@/theme/theme';
-import { useStaff } from '@/context/StaffContext';
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useStaff } from "@/hooks/useStaff";
 
-export function EmployeeSelectionModal({ visible, onClose, onSelect, selectedEmployeeId }) {
+export function EmployeeSelectionModal({
+  visible,
+  onClose,
+  onSelect,
+  selectedEmployeeId,
+}) {
   const { employees } = useStaff();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = employees.filter((emp) =>
-    (emp.firstName + ' ' + emp.lastName).toLowerCase().includes(searchQuery.toLowerCase())
+    (emp.firstName + " " + emp.lastName)
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -48,14 +55,19 @@ export function EmployeeSelectionModal({ visible, onClose, onSelect, selectedEmp
               return (
                 <TouchableOpacity
                   key={emp.id}
-                  style={[styles.employeeCard, isSelected && styles.employeeCardSelected]}
+                  style={[
+                    styles.employeeCard,
+                    isSelected && styles.employeeCardSelected,
+                  ]}
                   onPress={() => {
                     onSelect(emp);
                     onClose();
                   }}
                 >
                   <View style={styles.employeeInfo}>
-                    <Text style={styles.employeeName}>{emp.firstName} {emp.lastName}</Text>
+                    <Text style={styles.employeeName}>
+                      {emp.firstName} {emp.lastName}
+                    </Text>
                     <Text style={styles.employeeRole}>{emp.role}</Text>
                   </View>
                   {isSelected && (
@@ -64,7 +76,7 @@ export function EmployeeSelectionModal({ visible, onClose, onSelect, selectedEmp
                 </TouchableOpacity>
               );
             })}
-            
+
             <TouchableOpacity
               style={styles.employeeCard}
               onPress={() => {
@@ -116,8 +128,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     margin: ThemeSpacing.xl,
     paddingHorizontal: ThemeSpacing.md,
     height: 48,
@@ -129,7 +141,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: '100%',
+    height: "100%",
     color: ThemeColors.textPrimary,
   },
   list: {
@@ -138,9 +150,9 @@ const styles = StyleSheet.create({
     gap: ThemeSpacing.sm,
   },
   employeeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: ThemeSpacing.lg,
     backgroundColor: ThemeColors.bg,
     borderWidth: 1,
@@ -149,18 +161,18 @@ const styles = StyleSheet.create({
   },
   employeeCardSelected: {
     borderColor: ThemeColors.emerald,
-    backgroundColor: ThemeColors.emerald + '10',
+    backgroundColor: ThemeColors.emerald + "10",
   },
   employeeInfo: {
     gap: 4,
   },
   employeeName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: ThemeColors.textPrimary,
   },
   employeeRole: {
     fontSize: 13,
     color: ThemeColors.textSecondary,
-  }
+  },
 });

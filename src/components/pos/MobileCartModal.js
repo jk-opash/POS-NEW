@@ -30,6 +30,9 @@ export function MobileCartModal({
   onViewParkedSales,
   onUpdateQuantity,
   onVoidItem,
+  onVoidLockedItem,
+  onDecreaseLockedItem,
+  onSetCustomer,
   onAssignStaff,
   onDiscount,
   onParkSale,
@@ -65,6 +68,9 @@ export function MobileCartModal({
           onViewParkedSales={onViewParkedSales}
           onUpdateQuantity={onUpdateQuantity}
           onVoidItem={onVoidItem}
+          onVoidLockedItem={onVoidLockedItem}
+          onDecreaseLockedItem={onDecreaseLockedItem}
+          onSetCustomer={onSetCustomer}
           onAssignStaff={onAssignStaff}
           onDiscount={onDiscount}
           onParkSale={onParkSale}

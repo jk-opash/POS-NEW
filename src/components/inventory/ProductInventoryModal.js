@@ -4,11 +4,28 @@ import { Text } from '@/components/ui/Text';
 import { ThemeColors, ThemeSpacing, ThemeRadius } from '@/theme/theme';
 import { X, Package, AlertCircle } from 'lucide-react-native';
 import { useResponsive } from '@/hooks/useResponsive';
+import { useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { fetchInventoryItemById, clearSelectedItem } from '@/store/slices/inventorySlice';
+import { ActivityIndicator } from 'react-native';
 
 export function ProductInventoryModal({ product, visible, onClose }) {
   const { isMobile } = useResponsive();
+  const dispatch = useDispatch();
+  const { selectedItem, isItemLoading } = useSelector(state => state.inventory);
 
-  if (!product) return null;
+  useEffect(() => {
+    if (visible && product?.id) {
+      dispatch(fetchInventoryItemById(product.id));
+    }
+    if (!visible) {
+      dispatch(clearSelectedItem());
+    }
+  }, [visible, product?.id, dispatch]);
+
+  const displayProduct = selectedItem || product;
+
+  if (!visible || !displayProduct) return null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -28,8 +45,14 @@ export function ProductInventoryModal({ product, visible, onClose }) {
                 <Package size={24} color={ThemeColors.blue} />
               </View>
               <View>
-                <Text weight="bold" style={styles.title}>{product.name}</Text>
-                <Text style={styles.subtitle}>{product.sku} • {product.category}</Text>
+                {isItemLoading && !selectedItem ? (
+                  <ActivityIndicator size="small" color={ThemeColors.primary} />
+                ) : (
+                  <>
+                    <Text weight="bold" style={styles.title}>{displayProduct.name}</Text>
+                    <Text style={styles.subtitle}>{displayProduct.sku} • {displayProduct.category}</Text>
+                  </>
+                )}
               </View>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -38,20 +61,26 @@ export function ProductInventoryModal({ product, visible, onClose }) {
           </View>
 
           {/* Quick Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Available</Text>
-              <Text weight="bold" style={styles.statValue}>{product.inStock} {product.unit}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Reserved</Text>
-              <Text weight="bold" style={styles.statValue}>{product.reserved} {product.unit}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Reorder Level</Text>
-              <Text weight="bold" style={styles.statValue}>{product.reorderLevel} {product.unit}</Text>
-            </View>
-          </View>
+          {isItemLoading && !selectedItem ? (
+             <View style={{ padding: ThemeSpacing.xl, alignItems: 'center' }}>
+               <ActivityIndicator size="large" color={ThemeColors.primary} />
+             </View>
+          ) : (
+            <>
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>Available</Text>
+                  <Text weight="bold" style={styles.statValue}>{displayProduct.in_stock ?? displayProduct.inStock} {displayProduct.unit}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>Reserved</Text>
+                  <Text weight="bold" style={styles.statValue}>{displayProduct.reserved} {displayProduct.unit}</Text>
+                </View>
+                <View style={styles.statBox}>
+                  <Text style={styles.statLabel}>Reorder Level</Text>
+                  <Text weight="bold" style={styles.statValue}>{displayProduct.reorder_level ?? displayProduct.reorderLevel} {displayProduct.unit}</Text>
+                </View>
+              </View>
 
           {/* Detailed Info */}
           <View style={styles.detailsSection}>
@@ -59,33 +88,35 @@ export function ProductInventoryModal({ product, visible, onClose }) {
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Cost Price</Text>
-              <Text style={styles.infoValue}>₹{product.price}</Text>
+              <Text style={styles.infoValue}>₹{displayProduct.price}</Text>
             </View>
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Total Value</Text>
-              <Text style={styles.infoValue}>₹{(product.inStock * product.price).toLocaleString()}</Text>
+              <Text style={styles.infoValue}>₹{((displayProduct.in_stock ?? displayProduct.inStock) * displayProduct.price).toLocaleString()}</Text>
             </View>
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Status</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                {product.status === 'Low' || product.status === 'Critical' ? (
+                {displayProduct.status === 'Low' || displayProduct.status === 'Critical' ? (
                   <AlertCircle size={14} color={ThemeColors.rose} />
                 ) : null}
                 <Text style={[styles.infoValue, { 
-                  color: product.status === 'Normal' ? ThemeColors.emerald : ThemeColors.rose 
+                  color: displayProduct.status === 'Normal' ? ThemeColors.emerald : ThemeColors.rose 
                 }]}>
-                  {product.status}
+                  {displayProduct.status}
                 </Text>
               </View>
             </View>
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Last Counted</Text>
-              <Text style={styles.infoValue}>{product.lastCounted}</Text>
+              <Text style={styles.infoValue}>{displayProduct.lastCounted || displayProduct.updated_at ? new Date(displayProduct.updated_at || displayProduct.lastCounted).toLocaleDateString() : 'N/A'}</Text>
             </View>
           </View>
+            </>
+          )}
 
         </View>
       </View>

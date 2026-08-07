@@ -1,12 +1,5 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
-import {
-  ADDON_GROUPS,
-  FOOD_TYPE,
-  MENU_CATEGORIES,
-  SUBCATEGORY_ICONS,
-} from "@/constants/menu";
-import { useMenu } from "@/context/MenuContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
@@ -30,23 +23,27 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
+  const categories = useSelector((state) => state.menu.categories) || [];
+  const menuItems = useSelector((state) => state.menu.items) || [];
   const { isMobile, isMiniTab } = useResponsive();
-  const { menuItems } = useMenu();
   const [currentStep, setCurrentStep] = useState(0);
 
-  const categoryOptions = MENU_CATEGORIES.map((cat) => ({
-    label: cat,
-    value: cat,
+  const FOOD_TYPES = ["Veg", "Non-Veg", "Egg", "Vegan", "Jain", "Dessert", "Beverage"];
+
+  const categoryOptions = categories.map((cat) => ({
+    label: cat.name,
+    value: cat.id,
   }));
 
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
-    subCategory: "",
+    category_id: "",
+    sub_category: "",
     description: "",
-    foodType: FOOD_TYPE.VEG,
+    food_type: "Veg",
     sellingPrice: "",
     costPrice: "",
     variants: [],
@@ -57,34 +54,14 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
   });
 
   const subCategoryOptions = (() => {
-    if (!formData.category) {
-      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({
-        label: sub,
-        value: sub,
-      }));
-    }
+    if (!formData.category_id) return [];
+    
+    const selectedCategory = categories.find((c) => c.id === formData.category_id);
+    if (!selectedCategory || !selectedCategory.sub_categories) return [];
 
-    const related = new Set(
-      menuItems
-        .filter((item) => item.category === formData.category)
-        .map((item) => item.subCategory)
-        .filter(Boolean),
-    );
-
-    if (formData.subCategory) {
-      related.add(formData.subCategory);
-    }
-
-    if (related.size === 0) {
-      return Object.keys(SUBCATEGORY_ICONS).map((sub) => ({
-        label: sub,
-        value: sub,
-      }));
-    }
-
-    return Array.from(related).map((sub) => ({
-      label: sub,
-      value: sub,
+    return selectedCategory.sub_categories.map((sub) => ({
+      label: sub.name,
+      value: sub.id,
     }));
   })();
 
@@ -109,56 +86,44 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
     if (visible) {
       setCurrentStep(0);
       if (initialData) {
-        let combinedCustomAddons = (initialData.customAddonGroups || []).map(
+        let combinedCustomAddons = (initialData.addon_categories || []).map(
           (g) => ({
             ...g,
-            addons: g.addons.map((a) => ({ ...a, price: a.price.toString() })),
+            minSelect: g.minSelection ?? g.minSelect ?? 0,
+            maxSelect: g.maxSelection ?? g.maxSelect ?? 1,
+            addons: (g.options || g.addons || []).map((a) => ({
+              ...a,
+              price: a.price != null ? a.price.toString() : "0",
+            })),
           }),
         );
 
-        if (initialData.addonGroups && initialData.addonGroups.length > 0) {
-          initialData.addonGroups.forEach((groupId) => {
-            const group = ADDON_GROUPS.find((g) => g.id === groupId);
-            if (group) {
-              combinedCustomAddons.push({
-                ...group,
-                id: `AG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                addons: group.addons.map((a) => ({
-                  id: `A-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                  name: a.name,
-                  price: (a.price || 0).toString(),
-                })),
-              });
-            }
-          });
-        }
-
         setFormData({
           name: initialData.name || "",
-          category: initialData.category || "",
-          subCategory: initialData.subCategory || "",
+          category_id: initialData.category_id || "",
+          sub_category: initialData.sub_category || "",
           description: initialData.description || "",
-          foodType: initialData.foodType || FOOD_TYPE.VEG,
-          sellingPrice: initialData.pricing?.sellingPrice?.toString() || "",
-          costPrice: initialData.pricing?.costPrice?.toString() || "",
+          food_type: initialData.food_type || "Veg",
+          sellingPrice: initialData.base_price?.toString() || "",
+          costPrice: initialData.cost_price?.toString() || "",
           variants: initialData.variants
             ? initialData.variants.map((v) => ({
                 ...v,
-                price: v.price.toString(),
+                price: v.price != null ? v.price.toString() : "0",
               }))
             : [],
           customAddonGroups: combinedCustomAddons,
-          spiceLevelEnabled: initialData.spiceLevelEnabled || false,
-          image: initialData.image || null,
+          spiceLevelEnabled: initialData.spice_level_enabled || false,
+          image: initialData.image_url || null,
           status: initialData.status || "Active",
         });
       } else {
         setFormData({
           name: "",
-          category: "",
-          subCategory: "",
+          category_id: "",
+          sub_category: "",
           description: "",
-          foodType: FOOD_TYPE.VEG,
+          food_type: "Veg",
           sellingPrice: "",
           costPrice: "",
           variants: [],
@@ -177,44 +142,37 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
     } else {
       // Final Submit
       const payload = {
-        ...(initialData || {}),
         name: formData.name,
-        category: formData.category,
-        subCategory: formData.subCategory,
+        category_id: formData.category_id,
+        sub_category: formData.sub_category,
         description: formData.description,
-        foodType: formData.foodType,
-        pricing: {
-          sellingPrice: parseFloat(formData.sellingPrice) || 0,
-          costPrice: parseFloat(formData.costPrice) || 0,
-        },
+        food_type: formData.food_type,
+        base_price: parseFloat(formData.sellingPrice) || 0,
+        cost_price: parseFloat(formData.costPrice) || 0,
         variants: formData.variants
           .filter((v) => v.name.trim() !== "")
           .map((v) => ({
-            id:
-              v.id ||
-              `V-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             name: v.name,
             price: parseFloat(v.price) || 0,
           })),
-        customAddonGroups: formData.customAddonGroups
+        addon_categories: formData.customAddonGroups
           .map((group) => ({
             ...group,
-            addons: group.addons
-              .filter((a) => a.name.trim() !== "")
+            name: group.name || "",
+            minSelection: group.minSelect || 0,
+            maxSelection: group.maxSelect || 1,
+            options: group.addons
+              .filter((a) => a.name && a.name.trim() !== "")
               .map((a) => ({
-                id:
-                  a.id ||
-                  `A-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: a.name,
                 price: parseFloat(a.price) || 0,
               })),
           }))
           .filter(
-            (group) => group.name.trim() !== "" && group.addons.length > 0,
+            (group) => group.name.trim() !== "" && group.options.length > 0,
           ),
-        addonGroups: [],
-        spiceLevelEnabled: formData.spiceLevelEnabled,
-        image: formData.image,
+        spice_level_enabled: formData.spiceLevelEnabled,
+        image_url: formData.image,
         status: formData.status,
       };
 
@@ -325,12 +283,12 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                     </Text>
                     <Dropdown
                       options={categoryOptions}
-                      value={formData.category}
+                      value={formData.category_id}
                       onChange={(val) =>
                         setFormData({
                           ...formData,
-                          category: val,
-                          subCategory: "",
+                          category_id: val,
+                          sub_category: "",
                         })
                       }
                       placeholder="Select Category"
@@ -342,9 +300,9 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                     </Text>
                     <Dropdown
                       options={subCategoryOptions}
-                      value={formData.subCategory}
+                      value={formData.sub_category}
                       onChange={(val) =>
-                        setFormData({ ...formData, subCategory: val })
+                        setFormData({ ...formData, sub_category: val })
                       }
                       placeholder="Select Sub Category"
                     />
@@ -358,8 +316,8 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                   <View
                     style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
                   >
-                    {Object.values(FOOD_TYPE).map((type) => {
-                      const isActive = formData.foodType === type;
+                    {FOOD_TYPES.map((type) => {
+                      const isActive = formData.food_type === type;
                       let typeColor = ThemeColors.primary;
                       switch (type) {
                         case "Veg":
@@ -396,7 +354,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                             },
                           ]}
                           onPress={() =>
-                            setFormData({ ...formData, foodType: type })
+                            setFormData({ ...formData, food_type: type })
                           }
                         >
                           <Text
@@ -500,7 +458,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                       <TextInput
                         placeholder="Variant Name"
                         placeholderTextColor={ThemeColors.textMuted}
-                        value={v.name}
+                        value={v.name || ""}
                         onChangeText={(val) => {
                           const newV = [...formData.variants];
                           newV[idx].name = val;
@@ -512,7 +470,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                         placeholder="Price (₹)"
                         placeholderTextColor={ThemeColors.textMuted}
                         keyboardType="numeric"
-                        value={v.price}
+                        value={v.price != null ? String(v.price) : ""}
                         onChangeText={(val) => {
                           const newV = [...formData.variants];
                           newV[idx].price = val;
@@ -643,7 +601,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                           <TextInput
                             style={[styles.input, { padding: 8 }]}
                             keyboardType="numeric"
-                            value={group.minSelect.toString()}
+                            value={(group.minSelect ?? 0).toString()}
                             onChangeText={(val) => {
                               const newGroups = [...formData.customAddonGroups];
                               newGroups[groupIdx].minSelect =
@@ -660,7 +618,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                           <TextInput
                             style={[styles.input, { padding: 8 }]}
                             keyboardType="numeric"
-                            value={group.maxSelect.toString()}
+                            value={(group.maxSelect ?? 1).toString()}
                             onChangeText={(val) => {
                               const newGroups = [...formData.customAddonGroups];
                               newGroups[groupIdx].maxSelect =
@@ -684,7 +642,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                                 styles.input,
                                 { flex: 2, padding: 8, marginBottom: 0 },
                               ]}
-                              value={addon.name}
+                              value={addon.name || ""}
                               onChangeText={(val) => {
                                 const newGroups = [
                                   ...formData.customAddonGroups,
@@ -704,7 +662,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                                 styles.input,
                                 { flex: 1, padding: 8, marginBottom: 0 },
                               ]}
-                              value={addon.price}
+                              value={addon.price != null ? String(addon.price) : ""}
                               onChangeText={(val) => {
                                 const newGroups = [
                                   ...formData.customAddonGroups,
