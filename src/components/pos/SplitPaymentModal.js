@@ -1,7 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useKDS } from "@/context/KDSContext";
-import { useOrders } from "@/context/OrdersContext";
-import { usePOS } from "@/context/POSContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
 import { Minus, Plus, User, X } from "lucide-react-native";
@@ -14,28 +11,27 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 export function SplitPaymentModal({
   visible,
   onClose,
   checkoutAction,
+  draftSplitState,
+  setDraftSplitState,
   onComplete,
 }) {
+  const posState = useSelector((state) => state.pos) || {};
   const {
-    cart,
-    runningOrder,
-    totals,
-    clearCart,
-    activeTable,
-    draftSplitState,
-    setDraftSplitState,
-    orderType,
-    customer,
-    setCustomer,
-  } = usePOS();
-  const { addOrder } = useOrders();
-  const { completeTableOrdersInKDS, completeOrderInKDS, activeOrders } =
-    useKDS();
+    cart = [],
+    runningOrder = [],
+    totals = { subtotal: 0, taxAmount: 0, discount: 0, grandTotal: 0 },
+    orderType = "Dine-In",
+    customer = null,
+  } = posState;
+
+  // Fallbacks for missing Redux actions/state
+  const setCustomer = () => {};
 
   const [splitMode, setSplitMode] = useState(
     draftSplitState?.splitMode || "custom",

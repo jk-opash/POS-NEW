@@ -1,34 +1,44 @@
-import React, { useState } from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-} from "react-native";
-import { showAlert } from "@/utils/alert";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { showAlert } from "@/utils/alert";
 import {
-  X,
-  Send,
-  Mail,
-  Phone,
   Check,
-  Receipt,
-  MessageSquare,
   ChevronDown,
   ChevronUp,
+  Mail,
+  MessageSquare,
+  Phone,
+  Receipt,
+  Send,
+  X,
 } from "lucide-react-native";
-import { useOrders } from "@/context/OrdersContext";
-import { usePOS } from "@/context/POSContext";
-import { useKDS } from "@/context/KDSContext";
+import { useState } from "react";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSelector } from "react-redux";
 
 export function EBillCheckoutModal({ visible, onClose, onComplete }) {
-  const { cart, runningOrder, totals, clearCart, activeTable, customer } = usePOS();
-  const { addOrder } = useOrders();
-  const { completeTableOrdersInKDS, completeOrderInKDS, activeOrders } = useKDS();
+  const posState = useSelector((state) => state.pos) || {};
+  const {
+    cart = [],
+    runningOrder = [],
+    totals = { subtotal: 0, taxAmount: 0, discount: 0, grandTotal: 0 },
+    activeTable = null,
+    customer = null,
+    taxRate = 0,
+  } = posState;
+
+  const clearCart = () => {};
+  const addOrder = () => {};
+  const completeTableOrdersInKDS = () => {};
+  const completeOrderInKDS = () => {};
+  const activeOrders = [];
 
   // Payment state
   const [paymentMethods, setPaymentMethods] = useState([
@@ -37,13 +47,18 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
   const [showSplitPayment, setShowSplitPayment] = useState(false);
 
   // Contact state
-  const [phone, setPhone] = useState(customer?.phone?.replace(/[^0-9+]/g, "") || "");
+  const [phone, setPhone] = useState(
+    customer?.phone?.replace(/[^0-9+]/g, "") || "",
+  );
   const [email, setEmail] = useState(customer?.email || "");
 
   // Step state
   const [step, setStep] = useState("checkout"); // "checkout" | "success"
 
-  const totalPaid = paymentMethods.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const totalPaid = paymentMethods.reduce(
+    (sum, p) => sum + (parseFloat(p.amount) || 0),
+    0,
+  );
   const remaining = totals.grandTotal - totalPaid;
 
   const methods = ["Cash", "Card", "UPI"];
@@ -68,8 +83,10 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
     setPaymentMethods([...paymentMethods, { method: "Card", amount: "" }]);
   };
 
-  const validatePhone = (val) => !val.trim() || /^[+]?[0-9]{7,15}$/.test(val.trim());
-  const validateEmail = (val) => !val.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  const validatePhone = (val) =>
+    !val.trim() || /^[+]?[0-9]{7,15}$/.test(val.trim());
+  const validateEmail = (val) =>
+    !val.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
 
   const handleCompleteAndSend = () => {
     if (Math.abs(remaining) > 0.01) {
@@ -77,15 +94,24 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
       return;
     }
     if (!validatePhone(phone)) {
-      showAlert("Invalid Number", "Please enter a valid phone number or leave it empty.");
+      showAlert(
+        "Invalid Number",
+        "Please enter a valid phone number or leave it empty.",
+      );
       return;
     }
     if (!validateEmail(email)) {
-      showAlert("Invalid Email", "Please enter a valid email address or leave it empty.");
+      showAlert(
+        "Invalid Email",
+        "Please enter a valid email address or leave it empty.",
+      );
       return;
     }
     if (!phone.trim() && !email.trim()) {
-      showAlert("Contact Required", "Please enter at least a phone number or email to send the eBill.");
+      showAlert(
+        "Contact Required",
+        "Please enter at least a phone number or email to send the eBill.",
+      );
       return;
     }
 
@@ -120,7 +146,9 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
 
   const handleClose = () => {
     setStep("checkout");
-    setPaymentMethods([{ method: "Cash", amount: totals.grandTotal.toString() }]);
+    setPaymentMethods([
+      { method: "Cash", amount: totals.grandTotal.toString() },
+    ]);
     setPhone(customer?.phone?.replace(/[^0-9+]/g, "") || "");
     setEmail(customer?.email || "");
     setShowSplitPayment(false);
@@ -143,7 +171,9 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                 <Text weight="bold" style={styles.title}>
                   Save & eBill
                 </Text>
-                <Text style={styles.subtitle}>Complete payment & send digital receipt</Text>
+                <Text style={styles.subtitle}>
+                  Complete payment & send digital receipt
+                </Text>
               </View>
             </View>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
@@ -168,19 +198,37 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                 {(totals.discountAmount || 0) > 0 && (
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Discount</Text>
-                    <Text weight="semibold" style={[styles.summaryValue, { color: ThemeColors.emerald }]}>
+                    <Text
+                      weight="semibold"
+                      style={[
+                        styles.summaryValue,
+                        { color: ThemeColors.emerald },
+                      ]}
+                    >
                       − ₹{(totals.discountAmount || 0).toFixed(2)}
                     </Text>
                   </View>
                 )}
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Tax</Text>
+                  <Text style={styles.summaryLabel}>
+                    SGST ({(taxRate / 2).toFixed(1)}%)
+                  </Text>
                   <Text weight="semibold" style={styles.summaryValue}>
-                    ₹{(totals.taxAmount || 0).toFixed(2)}
+                    ₹{((totals.taxAmount || 0) / 2).toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>
+                    CGST ({(taxRate / 2).toFixed(1)}%)
+                  </Text>
+                  <Text weight="semibold" style={styles.summaryValue}>
+                    ₹{((totals.taxAmount || 0) / 2).toFixed(2)}
                   </Text>
                 </View>
                 <View style={[styles.summaryRow, styles.totalRow]}>
-                  <Text weight="bold" style={styles.totalLabel}>Grand Total</Text>
+                  <Text weight="bold" style={styles.totalLabel}>
+                    Grand Total
+                  </Text>
                   <Text weight="bold" style={styles.totalValue}>
                     ₹{(totals.grandTotal || 0).toFixed(2)}
                   </Text>
@@ -189,7 +237,9 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
 
               {/* ── Payment Method ───────────────── */}
               <View style={styles.sectionCard}>
-                <Text weight="semibold" style={styles.sectionTitle}>Payment Method</Text>
+                <Text weight="semibold" style={styles.sectionTitle}>
+                  Payment Method
+                </Text>
 
                 {/* Quick method selector for first method */}
                 <View style={styles.quickMethodRow}>
@@ -198,7 +248,8 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                       key={m}
                       style={[
                         styles.quickMethodBtn,
-                        paymentMethods[0]?.method === m && styles.quickMethodBtnActive,
+                        paymentMethods[0]?.method === m &&
+                          styles.quickMethodBtnActive,
                       ]}
                       onPress={() => handleUpdateMethod(0, m)}
                       activeOpacity={0.8}
@@ -207,7 +258,8 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                         weight="semibold"
                         style={[
                           styles.quickMethodText,
-                          paymentMethods[0]?.method === m && styles.quickMethodTextActive,
+                          paymentMethods[0]?.method === m &&
+                            styles.quickMethodTextActive,
                         ]}
                       >
                         {m}
@@ -242,58 +294,78 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                   )}
                 </TouchableOpacity>
 
-                {showSplitPayment && paymentMethods.slice(1).map((pm, idx) => {
-                  const realIdx = idx + 1;
-                  return (
-                    <View key={realIdx} style={styles.splitRow}>
-                      <View style={styles.splitMethodRow}>
-                        {methods.map((m) => (
-                          <TouchableOpacity
-                            key={m}
-                            style={[
-                              styles.quickMethodBtn,
-                              pm.method === m && styles.quickMethodBtnActive,
-                              { flex: 1 },
-                            ]}
-                            onPress={() => handleUpdateMethod(realIdx, m)}
-                          >
-                            <Text
+                {showSplitPayment &&
+                  paymentMethods.slice(1).map((pm, idx) => {
+                    const realIdx = idx + 1;
+                    return (
+                      <View key={realIdx} style={styles.splitRow}>
+                        <View style={styles.splitMethodRow}>
+                          {methods.map((m) => (
+                            <TouchableOpacity
+                              key={m}
                               style={[
-                                styles.quickMethodText,
-                                pm.method === m && styles.quickMethodTextActive,
+                                styles.quickMethodBtn,
+                                pm.method === m && styles.quickMethodBtnActive,
+                                { flex: 1 },
                               ]}
+                              onPress={() => handleUpdateMethod(realIdx, m)}
                             >
-                              {m}
-                            </Text>
+                              <Text
+                                style={[
+                                  styles.quickMethodText,
+                                  pm.method === m &&
+                                    styles.quickMethodTextActive,
+                                ]}
+                              >
+                                {m}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                        <View style={styles.splitAmountRow}>
+                          <Text style={styles.amountCurrency}>₹</Text>
+                          <TextInput
+                            style={[styles.amountInput, { flex: 1 }]}
+                            value={pm.amount}
+                            onChangeText={(v) => handleUpdateAmount(realIdx, v)}
+                            keyboardType="numeric"
+                            placeholder="0.00"
+                            placeholderTextColor={ThemeColors.textMuted}
+                          />
+                          <TouchableOpacity
+                            onPress={() => handleRemoveMethod(realIdx)}
+                            style={styles.removeBtn}
+                          >
+                            <X size={18} color={ThemeColors.red} />
                           </TouchableOpacity>
-                        ))}
+                        </View>
                       </View>
-                      <View style={styles.splitAmountRow}>
-                        <Text style={styles.amountCurrency}>₹</Text>
-                        <TextInput
-                          style={[styles.amountInput, { flex: 1 }]}
-                          value={pm.amount}
-                          onChangeText={(v) => handleUpdateAmount(realIdx, v)}
-                          keyboardType="numeric"
-                          placeholder="0.00"
-                          placeholderTextColor={ThemeColors.textMuted}
-                        />
-                        <TouchableOpacity onPress={() => handleRemoveMethod(realIdx)} style={styles.removeBtn}>
-                          <X size={18} color={ThemeColors.red} />
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
 
                 {showSplitPayment && (
-                  <TouchableOpacity style={styles.addSplitBtn} onPress={handleAddMethod}>
-                    <Text style={styles.addSplitText}>+ Add Another Method</Text>
+                  <TouchableOpacity
+                    style={styles.addSplitBtn}
+                    onPress={handleAddMethod}
+                  >
+                    <Text style={styles.addSplitText}>
+                      + Add Another Method
+                    </Text>
                   </TouchableOpacity>
                 )}
 
                 {/* Remaining balance */}
-                <View style={[styles.balanceRow, remaining !== 0 && { backgroundColor: remaining > 0 ? ThemeColors.red + "12" : ThemeColors.emerald + "12" }]}>
+                <View
+                  style={[
+                    styles.balanceRow,
+                    remaining !== 0 && {
+                      backgroundColor:
+                        remaining > 0
+                          ? ThemeColors.red + "12"
+                          : ThemeColors.emerald + "12",
+                    },
+                  ]}
+                >
                   <Text style={styles.balanceLabel}>Remaining Balance</Text>
                   <Text
                     weight="bold"
@@ -302,8 +374,8 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
                       remaining > 0
                         ? { color: ThemeColors.red }
                         : remaining < 0
-                        ? { color: ThemeColors.emerald }
-                        : { color: ThemeColors.textPrimary },
+                          ? { color: ThemeColors.emerald }
+                          : { color: ThemeColors.textPrimary },
                     ]}
                   >
                     ₹{remaining.toFixed(2)}
@@ -312,15 +384,24 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
               </View>
 
               {/* ── Send eBill To ────────────────── */}
-              <Text style={styles.contactSectionLabel}>Send eBill to customer</Text>
+              <Text style={styles.contactSectionLabel}>
+                Send eBill to customer
+              </Text>
 
               {/* SMS */}
               <View style={styles.channelCard}>
                 <View style={styles.channelHeader}>
-                  <View style={[styles.channelIcon, { backgroundColor: ThemeColors.emerald + "20" }]}>
+                  <View
+                    style={[
+                      styles.channelIcon,
+                      { backgroundColor: ThemeColors.emerald + "20" },
+                    ]}
+                  >
                     <MessageSquare size={14} color={ThemeColors.emerald} />
                   </View>
-                  <Text weight="semibold" style={styles.channelTitle}>SMS / WhatsApp</Text>
+                  <Text weight="semibold" style={styles.channelTitle}>
+                    SMS / WhatsApp
+                  </Text>
                 </View>
                 <View style={styles.contactInputWrap}>
                   <Phone size={14} color={ThemeColors.textMuted} />
@@ -338,10 +419,17 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
               {/* Email */}
               <View style={styles.channelCard}>
                 <View style={styles.channelHeader}>
-                  <View style={[styles.channelIcon, { backgroundColor: ThemeColors.blue + "20" }]}>
+                  <View
+                    style={[
+                      styles.channelIcon,
+                      { backgroundColor: ThemeColors.blue + "20" },
+                    ]}
+                  >
                     <Mail size={14} color={ThemeColors.blue} />
                   </View>
-                  <Text weight="semibold" style={styles.channelTitle}>Email</Text>
+                  <Text weight="semibold" style={styles.channelTitle}>
+                    Email
+                  </Text>
                 </View>
                 <View style={styles.contactInputWrap}>
                   <Mail size={14} color={ThemeColors.textMuted} />
@@ -363,12 +451,21 @@ export function EBillCheckoutModal({ visible, onClose, onComplete }) {
               <View style={styles.successIcon}>
                 <Check size={40} color={ThemeColors.emerald} />
               </View>
-              <Text weight="bold" style={styles.successTitle}>Payment Complete!</Text>
-              <Text style={styles.successDesc}>
-                Order has been completed and the eBill has been sent to the customer.
+              <Text weight="bold" style={styles.successTitle}>
+                Payment Complete!
               </Text>
-              <TouchableOpacity style={styles.doneBtn} onPress={handleClose} activeOpacity={0.8}>
-                <Text weight="bold" style={styles.doneBtnText}>Done</Text>
+              <Text style={styles.successDesc}>
+                Order has been completed and the eBill has been sent to the
+                customer.
+              </Text>
+              <TouchableOpacity
+                style={styles.doneBtn}
+                onPress={handleClose}
+                activeOpacity={0.8}
+              >
+                <Text weight="bold" style={styles.doneBtnText}>
+                  Done
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -474,7 +571,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ThemeColors.borderSubtle,
   },
-  sectionTitle: { fontSize: 14, color: ThemeColors.textPrimary, marginBottom: 4 },
+  sectionTitle: {
+    fontSize: 14,
+    color: ThemeColors.textPrimary,
+    marginBottom: 4,
+  },
   quickMethodRow: { flexDirection: "row", gap: ThemeSpacing.sm },
   quickMethodBtn: {
     flex: 1,
@@ -503,7 +604,12 @@ const styles = StyleSheet.create({
     gap: ThemeSpacing.sm,
   },
   amountCurrency: { fontSize: 18, color: ThemeColors.textSecondary },
-  amountInput: { flex: 1, fontSize: 22, color: ThemeColors.textPrimary, outlineStyle: "none" },
+  amountInput: {
+    flex: 1,
+    fontSize: 22,
+    color: ThemeColors.textPrimary,
+    outlineStyle: "none",
+  },
   splitToggle: {
     flexDirection: "row",
     alignItems: "center",
@@ -513,7 +619,11 @@ const styles = StyleSheet.create({
   splitToggleText: { fontSize: 13, color: ThemeColors.accent },
   splitRow: { gap: ThemeSpacing.sm },
   splitMethodRow: { flexDirection: "row", gap: ThemeSpacing.sm },
-  splitAmountRow: { flexDirection: "row", alignItems: "center", gap: ThemeSpacing.sm },
+  splitAmountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.sm,
+  },
   removeBtn: { padding: 6 },
   addSplitBtn: { alignSelf: "flex-start" },
   addSplitText: { fontSize: 13, color: ThemeColors.textMuted },
@@ -544,7 +654,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ThemeColors.borderSubtle,
   },
-  channelHeader: { flexDirection: "row", alignItems: "center", gap: ThemeSpacing.sm },
+  channelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.sm,
+  },
   channelIcon: {
     width: 26,
     height: 26,
@@ -564,7 +678,12 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.surface,
     height: 42,
   },
-  contactInput: { flex: 1, fontSize: 14, color: ThemeColors.textPrimary, outlineStyle: "none" },
+  contactInput: {
+    flex: 1,
+    fontSize: 14,
+    color: ThemeColors.textPrimary,
+    outlineStyle: "none",
+  },
 
   // Footer
   footer: {

@@ -1,6 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { Platform } from 'react-native';
-import { useHardware } from '@/context/HardwareContext';
+import { useCallback, useEffect, useRef } from "react";
+import { Platform } from "react-native";
 
 /**
  * Hook to intercept HID Barcode Scanner input globally.
@@ -8,7 +7,7 @@ import { useHardware } from '@/context/HardwareContext';
  */
 export function useBarcodeScanner(onScan, enabled = true) {
   const { hardwareStatus, manager } = useHardware();
-  const bufferRef = useRef('');
+  const bufferRef = useRef("");
   const lastKeyTimeRef = useRef(0);
 
   // Subscribe to HAL Scanner Adapter
@@ -29,34 +28,39 @@ export function useBarcodeScanner(onScan, enabled = true) {
       const timeDiff = currentTime - lastKeyTimeRef.current;
 
       if (timeDiff > 100) {
-        bufferRef.current = '';
+        bufferRef.current = "";
       }
 
       lastKeyTimeRef.current = currentTime;
 
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         const barcode = bufferRef.current.trim();
-        if (barcode.length > 3) { 
+        if (barcode.length > 3) {
           // Trigger via manager so it follows the HAL flow
           manager?.simulateScan(barcode);
-          event.preventDefault(); 
+          event.preventDefault();
         }
-        bufferRef.current = ''; 
+        bufferRef.current = "";
         return;
       }
 
-      if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (
+        event.key.length === 1 &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
         bufferRef.current += event.key;
       }
     },
-    [enabled, manager]
+    [enabled, manager],
   );
 
   useEffect(() => {
-    if (Platform.OS === 'web') {
-      window.addEventListener('keydown', handleKeyPress);
+    if (Platform.OS === "web") {
+      window.addEventListener("keydown", handleKeyPress);
       return () => {
-        window.removeEventListener('keydown', handleKeyPress);
+        window.removeEventListener("keydown", handleKeyPress);
       };
     }
   }, [handleKeyPress]);

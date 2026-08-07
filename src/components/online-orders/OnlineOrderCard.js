@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/Text";
 import {
   PLATFORM_COLORS,
   getTimeSince,
-} from "@/screens/online-orders/OnlineOrdersScreen";
+} from "@/app/online-orders/index";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Check, Clock, ShoppingBag, X } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";

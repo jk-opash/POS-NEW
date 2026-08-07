@@ -1,24 +1,26 @@
-import React, { useState } from "react";
-import { View, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Search, ChevronDown, ChevronUp } from "lucide-react-native";
-import { useSupport } from "@/context/SupportContext";
+import { ChevronDown, ChevronUp, Search } from "lucide-react-native";
+import { useState } from "react";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 export function FaqTab() {
   const { faqs } = useSupport();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState(null);
 
-  const filteredFaqs = faqs.filter(f => 
-    f.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    f.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFaqs = faqs.filter(
+    (f) =>
+      f.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.answer.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text weight="bold" style={styles.title}>Frequently Asked Questions</Text>
+        <Text weight="bold" style={styles.title}>
+          Frequently Asked Questions
+        </Text>
         <Text style={styles.subtitle}>Quick answers to common questions.</Text>
       </View>
 
@@ -38,11 +40,13 @@ export function FaqTab() {
           const isExpanded = expandedId === faq.id;
           return (
             <View key={faq.id} style={styles.faqCard}>
-              <TouchableOpacity 
-                style={styles.faqHeader} 
+              <TouchableOpacity
+                style={styles.faqHeader}
                 onPress={() => setExpandedId(isExpanded ? null : faq.id)}
               >
-                <Text weight="bold" style={styles.questionText}>{faq.question}</Text>
+                <Text weight="bold" style={styles.questionText}>
+                  {faq.question}
+                </Text>
                 {isExpanded ? (
                   <ChevronUp size={20} color={ThemeColors.textMuted} />
                 ) : (
@@ -137,5 +141,5 @@ const styles = StyleSheet.create({
   emptyText: {
     color: ThemeColors.textMuted,
     fontSize: 15,
-  }
+  },
 });

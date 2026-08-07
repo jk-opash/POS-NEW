@@ -3,6 +3,7 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Bell, Calendar, Clock, Menu, Users } from "lucide-react-native";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 const TABS = [
   { key: "directory", label: "Directory", icon: Users },
@@ -32,6 +33,7 @@ export function StaffHeader({
           <Text style={styles.pageTitle}>Staff</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <Text weight="medium" style={styles.headerDate}>
             {dateString}
           </Text>

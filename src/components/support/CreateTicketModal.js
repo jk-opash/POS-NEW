@@ -1,13 +1,20 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Modal, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { X } from "lucide-react-native";
-import { useSupport } from "@/context/SupportContext";
+import { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export function CreateTicketModal({ visible, onClose }) {
   const { addTicket } = useSupport();
-  
+
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("Hardware");
   const [description, setDescription] = useState("");
@@ -31,13 +38,15 @@ export function CreateTicketModal({ visible, onClose }) {
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.overlay}
       >
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text weight="bold" style={styles.title}>Create Support Ticket</Text>
+            <Text weight="bold" style={styles.title}>
+              Create Support Ticket
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textMuted} />
             </TouchableOpacity>
@@ -63,14 +72,16 @@ export function CreateTicketModal({ visible, onClose }) {
                     key={cat}
                     style={[
                       styles.radioBtn,
-                      category === cat && styles.radioBtnActive
+                      category === cat && styles.radioBtnActive,
                     ]}
                     onPress={() => setCategory(cat)}
                   >
-                    <Text style={[
-                      styles.radioText,
-                      category === cat && styles.radioTextActive
-                    ]}>
+                    <Text
+                      style={[
+                        styles.radioText,
+                        category === cat && styles.radioTextActive,
+                      ]}
+                    >
                       {cat}
                     </Text>
                   </TouchableOpacity>
@@ -95,14 +106,21 @@ export function CreateTicketModal({ visible, onClose }) {
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text weight="bold" style={styles.cancelBtnText}>Cancel</Text>
+              <Text weight="bold" style={styles.cancelBtnText}>
+                Cancel
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.submitBtn, (!subject || !description) && { opacity: 0.5 }]} 
+            <TouchableOpacity
+              style={[
+                styles.submitBtn,
+                (!subject || !description) && { opacity: 0.5 },
+              ]}
               onPress={handleSubmit}
               disabled={!subject || !description}
             >
-              <Text weight="bold" style={styles.submitBtnText}>Submit Ticket</Text>
+              <Text weight="bold" style={styles.submitBtnText}>
+                Submit Ticket
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -182,7 +200,7 @@ const styles = StyleSheet.create({
   },
   radioBtnActive: {
     borderColor: ThemeColors.blue,
-    backgroundColor: ThemeColors.blue + '15',
+    backgroundColor: ThemeColors.blue + "15",
   },
   radioText: {
     fontSize: 13,
@@ -217,5 +235,5 @@ const styles = StyleSheet.create({
   submitBtnText: {
     color: ThemeColors.white,
     fontSize: 14,
-  }
+  },
 });

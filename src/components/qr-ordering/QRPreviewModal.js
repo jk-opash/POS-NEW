@@ -5,6 +5,8 @@ import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
 export function QRPreviewModal({ previewTable, onClose, onDownload }) {
+  const baseUrl = process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://your-ordering-site.com/order";
+
   return (
     <Modal visible={!!previewTable} transparent animationType="fade">
       <View style={styles.modalOverlay}>
@@ -17,7 +19,7 @@ export function QRPreviewModal({ previewTable, onClose, onDownload }) {
           <View style={styles.modalQrWrapper}>
             {previewTable && (
               <QRCode
-                value={`https://spicegarden.in/order?table=${previewTable.name}`}
+                value={`${baseUrl}?table=${previewTable.name}`}
                 size={200}
                 color={ThemeColors.primary}
                 backgroundColor={ThemeColors.white}
@@ -25,7 +27,7 @@ export function QRPreviewModal({ previewTable, onClose, onDownload }) {
             )}
           </View>
           <Text style={styles.modalUrlText}>
-            https://spicegarden.in/order?table={previewTable?.name}
+            {baseUrl}?table={previewTable?.name}
           </Text>
 
           <View style={styles.modalActions}>

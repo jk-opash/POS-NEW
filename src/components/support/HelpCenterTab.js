@@ -1,24 +1,28 @@
-import React, { useState } from "react";
-import { View, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Search, BookOpen, ChevronRight } from "lucide-react-native";
-import { useSupport } from "@/context/SupportContext";
+import { BookOpen, ChevronRight, Search } from "lucide-react-native";
+import { useState } from "react";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 
 export function HelpCenterTab() {
   const { articles } = useSupport();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredArticles = articles.filter(a => 
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    a.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredArticles = articles.filter(
+    (a) =>
+      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text weight="bold" style={styles.title}>Help Center</Text>
-        <Text style={styles.subtitle}>Find guides, tutorials, and documentation.</Text>
+        <Text weight="bold" style={styles.title}>
+          Help Center
+        </Text>
+        <Text style={styles.subtitle}>
+          Find guides, tutorials, and documentation.
+        </Text>
       </View>
 
       <View style={styles.searchWrap}>
@@ -39,9 +43,15 @@ export function HelpCenterTab() {
               <BookOpen size={24} color={ThemeColors.emerald} />
             </View>
             <View style={styles.articleInfo}>
-              <Text style={styles.categoryText}>{article.category.toUpperCase()}</Text>
-              <Text weight="bold" style={styles.articleTitle}>{article.title}</Text>
-              <Text style={styles.articleDesc} numberOfLines={2}>{article.description}</Text>
+              <Text style={styles.categoryText}>
+                {article.category.toUpperCase()}
+              </Text>
+              <Text weight="bold" style={styles.articleTitle}>
+                {article.title}
+              </Text>
+              <Text style={styles.articleDesc} numberOfLines={2}>
+                {article.description}
+              </Text>
             </View>
             <ChevronRight size={20} color={ThemeColors.border} />
           </TouchableOpacity>
@@ -135,5 +145,5 @@ const styles = StyleSheet.create({
   emptyText: {
     color: ThemeColors.textMuted,
     fontSize: 15,
-  }
+  },
 });

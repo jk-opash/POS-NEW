@@ -1,19 +1,24 @@
-import React from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
-} from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X, Image as ImageIcon, LayoutGrid, Printer, Banknote, ShieldAlert } from "lucide-react-native";
-import { useBillingConfig } from "@/context/BillingConfigContext";
+import {
+  Banknote,
+  Image as ImageIcon,
+  LayoutGrid,
+  Printer,
+  ShieldAlert,
+  X,
+} from "lucide-react-native";
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export function BillingConfigModal({ visible, onClose }) {
-  const { config, updateConfig } = useBillingConfig();
+  const { config = {}, updateConfig = () => {} } = {};
 
   if (!visible) return null;
 
@@ -24,8 +29,12 @@ export function BillingConfigModal({ visible, onClose }) {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text weight="bold" style={styles.title}>Billing Screen Settings</Text>
-              <Text style={styles.subtitle}>Customize the POS checkout experience</Text>
+              <Text weight="bold" style={styles.title}>
+                Billing Screen Settings
+              </Text>
+              <Text style={styles.subtitle}>
+                Customize the POS checkout experience
+              </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textSecondary} />
@@ -33,18 +42,27 @@ export function BillingConfigModal({ visible, onClose }) {
           </View>
 
           {/* Body */}
-          <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             {/* View Preferences */}
-            <Text weight="bold" style={styles.sectionTitle}>View Preferences</Text>
+            <Text weight="bold" style={styles.sectionTitle}>
+              View Preferences
+            </Text>
             <View style={styles.settingsGroup}>
               <View style={styles.settingRow}>
                 <View style={styles.settingIconBox}>
                   <ImageIcon size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Show Item Images</Text>
-                  <Text style={styles.settingDesc}>Display product images on the menu grid.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Show Item Images
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Display product images on the menu grid.
+                  </Text>
                 </View>
                 <Switch
                   value={config.showItemImages}
@@ -58,23 +76,57 @@ export function BillingConfigModal({ visible, onClose }) {
                   <LayoutGrid size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Default Menu View</Text>
-                  <Text style={styles.settingDesc}>Start with grid or list view.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Default Menu View
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Start with grid or list view.
+                  </Text>
                 </View>
                 <View style={styles.toggleRow}>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, config.defaultCategoryView === "grid" && styles.toggleBtnActive]}
+                    style={[
+                      styles.toggleBtn,
+                      config.defaultCategoryView === "grid" &&
+                        styles.toggleBtnActive,
+                    ]}
                     onPress={() => updateConfig("defaultCategoryView", "grid")}
                   >
-                    <Text weight={config.defaultCategoryView === "grid" ? "bold" : "medium"} style={[styles.toggleText, config.defaultCategoryView === "grid" && styles.toggleTextActive]}>
+                    <Text
+                      weight={
+                        config.defaultCategoryView === "grid"
+                          ? "bold"
+                          : "medium"
+                      }
+                      style={[
+                        styles.toggleText,
+                        config.defaultCategoryView === "grid" &&
+                          styles.toggleTextActive,
+                      ]}
+                    >
                       Grid
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, config.defaultCategoryView === "list" && styles.toggleBtnActive]}
+                    style={[
+                      styles.toggleBtn,
+                      config.defaultCategoryView === "list" &&
+                        styles.toggleBtnActive,
+                    ]}
                     onPress={() => updateConfig("defaultCategoryView", "list")}
                   >
-                    <Text weight={config.defaultCategoryView === "list" ? "bold" : "medium"} style={[styles.toggleText, config.defaultCategoryView === "list" && styles.toggleTextActive]}>
+                    <Text
+                      weight={
+                        config.defaultCategoryView === "list"
+                          ? "bold"
+                          : "medium"
+                      }
+                      style={[
+                        styles.toggleText,
+                        config.defaultCategoryView === "list" &&
+                          styles.toggleTextActive,
+                      ]}
+                    >
                       List
                     </Text>
                   </TouchableOpacity>
@@ -83,15 +135,21 @@ export function BillingConfigModal({ visible, onClose }) {
             </View>
 
             {/* Workflow & Security */}
-            <Text weight="bold" style={styles.sectionTitle}>Workflow & Security</Text>
+            <Text weight="bold" style={styles.sectionTitle}>
+              Workflow & Security
+            </Text>
             <View style={styles.settingsGroup}>
               <View style={styles.settingRow}>
                 <View style={styles.settingIconBox}>
                   <Printer size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Auto-Print Bill</Text>
-                  <Text style={styles.settingDesc}>Automatically print the receipt when payment completes.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Auto-Print Bill
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Automatically print the receipt when payment completes.
+                  </Text>
                 </View>
                 <Switch
                   value={config.autoPrintBill}
@@ -105,8 +163,12 @@ export function BillingConfigModal({ visible, onClose }) {
                   <Banknote size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Quick Cash Buttons</Text>
-                  <Text style={styles.settingDesc}>Show quick amount buttons (e.g., $10, $50) at checkout.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Quick Cash Buttons
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Show quick amount buttons (e.g., $10, $50) at checkout.
+                  </Text>
                 </View>
                 <Switch
                   value={config.quickCashButtons}
@@ -120,23 +182,30 @@ export function BillingConfigModal({ visible, onClose }) {
                   <ShieldAlert size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Require PIN for Voids</Text>
-                  <Text style={styles.settingDesc}>Ask for manager passcode to void items.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Require PIN for Voids
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Ask for manager passcode to void items.
+                  </Text>
                 </View>
                 <Switch
                   value={config.requirePasscodeForVoid}
-                  onValueChange={(val) => updateConfig("requirePasscodeForVoid", val)}
+                  onValueChange={(val) =>
+                    updateConfig("requirePasscodeForVoid", val)
+                  }
                   style={styles.switchControl}
                 />
               </View>
             </View>
-
           </ScrollView>
 
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.doneBtn} onPress={onClose}>
-              <Text weight="bold" style={styles.doneText}>Done</Text>
+              <Text weight="bold" style={styles.doneText}>
+                Done
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

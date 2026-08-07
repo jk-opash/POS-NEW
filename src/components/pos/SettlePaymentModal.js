@@ -9,7 +9,11 @@ import {
   View,
 } from "react-native";
 
+import { useSelector } from "react-redux";
+
 export function SettlePaymentModal({ visible, order, onClose, onSettle }) {
+  const taxRate = useSelector((state) => state.pos.taxRate) || 0;
+
   if (!visible || !order) return null;
 
   return (
@@ -100,9 +104,19 @@ export function SettlePaymentModal({ visible, order, onClose, onSettle }) {
                 </View>
               )}
               <View style={styles.totalsRow}>
-                <Text style={styles.totalsLabel}>Tax</Text>
+                <Text style={styles.totalsLabel}>
+                  SGST ({(taxRate / 2).toFixed(1)}%)
+                </Text>
                 <Text style={styles.totalsValue}>
-                  ₹{order.totals.taxAmount.toFixed(2)}
+                  ₹{(order.totals.taxAmount / 2).toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.totalsRow}>
+                <Text style={styles.totalsLabel}>
+                  CGST ({(taxRate / 2).toFixed(1)}%)
+                </Text>
+                <Text style={styles.totalsValue}>
+                  ₹{(order.totals.taxAmount / 2).toFixed(2)}
                 </Text>
               </View>
 

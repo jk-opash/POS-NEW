@@ -1,9 +1,14 @@
-import React from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { ThemeColors, ThemeSpacing, ThemeRadius } from "@/theme/theme";
-import { Receipt, FileText, Activity, TrendingUp, Hash } from "lucide-react-native";
-import { useResponsive } from "@/hooks/useResponsive";
 import { Text } from "@/components/ui/Text";
+import { useResponsive } from "@/hooks/useResponsive";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import {
+  Activity,
+  FileText,
+  Hash,
+  Receipt,
+  TrendingUp,
+} from "lucide-react-native";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 export function InvoicesSummaryCards({ metrics }) {
   const { isMobile, isMiniTab } = useResponsive();
@@ -22,42 +27,95 @@ export function InvoicesSummaryCards({ metrics }) {
     <>
       {/* --- Revenue Card --- */}
       <TouchableOpacity style={cardStyle} activeOpacity={0.9}>
-        <View style={[styles.blob, { backgroundColor: ThemeColors.emerald + "15" }]} />
-        <View style={[styles.blobSmall, { backgroundColor: ThemeColors.emerald + "15" }]} />
-        
+        <View
+          style={[styles.blob, { backgroundColor: ThemeColors.emerald + "15" }]}
+        />
+        <View
+          style={[
+            styles.blobSmall,
+            { backgroundColor: ThemeColors.emerald + "15" },
+          ]}
+        />
+
         <View style={styles.cardLeft}>
-          <View style={[styles.iconBox, { backgroundColor: ThemeColors.emerald + "15" }]}>
+          <View
+            style={[
+              styles.iconBox,
+              { backgroundColor: ThemeColors.emerald + "15" },
+            ]}
+          >
             <Receipt size={22} color={ThemeColors.emerald} />
           </View>
-          <Text weight="semibold" style={styles.cardTitle}>Total Revenue</Text>
+          <Text weight="semibold" style={styles.cardTitle}>
+            Total Revenue
+          </Text>
         </View>
 
         <View style={styles.cardRight}>
-          <Text weight="bold" style={styles.cardValue}>₹{metrics.totalRevenue.toFixed(2)}</Text>
+          <Text weight="bold" style={styles.cardValue}>
+            ₹{metrics.totalRevenue.toFixed(2)}
+          </Text>
           <View style={[styles.trendBadge, styles.trendUp]}>
-            <TrendingUp size={14} color={ThemeColors.emerald} style={{ marginRight: 4 }} />
-            <Text weight="bold" style={[styles.trendText, { color: ThemeColors.emerald }]}>+12.5%</Text>
+            <TrendingUp
+              size={14}
+              color={ThemeColors.emerald}
+              style={{ marginRight: 4 }}
+            />
+            <Text
+              weight="bold"
+              style={[styles.trendText, { color: ThemeColors.emerald }]}
+            >
+              +12.5%
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
 
       {/* --- Total Invoices Card --- */}
       <TouchableOpacity style={cardStyle} activeOpacity={0.9}>
-        <View style={[styles.blob, { backgroundColor: ThemeColors.primary + "15" }]} />
-        <View style={[styles.blobSmall, { backgroundColor: ThemeColors.primary + "15" }]} />
-        
+        <View
+          style={[styles.blob, { backgroundColor: ThemeColors.primary + "15" }]}
+        />
+        <View
+          style={[
+            styles.blobSmall,
+            { backgroundColor: ThemeColors.primary + "15" },
+          ]}
+        />
+
         <View style={styles.cardLeft}>
-          <View style={[styles.iconBox, { backgroundColor: ThemeColors.primary + "15" }]}>
+          <View
+            style={[
+              styles.iconBox,
+              { backgroundColor: ThemeColors.primary + "15" },
+            ]}
+          >
             <FileText size={22} color={ThemeColors.primary} />
           </View>
-          <Text weight="semibold" style={styles.cardTitle}>Total Invoices</Text>
+          <Text weight="semibold" style={styles.cardTitle}>
+            Total Invoices
+          </Text>
         </View>
 
         <View style={styles.cardRight}>
-          <Text weight="bold" style={styles.cardValue}>{metrics.totalInvoices}</Text>
-          <View style={[styles.trendBadge, { backgroundColor: ThemeColors.primary + "15" }]}>
-            <Hash size={14} color={ThemeColors.primary} style={{ marginRight: 4 }} />
-            <Text weight="bold" style={[styles.trendText, { color: ThemeColors.primary }]}>
+          <Text weight="bold" style={styles.cardValue}>
+            {metrics.totalInvoices}
+          </Text>
+          <View
+            style={[
+              styles.trendBadge,
+              { backgroundColor: ThemeColors.primary + "15" },
+            ]}
+          >
+            <Hash
+              size={14}
+              color={ThemeColors.primary}
+              style={{ marginRight: 4 }}
+            />
+            <Text
+              weight="bold"
+              style={[styles.trendText, { color: ThemeColors.primary }]}
+            >
               All time
             </Text>
           </View>
@@ -66,20 +124,44 @@ export function InvoicesSummaryCards({ metrics }) {
 
       {/* --- Average Value Card --- */}
       <TouchableOpacity style={cardStyle} activeOpacity={0.9}>
-        <View style={[styles.blob, { backgroundColor: ThemeColors.blue + "15" }]} />
-        <View style={[styles.blobSmall, { backgroundColor: ThemeColors.blue + "15" }]} />
-        
+        <View
+          style={[styles.blob, { backgroundColor: ThemeColors.blue + "15" }]}
+        />
+        <View
+          style={[
+            styles.blobSmall,
+            { backgroundColor: ThemeColors.blue + "15" },
+          ]}
+        />
+
         <View style={styles.cardLeft}>
-          <View style={[styles.iconBox, { backgroundColor: ThemeColors.blue + "15" }]}>
+          <View
+            style={[
+              styles.iconBox,
+              { backgroundColor: ThemeColors.blue + "15" },
+            ]}
+          >
             <Activity size={22} color={ThemeColors.blue} />
           </View>
-          <Text weight="semibold" style={styles.cardTitle}>Average Value</Text>
+          <Text weight="semibold" style={styles.cardTitle}>
+            Average Value
+          </Text>
         </View>
 
         <View style={styles.cardRight}>
-          <Text weight="bold" style={styles.cardValue}>₹{metrics.averageValue.toFixed(2)}</Text>
-          <View style={[styles.trendBadge, { backgroundColor: ThemeColors.blue + "15" }]}>
-            <Text weight="bold" style={[styles.trendText, { color: ThemeColors.blue }]}>
+          <Text weight="bold" style={styles.cardValue}>
+            ₹{metrics.averageValue.toFixed(2)}
+          </Text>
+          <View
+            style={[
+              styles.trendBadge,
+              { backgroundColor: ThemeColors.blue + "15" },
+            ]}
+          >
+            <Text
+              weight="bold"
+              style={[styles.trendText, { color: ThemeColors.blue }]}
+            >
               Per Invoice
             </Text>
           </View>
@@ -93,8 +175,15 @@ export function InvoicesSummaryCards({ metrics }) {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: ThemeSpacing.lg, paddingRight: ThemeSpacing.xl }}
-        style={{ marginHorizontal: -ThemeSpacing.lg, paddingHorizontal: ThemeSpacing.lg, marginBottom: ThemeSpacing.xl }}
+        contentContainerStyle={{
+          gap: ThemeSpacing.lg,
+          paddingRight: ThemeSpacing.xl,
+        }}
+        style={{
+          marginHorizontal: -ThemeSpacing.lg,
+          paddingHorizontal: ThemeSpacing.lg,
+          marginBottom: ThemeSpacing.xl,
+        }}
       >
         {content}
       </ScrollView>

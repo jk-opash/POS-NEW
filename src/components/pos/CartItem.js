@@ -8,18 +8,20 @@ export function CartItem({
   isLocked,
   onUpdateQuantity,
   onVoidItem,
+  onVoidLockedItem,
+  onDecreaseLockedItem,
   onAssignStaff,
   onPress,
   index,
 }) {
-  let basePrice = item.product.pricing?.sellingPrice || 0;
+  let basePrice = Number(item.product.pricing?.sellingPrice || item.product.price || item.product.base_price || 0);
   if (item.variant) {
-    basePrice = item.variant.price;
+    basePrice = Number(item.variant.price) || 0;
   }
   let addonsPrice = 0;
   if (item.addons && item.addons.length > 0) {
     item.addons.forEach((a) => {
-      if (a && a.price) addonsPrice += a.price;
+      if (a && a.price) addonsPrice += Number(a.price);
     });
   }
 
@@ -34,9 +36,9 @@ export function CartItem({
       disabled={isLocked && !onPress}
     >
       <View style={styles.cartItemRow}>
-        {!isLocked && (
+        {(!isLocked || onVoidLockedItem) && (
           <TouchableOpacity
-            onPress={() => onVoidItem(item.id)}
+            onPress={() => isLocked ? onVoidLockedItem(item) : onVoidItem(item.id)}
             style={styles.deleteBtn}
           >
             <Trash2 size={16} color={ThemeColors.red} />
@@ -47,7 +49,7 @@ export function CartItem({
           <Text weight="bold" style={styles.cartItemName} numberOfLines={1}>
             {item.product.name} {item.variant ? `(${item.variant.name})` : ""}
           </Text>
-          {item.addons && item.addons.length > 0 && (
+          {(item.addons?.length > 0 || item.spiceLevel) && (
             <Text
               style={{
                 fontSize: 11,
@@ -55,29 +57,42 @@ export function CartItem({
                 marginBottom: 2,
               }}
             >
-              {item.addons.map((a) => a.name).join(", ")}
+              {[
+                item.spiceLevel?.name ? `Spice: ${item.spiceLevel.name}` : null,
+                ...(item.addons || []).map((a) => a.name)
+              ].filter(Boolean).join(", ")}
             </Text>
           )}
           {item.note && <Text style={styles.itemNote}>Note: {item.note}</Text>}
         </View>
 
-        {!isLocked && (
+        {(!isLocked || onDecreaseLockedItem) && (
           <View style={styles.cartItemControls}>
             <TouchableOpacity
               style={styles.qtyBtn}
-              onPress={() => onUpdateQuantity(item.id, item.quantity - 1)}
+              onPress={() =>
+                isLocked
+                  ? onDecreaseLockedItem(item)
+                  : onUpdateQuantity(item.id, item.quantity - 1)
+              }
             >
               <Minus size={14} color={ThemeColors.textPrimary} />
             </TouchableOpacity>
             <Text weight="bold" style={styles.qtyText}>
               {item.quantity}
             </Text>
-            <TouchableOpacity
-              style={styles.qtyBtn}
-              onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
-            >
-              <Plus size={14} color={ThemeColors.textPrimary} />
-            </TouchableOpacity>
+            {isLocked ? (
+              <View style={[styles.qtyBtn, { opacity: 0.3 }]}>
+                <Plus size={14} color={ThemeColors.textPrimary} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.qtyBtn}
+                onPress={() => onUpdateQuantity(item.id, item.quantity + 1)}
+              >
+                <Plus size={14} color={ThemeColors.textPrimary} />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 

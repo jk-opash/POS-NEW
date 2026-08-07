@@ -60,8 +60,19 @@ export function WaiterTicket({ order, onServeAll }) {
             <Utensils size={18} color={ThemeColors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text weight="bold" style={styles.cardPlatform} numberOfLines={2}>
-              #{order.orderNumber} - {order.type}
+            <Text weight="bold" style={styles.cardPlatform} numberOfLines={1}>
+              {order.type === "Takeaway" ? "Customer" : "Table"}:{" "}
+              {order.table || order.customer || "N/A"}
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: ThemeColors.textSecondary,
+                marginTop: 2,
+              }}
+              numberOfLines={1}
+            >
+              {order.type} - #{order.orderNumber}
             </Text>
             {/* <View style={styles.cardTimeRow}>
               <Clock size={12} color={ThemeColors.textMuted} />
@@ -75,14 +86,9 @@ export function WaiterTicket({ order, onServeAll }) {
 
       {/* ── Items List ──────────────────────────── */}
       <View style={styles.orderItemsList}>
-        <View style={styles.customerRow}>
-          <Text weight="medium" style={styles.cardCustomer}>
-            Table: {order.table || order.customer || "N/A"}
-          </Text>
-          <Text style={styles.stationText}>Station: {order.station}</Text>
-        </View>
-
-        {["Starter", "Main", "Dessert", "Uncategorized"].map((courseName) => {
+        {Array.from(
+          new Set(order.items.map((i) => i.course || "Uncategorized")),
+        ).map((courseName) => {
           const courseItems = order.items.filter((item) => {
             const matchesCourse =
               (item.course || "Uncategorized") === courseName;
@@ -123,13 +129,41 @@ export function WaiterTicket({ order, onServeAll }) {
           );
         })}
 
-        {/* Notes */}
         {order.notes ? (
           <View style={styles.notesBox}>
             <AlertCircle size={14} color={ThemeColors.amber} />
             <Text style={styles.notesText}>{order.notes}</Text>
           </View>
         ) : null}
+
+        {order.type === "Takeaway" && (
+          <View
+            style={{
+              backgroundColor: ThemeColors.amber + "15",
+              padding: ThemeSpacing.md,
+              borderRadius: ThemeRadius.md,
+              marginTop: ThemeSpacing.md,
+              flexDirection: "row",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: ThemeColors.amber + "40",
+              gap: 8,
+            }}
+          >
+            <AlertCircle size={16} color={ThemeColors.amber} />
+            <Text
+              weight="medium"
+              style={{
+                color: ThemeColors.amber,
+                fontSize: 13,
+                flex: 1,
+                lineHeight: 18,
+              }}
+            >
+              Takeaway Order — Hand over at counter. Do not serve to a table.
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* ── Footer / Action Button ──────────────── */}

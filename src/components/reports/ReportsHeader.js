@@ -4,6 +4,7 @@ import { Text } from '@/components/ui/Text';
 import { ThemeColors, ThemeSpacing, ThemeRadius } from '@/theme/theme';
 import { Menu, Calendar, ChevronDown, Bell } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { HeaderQuickNav } from '@/components/common/HeaderQuickNav';
 
 export function ReportsHeader({ 
   isDesktop, 
@@ -30,6 +31,7 @@ export function ReportsHeader({
         </View>
         
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />
             <View style={styles.notifDot} />

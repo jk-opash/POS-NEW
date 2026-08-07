@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/Text";
-import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Plus, Search, Tag, Calendar } from "lucide-react-native";
-import { useSupport } from "@/context/SupportContext";
-import { CreateTicketModal } from "./CreateTicketModal";
 import { useResponsive } from "@/hooks/useResponsive";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { Calendar, Plus, Tag } from "lucide-react-native";
+import { useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { CreateTicketModal } from "./CreateTicketModal";
 
 export function MyTicketsTab() {
   const { tickets } = useSupport();
@@ -20,23 +19,38 @@ export function MyTicketsTab() {
   const listPadding = ThemeSpacing.lg * 2; // 32
   const totalGap = ThemeSpacing.md * (numColumns - 1);
   const availableWidth = width - sidebarW - listPadding - totalGap;
-  const cardWidth = numColumns > 1 ? Math.floor(availableWidth / numColumns) : "100%";
+  const cardWidth =
+    numColumns > 1 ? Math.floor(availableWidth / numColumns) : "100%";
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case "Open": return { bg: ThemeColors.blue + '15', text: ThemeColors.blue };
-      case "In Progress": return { bg: ThemeColors.amber + '15', text: ThemeColors.amber };
-      case "Resolved": return { bg: ThemeColors.emerald + '15', text: ThemeColors.emerald };
-      default: return { bg: ThemeColors.surfaceHighlight, text: ThemeColors.textMuted };
+      case "Open":
+        return { bg: ThemeColors.blue + "15", text: ThemeColors.blue };
+      case "In Progress":
+        return { bg: ThemeColors.amber + "15", text: ThemeColors.amber };
+      case "Resolved":
+        return { bg: ThemeColors.emerald + "15", text: ThemeColors.emerald };
+      default:
+        return {
+          bg: ThemeColors.surfaceHighlight,
+          text: ThemeColors.textMuted,
+        };
     }
   };
 
   const getPriorityStyle = (priority) => {
     switch (priority) {
-      case "High": return { bg: ThemeColors.red + '15', text: ThemeColors.red };
-      case "Medium": return { bg: ThemeColors.amber + '15', text: ThemeColors.amber };
-      case "Low": return { bg: ThemeColors.emerald + '15', text: ThemeColors.emerald };
-      default: return { bg: ThemeColors.surfaceHighlight, text: ThemeColors.textMuted };
+      case "High":
+        return { bg: ThemeColors.red + "15", text: ThemeColors.red };
+      case "Medium":
+        return { bg: ThemeColors.amber + "15", text: ThemeColors.amber };
+      case "Low":
+        return { bg: ThemeColors.emerald + "15", text: ThemeColors.emerald };
+      default:
+        return {
+          bg: ThemeColors.surfaceHighlight,
+          text: ThemeColors.textMuted,
+        };
     }
   };
 
@@ -44,15 +58,19 @@ export function MyTicketsTab() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <Text weight="bold" style={styles.title}>My Support Tickets</Text>
+          <Text weight="bold" style={styles.title}>
+            My Support Tickets
+          </Text>
           <Text style={styles.subtitle}>Track and manage your requests.</Text>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.newBtn}
           onPress={() => setIsCreateModalVisible(true)}
         >
           <Plus size={18} color={ThemeColors.white} />
-          <Text weight="bold" style={styles.newBtnText}>New Ticket</Text>
+          <Text weight="bold" style={styles.newBtnText}>
+            New Ticket
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -63,19 +81,34 @@ export function MyTicketsTab() {
             const priorityStyle = getPriorityStyle(ticket.priority);
 
             return (
-              <TouchableOpacity key={ticket.id} style={[styles.card, { width: cardWidth }]} activeOpacity={0.8}>
+              <TouchableOpacity
+                key={ticket.id}
+                style={[styles.card, { width: cardWidth }]}
+                activeOpacity={0.8}
+              >
                 <View style={styles.cardHeader}>
                   <View style={styles.headerLeft}>
-                    <Text weight="bold" style={styles.ticketId}>{ticket.id}</Text>
+                    <Text weight="bold" style={styles.ticketId}>
+                      {ticket.id}
+                    </Text>
                   </View>
-                  <View style={[styles.badge, { backgroundColor: statusStyle.bg }]}>
-                    <Text weight="bold" style={[styles.badgeText, { color: statusStyle.text }]}>
+                  <View
+                    style={[styles.badge, { backgroundColor: statusStyle.bg }]}
+                  >
+                    <Text
+                      weight="bold"
+                      style={[styles.badgeText, { color: statusStyle.text }]}
+                    >
                       {ticket.status.toUpperCase()}
                     </Text>
                   </View>
                 </View>
 
-                <Text weight="bold" style={styles.ticketSubject} numberOfLines={2}>
+                <Text
+                  weight="bold"
+                  style={styles.ticketSubject}
+                  numberOfLines={2}
+                >
                   {ticket.subject}
                 </Text>
 
@@ -94,14 +127,25 @@ export function MyTicketsTab() {
 
                 <View style={styles.cardFooter}>
                   <Text style={styles.priorityLabel}>Priority</Text>
-                  <View style={[styles.priorityBadge, { backgroundColor: priorityStyle.bg }]}>
-                    <Text weight="bold" style={[styles.priorityText, { color: priorityStyle.text }]}>
+                  <View
+                    style={[
+                      styles.priorityBadge,
+                      { backgroundColor: priorityStyle.bg },
+                    ]}
+                  >
+                    <Text
+                      weight="bold"
+                      style={[
+                        styles.priorityText,
+                        { color: priorityStyle.text },
+                      ]}
+                    >
                       {ticket.priority.toUpperCase()}
                     </Text>
                   </View>
                 </View>
               </TouchableOpacity>
-            )
+            );
           })
         ) : (
           <View style={styles.emptyState}>
@@ -110,7 +154,7 @@ export function MyTicketsTab() {
         )}
       </View>
 
-      <CreateTicketModal 
+      <CreateTicketModal
         visible={isCreateModalVisible}
         onClose={() => setIsCreateModalVisible(false)}
       />
@@ -129,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     marginBottom: ThemeSpacing.sm,
     gap: ThemeSpacing.md,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   title: {
     fontSize: 24,
@@ -221,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 'auto',
+    marginTop: "auto",
     paddingTop: ThemeSpacing.sm,
     borderTopWidth: 1,
     borderTopColor: ThemeColors.borderSubtle,
@@ -247,5 +291,5 @@ const styles = StyleSheet.create({
   emptyText: {
     color: ThemeColors.textMuted,
     fontSize: 15,
-  }
+  },
 });

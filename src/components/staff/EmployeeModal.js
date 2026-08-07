@@ -1,6 +1,5 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
-import { useStaff } from "@/context/StaffContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { X } from "lucide-react-native";
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useStaff } from "@/hooks/useStaff";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EmployeeModal({ visible, onClose, employee }) {

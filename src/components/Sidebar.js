@@ -1,21 +1,20 @@
 import { Text } from "@/components/ui/Text";
-import { useBranches } from "@/context/BranchesContext";
+import { logoutUser } from "@/store/slices/authSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { usePathname, useRouter } from "expo-router";
 import {
-  Check,
+  LayoutDashboard,
   LayoutGrid,
+  LogOut,
   MonitorPlay,
   Receipt,
   Settings,
   Smartphone,
   Store,
   UtensilsCrossed,
-  X,
 } from "lucide-react-native";
 import { useState } from "react";
 import {
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -23,12 +22,14 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
 
 // ── Petpooja-style grouped menu structure ────────────────────────────────────
 const MENU_SECTIONS = [
   {
     title: null,
     items: [
+      { key: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
       { key: "tables", label: "Tables", Icon: LayoutGrid },
       { key: "pos", label: "POS Billing", Icon: Store },
     ],
@@ -40,7 +41,6 @@ const MENU_SECTIONS = [
         key: "online-orders",
         label: "Online Orders",
         Icon: Smartphone,
-        badge: true,
       },
       { key: "kds", label: "KOT / KDS", Icon: MonitorPlay },
       { key: "waiter", label: "Waiter / Serve", Icon: UtensilsCrossed },
@@ -83,12 +83,14 @@ const ALL_ITEMS = MENU_SECTIONS.flatMap((s) => s.items);
 export function Sidebar({ isCollapsed }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { branches, activeBranch, setActiveBranch } = useBranches();
+  const dispatch = useDispatch();
+  const authUser = useSelector((state) => state.auth.user);
+  const { branches, activeBranch } = useSelector((state) => state.branch);
   const [showBranchModal, setShowBranchModal] = useState(false);
 
   const routeMap = {
+    dashboard: "/",
     tables: "/tables",
-    home: "/",
     time: "/time",
     orders: "/orders",
     customers: "/customers",
@@ -114,9 +116,11 @@ export function Sidebar({ isCollapsed }) {
   };
 
   const getActiveKey = () => {
-    if (!pathname || pathname === "/" || pathname === "/index") return "tables";
+    if (!pathname || pathname === "/" || pathname === "/index")
+      return "dashboard";
     // Use exact match first to avoid prefix collisions
     const exactMap = {
+      "/": "dashboard",
       "/tables": "tables",
       "/pos": "pos",
       "/kds": "kds",
@@ -143,16 +147,27 @@ export function Sidebar({ isCollapsed }) {
     for (const [prefix, key] of Object.entries(exactMap)) {
       if (pathname === prefix || pathname.startsWith(prefix + "/")) return key;
     }
-    return "tables";
+    return "dashboard";
   };
 
   const activeItem = getActiveKey();
 
   const currentBranchObj = branches.find((b) => b.id === activeBranch);
 
+  // Extract proper branch name from user profile or fall back to selected branch
+  const branchName =
+    authUser?.branch_name ||
+    authUser?.businesses?.[0]?.branches?.[0]?.name ||
+    currentBranchObj?.name;
+
   const handleNavigate = (key) => {
     const route = routeMap[key] || "/tables";
     router.replace(route);
+  };
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    router.replace("/login");
   };
 
   // ── Render a single menu item ─────────────────────────────────────
@@ -240,7 +255,28 @@ export function Sidebar({ isCollapsed }) {
             ))}
       </ScrollView>
 
-      {/* ── Bottom: Settings ────────────── */}
+      {/* ── User & Branch Profile ─────────────────────── */}
+      <View
+        style={styles.branchIndicator}
+        onPress={() => {
+          if (authUser?.role === "admin" || authUser?.role === "superadmin") {
+            setShowBranchModal(true);
+          }
+        }}
+        activeOpacity={0.7}
+      >
+        <View style={styles.branchDot} />
+        <View style={{ flex: 1, overflow: "hidden" }}>
+          <Text style={styles.branchLabel} numberOfLines={1}>
+            {branchName ||
+              (typeof authUser?.role === "string"
+                ? authUser.role
+                : authUser?.role?.name || "Staff")}
+          </Text>
+        </View>
+      </View>
+
+      {/* ── Bottom: Settings & Support ────────────── */}
       <View style={styles.bottomSection}>
         <TouchableOpacity
           style={[
@@ -272,51 +308,27 @@ export function Sidebar({ isCollapsed }) {
             </Text>
           )}
         </TouchableOpacity>
-      </View>
 
-      {/* ── Branch Selection Modal ────────────────────── */}
-      <Modal visible={showBranchModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text weight="bold" style={styles.modalTitle}>
-                Select Branch
-              </Text>
-              <TouchableOpacity onPress={() => setShowBranchModal(false)}>
-                <X size={20} color={ThemeColors.textMuted} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.branchList}>
-              {branches.map((b) => (
-                <TouchableOpacity
-                  key={b.id}
-                  style={[
-                    styles.branchItem,
-                    activeBranch === b.id && styles.branchItemActive,
-                  ]}
-                  onPress={() => {
-                    setActiveBranch(b.id);
-                    setShowBranchModal(false);
-                  }}
-                >
-                  <View style={styles.branchInfo}>
-                    <Text
-                      weight={activeBranch === b.id ? "bold" : "medium"}
-                      style={styles.branchName}
-                    >
-                      {b.name}
-                    </Text>
-                    <Text style={styles.branchCode}>{b.code}</Text>
-                  </View>
-                  {activeBranch === b.id && (
-                    <Check size={18} color={ThemeColors.accent} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        <TouchableOpacity
+          style={[
+            styles.bottomBtn,
+            isCollapsed && styles.bottomBtnCollapsed,
+            { marginTop: 4 },
+          ]}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
+          <LogOut size={18} color={ThemeColors.red} strokeWidth={1.8} />
+          {!isCollapsed && (
+            <Text
+              weight="medium"
+              style={[styles.bottomBtnLabel, { color: ThemeColors.red }]}
+            >
+              Logout
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

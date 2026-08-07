@@ -5,6 +5,7 @@ import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Bell, Menu } from "lucide-react-native";
 import { useNavigation } from "expo-router";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export const FILTER_TABS = [
   { key: "All", label: "All", activeColor: ThemeColors.emerald },
@@ -30,6 +31,7 @@ export function OrdersHeader({ isDesktop, dateString, activeFilter, setActiveFil
           <Text style={styles.pageTitle}>Orders</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <Text style={styles.headerDate}>{dateString}</Text>
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />

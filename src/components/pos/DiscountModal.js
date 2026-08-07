@@ -1,32 +1,45 @@
-import React, { useState } from "react";
+import { Text } from "@/components/ui/Text";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { ChevronDown, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
   Modal,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View,
-  TextInput,
 } from "react-native";
-import { Text } from "@/components/ui/Text";
-import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X, ChevronDown } from "lucide-react-native";
-import { usePOS } from "@/context/POSContext";
 
-export function DiscountModal({ visible, onClose }) {
-  const { globalDiscount, setGlobalDiscount } = usePOS();
-  
+export function DiscountModal({ visible, onClose, discount, onApply }) {
+  const globalDiscount = discount || { type: "none", value: 0, reason: "" };
+
   // Local state for editing
-  const [type, setType] = useState(globalDiscount.type === "none" ? "percentage" : globalDiscount.type);
-  const [value, setValue] = useState(globalDiscount.value ? globalDiscount.value.toString() : "");
-  const [reason, setReason] = useState("");
+  const [type, setType] = useState(
+    globalDiscount.type === "none" ? "percentage" : globalDiscount.type,
+  );
+  const [value, setValue] = useState(
+    globalDiscount.value ? globalDiscount.value.toString() : "",
+  );
+  const [reason, setReason] = useState(globalDiscount.reason || "");
   const [coupon, setCoupon] = useState("");
   const [couponError, setCouponError] = useState("");
 
+  useEffect(() => {
+    if (visible) {
+      setType(globalDiscount.type === "none" ? "percentage" : globalDiscount.type);
+      setValue(globalDiscount.value ? globalDiscount.value.toString() : "");
+      setReason(globalDiscount.reason || "");
+      setCoupon("");
+      setCouponError("");
+    }
+  }, [visible]);
+
   const handleSave = () => {
     const val = parseFloat(value);
-    if (!val || val <= 0) {
-      setGlobalDiscount({ type: "none", value: 0 });
+    if (!val || val <= 0 || type === "none") {
+      onApply(null); // Clear discount
     } else {
-      setGlobalDiscount({ type, value: val, reason });
+      onApply({ type, value: val, reason });
     }
     onClose();
   };
@@ -49,7 +62,9 @@ export function DiscountModal({ visible, onClose }) {
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text weight="bold" style={styles.title}>Applied Discount</Text>
+            <Text weight="bold" style={styles.title}>
+              Applied Discount
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textSecondary} />
             </TouchableOpacity>
@@ -58,7 +73,9 @@ export function DiscountModal({ visible, onClose }) {
           <View style={styles.body}>
             {/* Custom Discount Section */}
             <View style={styles.sectionHeader}>
-              <Text weight="bold" style={styles.sectionTitle}>Custom Discount</Text>
+              <Text weight="bold" style={styles.sectionTitle}>
+                Custom Discount
+              </Text>
               <TouchableOpacity>
                 <Text style={styles.addMoreText}>Add More</Text>
               </TouchableOpacity>
@@ -79,21 +96,39 @@ export function DiscountModal({ visible, onClose }) {
 
             <View style={styles.discountRow}>
               <View style={styles.radioGroup}>
-                <TouchableOpacity style={styles.radioItem} onPress={() => setType("percentage")}>
-                  <View style={[styles.radioCircle, type === "percentage" && styles.radioCircleActive]}>
-                    {type === "percentage" && <View style={styles.radioInner} />}
+                <TouchableOpacity
+                  style={styles.radioItem}
+                  onPress={() => setType("percentage")}
+                >
+                  <View
+                    style={[
+                      styles.radioCircle,
+                      type === "percentage" && styles.radioCircleActive,
+                    ]}
+                  >
+                    {type === "percentage" && (
+                      <View style={styles.radioInner} />
+                    )}
                   </View>
                   <Text style={styles.radioLabel}>Percentage</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.radioItem} onPress={() => setType("fixed")}>
-                  <View style={[styles.radioCircle, type === "fixed" && styles.radioCircleActive]}>
+
+                <TouchableOpacity
+                  style={styles.radioItem}
+                  onPress={() => setType("fixed")}
+                >
+                  <View
+                    style={[
+                      styles.radioCircle,
+                      type === "fixed" && styles.radioCircleActive,
+                    ]}
+                  >
                     {type === "fixed" && <View style={styles.radioInner} />}
                   </View>
                   <Text style={styles.radioLabel}>Fixed</Text>
                 </TouchableOpacity>
               </View>
-              
+
               <TextInput
                 style={styles.amountInput}
                 keyboardType="numeric"
@@ -104,10 +139,13 @@ export function DiscountModal({ visible, onClose }) {
             </View>
 
             {/* Coupon Code Section */}
-            <Text weight="bold" style={[styles.sectionTitle, { marginTop: ThemeSpacing.md }]}>
+            <Text
+              weight="bold"
+              style={[styles.sectionTitle, { marginTop: ThemeSpacing.md }]}
+            >
               Coupon Code
             </Text>
-            
+
             <View style={styles.couponRow}>
               <TextInput
                 style={[styles.textInput, { flex: 1, marginBottom: 0 }]}
@@ -122,11 +160,16 @@ export function DiscountModal({ visible, onClose }) {
               <TouchableOpacity onPress={handleClearCoupon}>
                 <Text style={styles.clearCouponText}>Clear</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.applyCouponBtn} onPress={handleApplyCoupon}>
-                <Text weight="bold" style={styles.applyCouponText}>Apply</Text>
+              <TouchableOpacity
+                style={styles.applyCouponBtn}
+                onPress={handleApplyCoupon}
+              >
+                <Text weight="bold" style={styles.applyCouponText}>
+                  Apply
+                </Text>
               </TouchableOpacity>
             </View>
-            
+
             {couponError !== "" && (
               <Text style={styles.errorText}>{couponError}</Text>
             )}
@@ -134,10 +177,14 @@ export function DiscountModal({ visible, onClose }) {
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text weight="bold" style={styles.cancelBtnText}>Cancel</Text>
+              <Text weight="bold" style={styles.cancelBtnText}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-              <Text weight="bold" style={styles.saveBtnText}>Save</Text>
+              <Text weight="bold" style={styles.saveBtnText}>
+                Save
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

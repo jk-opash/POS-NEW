@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useInvoices } from "@/context/InvoicesContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import {
   Download,
@@ -22,10 +21,7 @@ import {
 } from "react-native";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 
-export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
-  const { invoices } = useInvoices();
-  const invoice = invoices.find((inv) => inv.id === invoiceId);
-
+export function InvoiceDetailsModal({ visible, onClose, invoice }) {
   if (!invoice) return null;
 
   const isEBill = invoice.billingType === "ebill";
@@ -34,10 +30,14 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
   const billingLabel = isEBill
     ? "eBill"
     : isPrint
-    ? "Print Receipt"
-    : "POS Checkout";
+      ? "Print Receipt"
+      : "POS Checkout";
 
-  const billingColor = isEBill ? ThemeColors.accent : isPrint ? ThemeColors.blue : ThemeColors.emerald;
+  const billingColor = isEBill
+    ? ThemeColors.accent
+    : isPrint
+      ? ThemeColors.blue
+      : ThemeColors.emerald;
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -46,7 +46,9 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
           {/* ── Header ──────────────────────────────── */}
           <View style={styles.header}>
             <View>
-              <Text weight="bold" style={styles.title}>{invoice.id}</Text>
+              <Text weight="bold" style={styles.title}>
+                {invoice.id}
+              </Text>
               <Text style={styles.subtitle}>{invoice.type}</Text>
             </View>
             <View style={styles.headerRight}>
@@ -61,38 +63,65 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
           <View style={styles.actionBar}>
             <TouchableOpacity style={styles.actionBtn}>
               <Printer size={15} color={ThemeColors.textPrimary} />
-              <Text weight="bold" style={styles.actionText}>Print</Text>
+              <Text weight="bold" style={styles.actionText}>
+                Print
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn}>
               <Mail size={15} color={ThemeColors.textPrimary} />
-              <Text weight="bold" style={styles.actionText}>Email</Text>
+              <Text weight="bold" style={styles.actionText}>
+                Email
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn}>
               <Download size={15} color={ThemeColors.textPrimary} />
-              <Text weight="bold" style={styles.actionText}>Download</Text>
+              <Text weight="bold" style={styles.actionText}>
+                Download
+              </Text>
             </TouchableOpacity>
 
             <View style={{ flex: 1 }} />
 
             {/* Billing type badge */}
-            <View style={[styles.billingBadge, { backgroundColor: billingColor + "20" }]}>
+            <View
+              style={[
+                styles.billingBadge,
+                { backgroundColor: billingColor + "20" },
+              ]}
+            >
               <Receipt size={12} color={billingColor} />
-              <Text style={[styles.billingBadgeText, { color: billingColor }]}>{billingLabel}</Text>
+              <Text style={[styles.billingBadgeText, { color: billingColor }]}>
+                {billingLabel}
+              </Text>
             </View>
           </View>
 
-          <ScrollView style={styles.documentBody} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.documentBody}
+            showsVerticalScrollIndicator={false}
+          >
             {/* ── From / To ───────────────────────── */}
             <View style={styles.row}>
               <View style={styles.col}>
-                <Text weight="bold" style={styles.sectionTitle}>From</Text>
-                <Text style={styles.bodyTextBold}>Mac Burguer</Text>
-                <Text style={styles.bodyText}>{invoice.store}</Text>
-                <Text style={styles.bodyText}>Cashier: {invoice.cashier}</Text>
+                <Text weight="bold" style={styles.sectionTitle}>
+                  From
+                </Text>
+                <Text style={styles.bodyTextBold}>{invoice.store}</Text>
+                {!!invoice.storeAddress && (
+                  <Text style={styles.bodyText}>{invoice.storeAddress}</Text>
+                )}
+                <Text style={styles.bodyText}>
+                  Cashier: {invoice.cashier}{" "}
+                  {invoice.cashierRole ? `(${invoice.cashierRole})` : ""}
+                </Text>
               </View>
               <View style={[styles.col, { alignItems: "flex-end" }]}>
-                <Text weight="bold" style={styles.sectionTitle}>To</Text>
-                <Text style={styles.bodyTextBold}>{invoice.customer?.name || "Walk-in"}</Text>
+                <Text weight="bold" style={styles.sectionTitle}>
+                  To
+                </Text>
+                <Text style={styles.bodyTextBold}>
+                  {invoice.customer?.name || "Walk-in"}
+                </Text>
                 {!!invoice.customer?.phone && (
                   <Text style={styles.bodyText}>{invoice.customer.phone}</Text>
                 )}
@@ -110,7 +139,10 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                   {new Date(invoice.date).toLocaleDateString()}
                 </Text>
                 <Text style={styles.metaSubValue}>
-                  {new Date(invoice.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(invoice.date).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </Text>
               </View>
 
@@ -119,7 +151,9 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                   <Text style={styles.metaLabel}>Table</Text>
                   <View style={styles.metaIconRow}>
                     <Utensils size={13} color={ThemeColors.textSecondary} />
-                    <Text weight="bold" style={styles.metaValue}>{invoice.table}</Text>
+                    <Text weight="bold" style={styles.metaValue}>
+                      {invoice.table}
+                    </Text>
                   </View>
                 </View>
               )}
@@ -129,17 +163,9 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                   <Text style={styles.metaLabel}>Order Type</Text>
                   <View style={styles.metaIconRow}>
                     <Store size={13} color={ThemeColors.textSecondary} />
-                    <Text weight="bold" style={styles.metaValue}>{invoice.orderType}</Text>
-                  </View>
-                </View>
-              )}
-
-              {invoice.platform && (
-                <View style={styles.metaBox}>
-                  <Text style={styles.metaLabel}>Platform</Text>
-                  <View style={styles.metaIconRow}>
-                    <Smartphone size={13} color={ThemeColors.textSecondary} />
-                    <Text weight="bold" style={styles.metaValue}>{invoice.platform}</Text>
+                    <Text weight="bold" style={styles.metaValue}>
+                      {invoice.orderType}
+                    </Text>
                   </View>
                 </View>
               )}
@@ -148,46 +174,100 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                 <Text style={styles.metaLabel}>Payment</Text>
                 {invoice.splitPayments && invoice.splitPayments.length > 1 ? (
                   <>
+                    <Text weight="bold" style={styles.metaValue}>
+                      {invoice.paymentMethod}
+                    </Text>
                     {invoice.splitPayments.map((p, i) => (
-                      <Text key={i} weight="semibold" style={styles.metaValue}>
-                        {p.method}: ₹{parseFloat(p.amount).toFixed(2)}
+                      <Text key={i} style={styles.metaSubValue}>
+                        • {p.label ? `${p.label} (${p.method})` : p.method}: ₹
+                        {parseFloat(p.amount).toFixed(2)}
                       </Text>
                     ))}
                   </>
                 ) : (
-                  <Text weight="bold" style={styles.metaValue}>{invoice.paymentMethod}</Text>
+                  <Text weight="bold" style={styles.metaValue}>
+                    {invoice.paymentMethod}
+                  </Text>
                 )}
               </View>
+
+              {invoice.orderNumber && (
+                <View style={styles.metaBox}>
+                  <Text style={styles.metaLabel}>Order #</Text>
+                  <Text weight="bold" style={styles.metaValue}>
+                    {invoice.orderNumber}
+                  </Text>
+                </View>
+              )}
+
+              {invoice.platform && (
+                <View style={styles.metaBox}>
+                  <Text style={styles.metaLabel}>Platform</Text>
+                  <View style={styles.metaIconRow}>
+                    <Smartphone size={13} color={ThemeColors.textSecondary} />
+                    <Text weight="bold" style={styles.metaValue}>
+                      {invoice.platform}
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
 
             {/* ── eBill Contact ──────────────────── */}
-            {isEBill && invoice.ebillContact && (invoice.ebillContact.phone || invoice.ebillContact.email) && (
-              <View style={styles.ebillBox}>
-                <View style={styles.ebillHeader}>
-                  <MessageSquare size={14} color={ThemeColors.accent} />
-                  <Text weight="semibold" style={styles.ebillTitle}>eBill Sent To</Text>
+            {isEBill &&
+              invoice.ebillContact &&
+              (invoice.ebillContact.phone || invoice.ebillContact.email) && (
+                <View style={styles.ebillBox}>
+                  <View style={styles.ebillHeader}>
+                    <MessageSquare size={14} color={ThemeColors.accent} />
+                    <Text weight="semibold" style={styles.ebillTitle}>
+                      eBill Sent To
+                    </Text>
+                  </View>
+                  {!!invoice.ebillContact.phone && (
+                    <Text style={styles.ebillContact}>
+                      📱 {invoice.ebillContact.phone}
+                    </Text>
+                  )}
+                  {!!invoice.ebillContact.email && (
+                    <Text style={styles.ebillContact}>
+                      ✉️ {invoice.ebillContact.email}
+                    </Text>
+                  )}
                 </View>
-                {!!invoice.ebillContact.phone && (
-                  <Text style={styles.ebillContact}>📱 {invoice.ebillContact.phone}</Text>
-                )}
-                {!!invoice.ebillContact.email && (
-                  <Text style={styles.ebillContact}>✉️ {invoice.ebillContact.email}</Text>
-                )}
-              </View>
-            )}
+              )}
 
             {/* ── Items Table ─────────────────────── */}
             <View style={styles.tableHeader}>
-              <Text weight="bold" style={[styles.th, { flex: 2 }]}>ITEM</Text>
-              <Text weight="bold" style={[styles.th, { width: 50, textAlign: "center" }]}>QTY</Text>
-              <Text weight="bold" style={[styles.th, { width: 90, textAlign: "right" }]}>PRICE</Text>
-              <Text weight="bold" style={[styles.th, { width: 90, textAlign: "right" }]}>TOTAL</Text>
+              <Text weight="bold" style={[styles.th, { flex: 2 }]}>
+                ITEM
+              </Text>
+              <Text
+                weight="bold"
+                style={[styles.th, { width: 50, textAlign: "center" }]}
+              >
+                QTY
+              </Text>
+              <Text
+                weight="bold"
+                style={[styles.th, { width: 90, textAlign: "right" }]}
+              >
+                PRICE
+              </Text>
+              <Text
+                weight="bold"
+                style={[styles.th, { width: 90, textAlign: "right" }]}
+              >
+                TOTAL
+              </Text>
             </View>
 
             {invoice.items.map((item, index) => (
               <View key={index} style={styles.tableRow}>
                 <View style={{ flex: 2 }}>
-                  <Text weight="bold" style={styles.tdMain}>{item.name}</Text>
+                  <Text weight="bold" style={styles.tdMain}>
+                    {item.name}
+                  </Text>
                   {item.sku && item.sku !== "—" && (
                     <Text style={styles.tdSub}>SKU: {item.sku}</Text>
                   )}
@@ -201,12 +281,16 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
                     <Text style={styles.tdNote}>📝 {item.note}</Text>
                   )}
                   {item.discount > 0 && (
-                    <Text style={[styles.tdSub, { color: ThemeColors.emerald }]}>
+                    <Text
+                      style={[styles.tdSub, { color: ThemeColors.emerald }]}
+                    >
                       Disc: −₹{item.discount.toFixed(2)}
                     </Text>
                   )}
                 </View>
-                <Text style={[styles.td, { width: 50, textAlign: "center" }]}>{item.qty}</Text>
+                <Text style={[styles.td, { width: 50, textAlign: "center" }]}>
+                  {item.qty}
+                </Text>
                 <Text style={[styles.td, { width: 90, textAlign: "right" }]}>
                   ₹{(item.unitPrice || 0).toFixed(2)}
                 </Text>
@@ -220,33 +304,74 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
             <View style={styles.summaryBox}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>₹{(invoice.subtotal || 0).toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{(invoice.subtotal || 0).toFixed(2)}
+                </Text>
               </View>
               {(invoice.discount || 0) > 0 && (
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Discount</Text>
-                  <Text style={[styles.summaryValue, { color: ThemeColors.emerald }]}>
-                    −₹{(invoice.discount).toFixed(2)}
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      { color: ThemeColors.emerald },
+                    ]}
+                  >
+                    −₹{invoice.discount.toFixed(2)}
                   </Text>
                 </View>
               )}
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Tax</Text>
-                <Text style={styles.summaryValue}>₹{(invoice.tax || 0).toFixed(2)}</Text>
-              </View>
+              {invoice.tax > 0 && invoice.taxRate ? (
+                <>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      CGST ({(invoice.taxRate / 2).toFixed(1)}%)
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      ₹{(invoice.tax / 2).toFixed(2)}
+                    </Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>
+                      SGST ({(invoice.taxRate / 2).toFixed(1)}%)
+                    </Text>
+                    <Text style={styles.summaryValue}>
+                      ₹{(invoice.tax / 2).toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Tax</Text>
+                  <Text style={styles.summaryValue}>
+                    ₹{(invoice.tax || 0).toFixed(2)}
+                  </Text>
+                </View>
+              )}
               <View style={[styles.summaryRow, styles.summaryTotalRow]}>
-                <Text weight="bold" style={styles.summaryTotalLabel}>Grand Total</Text>
-                <Text weight="bold" style={styles.summaryTotalValue}>₹{(invoice.grandTotal || 0).toFixed(2)}</Text>
+                <Text weight="bold" style={styles.summaryTotalLabel}>
+                  Grand Total
+                </Text>
+                <Text weight="bold" style={styles.summaryTotalValue}>
+                  ₹{(invoice.grandTotal || 0).toFixed(2)}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Amount Paid</Text>
-                <Text style={styles.summaryValue}>₹{(invoice.amountPaid || 0).toFixed(2)}</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{(invoice.amountPaid || 0).toFixed(2)}
+                </Text>
               </View>
               {(invoice.outstandingBalance || 0) > 0 && (
                 <View style={styles.summaryRow}>
-                  <Text weight="bold" style={styles.summaryLabel}>Outstanding</Text>
-                  <Text weight="bold" style={[styles.summaryValue, { color: ThemeColors.red }]}>
-                    ₹{(invoice.outstandingBalance).toFixed(2)}
+                  <Text weight="bold" style={styles.summaryLabel}>
+                    Outstanding
+                  </Text>
+                  <Text
+                    weight="bold"
+                    style={[styles.summaryValue, { color: ThemeColors.red }]}
+                  >
+                    ₹{invoice.outstandingBalance.toFixed(2)}
                   </Text>
                 </View>
               )}
@@ -254,7 +379,9 @@ export function InvoiceDetailsModal({ visible, onClose, invoiceId }) {
 
             {!!invoice.notes && (
               <View style={styles.notesBox}>
-                <Text weight="bold" style={styles.notesLabel}>Notes:</Text>
+                <Text weight="bold" style={styles.notesLabel}>
+                  Notes:
+                </Text>
                 <Text style={styles.notesValue}>{invoice.notes}</Text>
               </View>
             )}
@@ -296,7 +423,11 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, color: ThemeColors.textPrimary, marginBottom: 4 },
   subtitle: { fontSize: 14, color: ThemeColors.textSecondary },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: ThemeSpacing.md },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
   closeBtn: {
     padding: 4,
     backgroundColor: ThemeColors.bg,
@@ -349,7 +480,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   bodyText: { fontSize: 14, color: ThemeColors.textPrimary },
-  bodyTextBold: { fontSize: 15, color: ThemeColors.textPrimary, fontWeight: "600" },
+  bodyTextBold: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
+    fontWeight: "600",
+  },
   metaDataRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -362,7 +497,12 @@ const styles = StyleSheet.create({
     borderColor: ThemeColors.borderSubtle,
   },
   metaBox: { gap: 4, minWidth: 100 },
-  metaLabel: { fontSize: 11, color: ThemeColors.textMuted, textTransform: "uppercase", letterSpacing: 0.3 },
+  metaLabel: {
+    fontSize: 11,
+    color: ThemeColors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
+  },
   metaValue: { fontSize: 14, color: ThemeColors.textPrimary },
   metaSubValue: { fontSize: 12, color: ThemeColors.textSecondary },
   metaIconRow: { flexDirection: "row", alignItems: "center", gap: 4 },
@@ -376,7 +516,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: ThemeColors.accent + "30",
   },
-  ebillHeader: { flexDirection: "row", alignItems: "center", gap: ThemeSpacing.sm },
+  ebillHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.sm,
+  },
   ebillTitle: { fontSize: 13, color: ThemeColors.accent },
   ebillContact: { fontSize: 14, color: ThemeColors.textPrimary },
   // Table
@@ -431,5 +575,9 @@ const styles = StyleSheet.create({
     borderTopColor: ThemeColors.border,
   },
   notesLabel: { fontSize: 14, color: ThemeColors.textPrimary, marginBottom: 4 },
-  notesValue: { fontSize: 14, color: ThemeColors.textSecondary, fontStyle: "italic" },
+  notesValue: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+    fontStyle: "italic",
+  },
 });

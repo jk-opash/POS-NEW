@@ -1,9 +1,10 @@
 import { Text } from "@/components/ui/Text";
-import { useInventoryContext } from "@/context/InventoryContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Package, Search, Settings2, Trash2 } from "lucide-react-native";
+import { showAlert } from "@/utils/alert";
+import { Package, Search, Settings2, Trash2, Edit2 } from "lucide-react-native";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   FlatList,
   Image,
@@ -12,13 +13,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { showAlert } from "@/utils/alert";
 import { InventoryActionModal } from "./InventoryActionModal";
 import { ProductInventoryModal } from "./ProductInventoryModal";
+import { deleteInventoryItem } from "@/store/slices/inventorySlice";
 
-export function StockListTab() {
-  const { inventory, deleteInventoryItem, logStockMovement } =
-    useInventoryContext();
+export function StockListTab({ onEditItem }) {
+  const dispatch = useDispatch();
+  const { items: inventory } = useSelector((state) => state.inventory);
+  
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [adjustmentProduct, setAdjustmentProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,7 +44,7 @@ export function StockListTab() {
   const availableWidth = width - sidebarW - listPadding - totalGap;
   const cardWidth = Math.floor(availableWidth / numColumns);
 
-  const filteredInventory = inventory.filter(
+  const filteredInventory = (inventory || []).filter(
     (item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.sku.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -58,32 +60,24 @@ export function StockListTab() {
       case "Out of Stock":
         return { bg: ThemeColors.redDim, text: ThemeColors.red };
       default:
-        return { bg: ThemeColors.borderSubtle, text: ThemeColors.textSecondary };
+        return {
+          bg: ThemeColors.borderSubtle,
+          text: ThemeColors.textSecondary,
+        };
     }
   };
 
   const handleDelete = (item) => {
-    showAlert(
-      "Delete Item",
-      `Are you sure you want to delete ${item.name}?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            deleteInventoryItem(item.id);
-            logStockMovement({
-              type: "DELETION",
-              itemId: item.id,
-              itemName: item.name,
-              quantityChange: -item.inStock,
-              reason: "Item deleted from inventory",
-            });
-          },
+    showAlert("Delete Item", `Are you sure you want to delete ${item.name}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          dispatch(deleteInventoryItem(item.id));
         },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
@@ -116,8 +110,12 @@ export function StockListTab() {
           contentContainerStyle={{ gap: ThemeSpacing.md }}
           renderItem={({ item }) => {
             const badge = getBadgeStyle(item.status);
-            const isZero = item.inStock === 0;
-            const isLow = item.inStock <= item.reorderLevel && !isZero;
+            const inStock = parseFloat(item.in_stock) || 0;
+            const price = parseFloat(item.price) || 0;
+            const reorderLvl = parseFloat(item.reorder_level) || 0;
+            
+            const isZero = inStock === 0;
+            const isLow = inStock <= reorderLvl && !isZero;
 
             return (
               <TouchableOpacity
@@ -161,7 +159,7 @@ export function StockListTab() {
                       {item.sku}
                     </Text>
                     <Text weight="extrabold" style={styles.price}>
-                      ₹{item.price.toFixed(2)}
+                      ₹{price.toFixed(2)}
                     </Text>
                   </View>
 
@@ -188,16 +186,25 @@ export function StockListTab() {
                               : { color: ThemeColors.emerald },
                         ]}
                       >
-                        {item.inStock}
+                        {inStock}
                       </Text>
                     </View>
-                    <View style={{ flexDirection: "row", gap: ThemeSpacing.sm }}>
+                    <View
+                      style={{ flexDirection: "row", gap: ThemeSpacing.sm }}
+                    >
                       <TouchableOpacity
                         style={styles.adjustBtn}
                         onPress={() => setAdjustmentProduct(item)}
                         activeOpacity={0.7}
                       >
                         <Settings2 size={16} color={ThemeColors.textMuted} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.adjustBtn}
+                        onPress={() => onEditItem && onEditItem(item)}
+                        activeOpacity={0.7}
+                      >
+                        <Edit2 size={16} color={ThemeColors.textMuted} />
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[

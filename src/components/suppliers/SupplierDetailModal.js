@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useSuppliers } from "@/context/SupplierContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import {
@@ -428,7 +427,11 @@ export function SupplierDetailModal({ visible, supplierId, onClose }) {
         <View style={styles.scoreRow}>
           <Text style={styles.scoreLabel}>Overall Rating</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Star fill={ThemeColors.amber} color={ThemeColors.amber} size={16} />
+            <Star
+              fill={ThemeColors.amber}
+              color={ThemeColors.amber}
+              size={16}
+            />
             <Text weight="bold">
               {supplier.performance?.overallRating} / 5.0
             </Text>
@@ -808,7 +811,11 @@ export function SupplierDetailModal({ visible, supplierId, onClose }) {
                     >
                       <tab.icon
                         size={16}
-                        color={isActive ? ThemeColors.white : ThemeColors.textSecondary}
+                        color={
+                          isActive
+                            ? ThemeColors.white
+                            : ThemeColors.textSecondary
+                        }
                         style={{ marginRight: 6 }}
                       />
                       <Text

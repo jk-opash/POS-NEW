@@ -1,14 +1,8 @@
 import { Text } from "@/components/ui/Text";
-import { MENU_STATUS } from "@/constants/menu";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Edit2, Trash2 } from "lucide-react-native";
-import {
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
 import { showAlert } from "@/utils/alert";
+import { Edit2, Trash2 } from "lucide-react-native";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 
 export function MenuItemCard({
   menuItem,
@@ -27,23 +21,21 @@ export function MenuItemCard({
     menuItem.category === "Bar / Beverages" ||
     menuItem.station === "Beverage";
 
-  if (menuItem.foodType === "Dessert" || isDessert) {
+  if (menuItem.food_type === "Dessert" || isDessert) {
     typeColor = ThemeColors.blue;
-  } else if (menuItem.foodType === "Beverage" || isDrink) {
+  } else if (menuItem.food_type === "Beverage" || isDrink) {
     typeColor = ThemeColors.violet;
-  } else if (menuItem.foodType === "Veg") {
+  } else if (menuItem.food_type === "Veg") {
     typeColor = ThemeColors.veg;
-  } else if (menuItem.foodType === "Non-Veg") {
+  } else if (menuItem.food_type === "Non-Veg") {
     typeColor = ThemeColors.nonVeg;
-  } else if (menuItem.foodType === "Egg") {
+  } else if (menuItem.food_type === "Egg") {
     typeColor = ThemeColors.egg;
-  } else if (menuItem.foodType === "Vegan") {
+  } else if (menuItem.food_type === "Vegan") {
     typeColor = ThemeColors.vegan;
-  } else if (menuItem.foodType === "Jain") {
+  } else if (menuItem.food_type === "Jain") {
     typeColor = ThemeColors.jain;
   }
-
-  const isInactive = menuItem.status === MENU_STATUS.INACTIVE;
 
   return (
     <TouchableOpacity
@@ -54,7 +46,6 @@ export function MenuItemCard({
           borderTopColor:
             typeColor !== ThemeColors.border ? typeColor : ThemeColors.primary,
         },
-        isInactive && styles.cardInactive,
         isList && styles.cardList,
       ]}
       activeOpacity={0.8}
@@ -87,9 +78,7 @@ export function MenuItemCard({
               style={[
                 styles.statusDot,
                 {
-                  backgroundColor: !isInactive
-                    ? ThemeColors.emerald
-                    : ThemeColors.textSecondary,
+                  backgroundColor: menuItem.status === 'Inactive' ? ThemeColors.red : ThemeColors.emerald,
                 },
               ]}
             />
@@ -98,13 +87,11 @@ export function MenuItemCard({
               style={[
                 styles.statusText,
                 {
-                  color: !isInactive
-                    ? ThemeColors.emerald
-                    : ThemeColors.textSecondary,
+                  color: menuItem.status === 'Inactive' ? ThemeColors.red : ThemeColors.emerald,
                 },
               ]}
             >
-              {!isInactive ? "ACTIVE" : "INACTIVE"}
+              {(menuItem.status || "ACTIVE").toUpperCase()}
             </Text>
           </TouchableOpacity>
 
@@ -119,7 +106,7 @@ export function MenuItemCard({
                       "Are you sure you want to delete this menu item?",
                     )
                   ) {
-                    menuItem.onDelete && menuItem.onDelete(menuItem.id);
+                    menuItem.onDelete && menuItem.onDelete(menuItem._id || menuItem.id);
                   }
                 } else {
                   showAlert(
@@ -130,7 +117,7 @@ export function MenuItemCard({
                       {
                         text: "Delete",
                         onPress: () =>
-                          menuItem.onDelete && menuItem.onDelete(menuItem.id),
+                          menuItem.onDelete && menuItem.onDelete(menuItem._id || menuItem.id),
                         style: "destructive",
                       },
                     ],

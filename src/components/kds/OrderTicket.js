@@ -51,12 +51,51 @@ export function OrderTicket({ order, onAction, onItemAction }) {
         };
       case "Done":
       case "Served":
-        return null;
+      case "Completed":
+        return null; // item is finished, no more action needed
       default:
         return null;
     }
   };
-  
+
+  // Derive main ticket button state from the LEAST advanced item status
+  // (All items must be Preparing before BUMP TICKET shows)
+  const getTicketAction = () => {
+    const statusPriority = [
+      "Accepted",
+      "Preparing",
+      "Done",
+      "Served",
+      "Completed",
+      "Cancelled",
+    ];
+    if (!order.items || order.items.length === 0) return null;
+    // Find the minimum (least advanced) item status
+    const effectiveStatuses = order.items.map(
+      (i) => i.status || order.status || "Accepted",
+    );
+    const minStatus = effectiveStatuses.reduce(
+      (worst, s) =>
+        statusPriority.indexOf(s) < statusPriority.indexOf(worst) ? s : worst,
+      "Completed",
+    );
+
+    if (minStatus === "Accepted") {
+      return {
+        label: "START PREP",
+        action: "Preparing",
+        color: ThemeColors.statusNew,
+      };
+    } else if (minStatus === "Preparing") {
+      return {
+        label: "BUMP TICKET",
+        action: "Completed",
+        color: ThemeColors.statusReady,
+      };
+    }
+    return null; // All items are Done/Served/Completed
+  };
+
   const isUrgent = order.priority === "High";
   const isOverdue = elapsed >= 15 * 60;
 
@@ -80,13 +119,18 @@ export function OrderTicket({ order, onAction, onItemAction }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text weight="bold" style={styles.cardPlatform} numberOfLines={1}>
-              #{order.orderNumber} - {order.type}
+              {order.type} - #{order.orderNumber}
             </Text>
-            
-            {(order.status !== "Served" && order.status !== "Completed" && order.status !== "Cancelled") ? (
+
+            {order.status !== "Served" &&
+            order.status !== "Completed" &&
+            order.status !== "Cancelled" ? (
               <View style={styles.cardTimeRow}>
                 <Clock size={12} color={getTimerColor()} />
-                <Text style={[styles.cardTime, { color: getTimerColor() }]} numberOfLines={1}>
+                <Text
+                  style={[styles.cardTime, { color: getTimerColor() }]}
+                  numberOfLines={1}
+                >
                   {formatTime(elapsed)} {isOverdue && " (Overdue)"}
                 </Text>
               </View>
@@ -117,14 +161,16 @@ export function OrderTicket({ order, onAction, onItemAction }) {
       <View style={styles.orderItemsList}>
         <View style={styles.customerRow}>
           <Text weight="medium" style={styles.cardCustomer}>
-            Table: {order.table || order.customer || "N/A"}
+            {order.type !== "Takeaway"
+              ? `Table: ${order.table || order.customer || "N/A"}`
+              : "Takeaway"}
           </Text>
-          <Text style={styles.stationText}>
-            Station: {order.station}
-          </Text>
+          <Text style={styles.stationText}>Station: {order.station}</Text>
         </View>
 
-        {["Starter", "Main", "Dessert", "Uncategorized"].map((courseName) => {
+        {Array.from(
+          new Set(order.items.map((i) => i.course || "Uncategorized")),
+        ).map((courseName) => {
           const courseItems = order.items.filter(
             (item) => (item.course || "Uncategorized") === courseName,
           );
@@ -133,7 +179,11 @@ export function OrderTicket({ order, onAction, onItemAction }) {
           return (
             <View key={courseName} style={styles.courseGroup}>
               {courseItems.map((item, i) => {
-                const itemAction = getNextItemAction(item.status || "Accepted");
+                // Item button uses its OWN status first, then falls back to the ticket's status
+                // This means clicking "START PREP" on the main button syncs all item buttons too
+                const effectiveStatus =
+                  item.status || order.status || "Accepted";
+                const itemAction = getNextItemAction(effectiveStatus);
                 return (
                   <View key={`${item.id}-${i}`} style={styles.itemContainer}>
                     <View style={styles.orderItemRow}>
@@ -143,8 +193,8 @@ export function OrderTicket({ order, onAction, onItemAction }) {
                         </Text>
                       </View>
                       <Text style={styles.orderItemName}>{item.name}</Text>
-                      
-                      {itemAction ? (
+
+                      {/* {itemAction ? (
                         <TouchableOpacity
                           style={[
                             styles.actionBtn,
@@ -159,7 +209,7 @@ export function OrderTicket({ order, onAction, onItemAction }) {
                             {itemAction.label}
                           </Text>
                         </TouchableOpacity>
-                      ) : null}
+                      ) : null} */}
                     </View>
 
                     {/* Modifiers */}
@@ -176,7 +226,9 @@ export function OrderTicket({ order, onAction, onItemAction }) {
                     {/* Item Notes */}
                     {item.note ? (
                       <View style={styles.itemNoteBox}>
-                        <Text style={styles.itemNoteText}>Note: {item.note}</Text>
+                        <Text style={styles.itemNoteText}>
+                          Note: {item.note}
+                        </Text>
                       </View>
                     ) : null}
                   </View>
@@ -200,22 +252,21 @@ export function OrderTicket({ order, onAction, onItemAction }) {
         if (order.status === "Completed" || order.status === "Cancelled")
           return null;
 
-        const isAccepted = order.status === "Accepted";
-        const btnLabel = isAccepted ? "START PREP" : "BUMP TICKET";
-        const actionVal = isAccepted ? "Preparing" : "Completed";
-        const btnColor = isAccepted
-          ? ThemeColors.statusNew
-          : ThemeColors.statusReady;
+        const ticketAction = getTicketAction();
+        if (!ticketAction) return null;
 
         return (
           <View style={styles.cardFooter}>
             <TouchableOpacity
-              style={[styles.btnAction, { backgroundColor: btnColor }]}
+              style={[
+                styles.btnAction,
+                { backgroundColor: ticketAction.color },
+              ]}
               activeOpacity={0.8}
-              onPress={() => onAction(order.id, actionVal)}
+              onPress={() => onAction(order.id, ticketAction.action)}
             >
               <Text weight="bold" style={styles.btnActionText}>
-                {btnLabel}
+                {ticketAction.label}
               </Text>
             </TouchableOpacity>
           </View>

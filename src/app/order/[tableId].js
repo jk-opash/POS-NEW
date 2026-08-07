@@ -1,6 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useMenu } from "@/context/MenuContext";
-import { useTables } from "@/context/TablesContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
@@ -32,8 +30,6 @@ const isTablet = width > 600;
 
 export default function OrderScreen() {
   const { tableId } = useLocalSearchParams();
-  const { tables, updateTableDetails } = useTables();
-  const { menuItems } = useMenu();
 
   const [activeSegment, setActiveSegment] = useState("Menu"); // 'Menu' | 'Cart'
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -125,7 +121,7 @@ export default function OrderScreen() {
       }
     });
 
-    updateTableDetails(tableId, { order: existingOrder, status: "Occupied" });
+    updateTable(tableId, { order: existingOrder, status: "Occupied" });
     setCart({});
     setActiveSegment("Menu");
     setOrderPlaced(true);

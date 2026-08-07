@@ -1,17 +1,12 @@
 import { Text } from "@/components/ui/Text";
-import { useInvoices } from "@/context/InvoicesContext";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import {
-  Calendar,
   ChevronLeft,
   ChevronRight,
-  FileText,
   LayoutGrid,
   List,
   Search,
-  User,
-  Utensils,
   Wallet,
 } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -27,14 +22,14 @@ import { InvoiceDetailsModal } from "./InvoiceDetailsModal";
 import { InvoiceStatusBadge } from "./InvoiceStatusBadge";
 
 export function InvoicesListTab({
+  invoices,
   isTodaySelected,
   selectedMonth,
   selectedYear,
 }) {
-  const { invoices } = useInvoices();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
-  const [isListView, setIsListView] = useState(false);
+  const [isListView, setIsListView] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
 
@@ -146,71 +141,56 @@ export function InvoicesListTab({
         activeOpacity={0.7}
         onPress={() => setSelectedInvoiceId(inv.id)}
       >
-        <View
-          style={[
-            styles.col,
-            { flex: 1.2, flexDirection: "row", alignItems: "center", gap: 8 },
-          ]}
-        >
-          <View style={styles.tableIconBox}>
-            <FileText size={14} color={ThemeColors.primary} />
-          </View>
-          <Text weight="semibold" style={{ color: ThemeColors.textPrimary }}>
+        <View style={[{ width: "30%", gap: 4, justifyContent: "center" }]}>
+          <Text
+            weight="semibold"
+            style={[styles.tableCell, { fontSize: 14 }]}
+            numberOfLines={1}
+          >
             {inv.id}
           </Text>
-        </View>
 
-        <View
-          style={[
-            styles.col,
-            { flex: 1.5, flexDirection: "row", alignItems: "center", gap: 6 },
-          ]}
-        >
-          <Calendar size={14} color={ThemeColors.textMuted} />
-          <Text style={{ color: ThemeColors.textSecondary }}>
+          <Text
+            style={[styles.tableCell, { color: ThemeColors.textMuted }]}
+            numberOfLines={1}
+          >
             {dateStr} • {timeStr}
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.col,
-            { flex: 2.5, flexDirection: "row", alignItems: "center", gap: 12 },
-          ]}
-        >
-          <View style={styles.tableCustomerAvatar}>
-            {inv.table ? (
-              <Utensils size={14} color={ThemeColors.textSecondary} />
-            ) : (
-              <User size={14} color={ThemeColors.textSecondary} />
-            )}
-          </View>
-          <View>
-            <Text
-              weight="medium"
-              style={{ color: ThemeColors.textPrimary }}
-              numberOfLines={1}
-            >
-              {inv.table ? inv.table : inv.customer?.name || "Walk-in"}
-            </Text>
-            <Text style={{ color: ThemeColors.textMuted, fontSize: 12 }}>
-              {inv.platform ? `Online - ${inv.platform}` : inv.orderType}
-            </Text>
-          </View>
-        </View>
-
-
-
-        <View
-          style={[
-            styles.col,
-            { flex: 1.2, alignItems: "flex-end", justifyContent: "center" },
-          ]}
-        >
-          <Text weight="bold" style={styles.tableTotal}>
-            ₹{inv.grandTotal.toFixed(2)}
+        <View style={[{ width: "30%", gap: 4, justifyContent: "center" }]}>
+          <Text
+            weight="medium"
+            style={{ color: ThemeColors.textPrimary, fontSize: 14 }}
+            numberOfLines={1}
+          >
+            {inv.table ? inv.table : inv.customer?.name || "Walk-in"}
+          </Text>
+          <Text style={{ color: ThemeColors.textMuted, fontSize: 12 }}>
+            {inv.platform ? `Online - ${inv.platform}` : inv.orderType}
           </Text>
         </View>
+
+        <Text
+          weight="bold"
+          style={[
+            styles.tableCell,
+            { width: "25%", color: ThemeColors.textSecondary },
+          ]}
+          numberOfLines={1}
+        >
+          {inv.paymentMethod}
+        </Text>
+
+        <Text
+          weight="bold"
+          style={[
+            styles.tableCell,
+            { textAlign: "right", fontSize: 16, color: ThemeColors.emerald },
+          ]}
+        >
+          ₹{inv.grandTotal.toFixed(2)}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -238,32 +218,25 @@ export function InvoicesListTab({
         style={styles.tableContainer}
         contentContainerStyle={{ minWidth: "100%" }}
       >
-        <View style={{ minWidth: isDesktop ? "100%" : 900, width: "100%" }}>
+        <View style={{ width: "100%" }}>
           <View style={styles.tableHeader}>
-            <View style={[styles.col, { flex: 1.2, flexDirection: "row", alignItems: "center" }]}>
-              <View style={{ width: 28 + 8 }} />
-              <Text weight="semibold" style={styles.colHeader}>
-                Invoice ID
-              </Text>
-            </View>
-            <View style={[styles.col, { flex: 1.5, flexDirection: "row", alignItems: "center" }]}>
-              <View style={{ width: 14 + 6 }} />
-              <Text weight="semibold" style={styles.colHeader}>
-                Date & Time
-              </Text>
-            </View>
-            <View style={[styles.col, { flex: 2.5, flexDirection: "row", alignItems: "center" }]}>
-              <View style={{ width: 32 + 12 }} />
-              <Text weight="semibold" style={styles.colHeader}>
-                Customer / Details
-              </Text>
-            </View>
+            <Text weight="bold" style={[styles.colHeader, { width: "30%" }]}>
+              Invoice ID
+            </Text>
 
-            <View style={[styles.col, { flex: 1.2, alignItems: "flex-end" }]}>
-              <Text weight="semibold" style={styles.colHeader}>
-                Total
-              </Text>
-            </View>
+            <Text weight="bold" style={[styles.colHeader, { width: "30%" }]}>
+              Customer / Details
+            </Text>
+
+            <Text weight="bold" style={[styles.colHeader, { width: "25%" }]}>
+              Payment
+            </Text>
+            <Text
+              weight="bold"
+              style={[styles.colHeader, { textAlign: "right" }]}
+            >
+              Total
+            </Text>
           </View>
           {currentInvoices.map((inv) => renderTableRow(inv))}
         </View>
@@ -305,20 +278,6 @@ export function InvoicesListTab({
         </View>
         <View style={styles.viewToggleWrap}>
           <TouchableOpacity
-            onPress={() => setIsListView(false)}
-            style={[
-              styles.viewToggleBtn,
-              !isListView && styles.viewToggleBtnActive,
-            ]}
-          >
-            <LayoutGrid
-              size={18}
-              color={
-                !isListView ? ThemeColors.emerald : ThemeColors.textSecondary
-              }
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
             onPress={() => setIsListView(true)}
             style={[
               styles.viewToggleBtn,
@@ -329,6 +288,20 @@ export function InvoicesListTab({
               size={18}
               color={
                 isListView ? ThemeColors.emerald : ThemeColors.textSecondary
+              }
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setIsListView(false)}
+            style={[
+              styles.viewToggleBtn,
+              !isListView && styles.viewToggleBtnActive,
+            ]}
+          >
+            <LayoutGrid
+              size={18}
+              color={
+                !isListView ? ThemeColors.emerald : ThemeColors.textSecondary
               }
             />
           </TouchableOpacity>
@@ -467,7 +440,7 @@ export function InvoicesListTab({
 
       <InvoiceDetailsModal
         visible={!!selectedInvoiceId}
-        invoiceId={selectedInvoiceId}
+        invoice={invoices.find((inv) => inv.id === selectedInvoiceId)}
         onClose={() => setSelectedInvoiceId(null)}
       />
     </View>
@@ -622,8 +595,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: ThemeColors.textPrimary,
   },
-  col: {
-    justifyContent: "center",
+  tableCell: {
+    fontSize: 12,
+    color: ThemeColors.textPrimary,
   },
   emptyState: {
     alignItems: "center",

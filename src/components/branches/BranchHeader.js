@@ -5,6 +5,7 @@ import { Menu, Bell } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function BranchHeader({
   isDesktop,
@@ -29,6 +30,7 @@ export function BranchHeader({
         </View>
 
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />
             <View style={styles.notifDot} />

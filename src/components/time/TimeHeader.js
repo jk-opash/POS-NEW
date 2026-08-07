@@ -3,6 +3,7 @@ import { ThemeColors, ThemeSpacing } from "@/theme/theme";
 import { Bell, Menu } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function TimeHeader({ isDesktop, onMenuPress }) {
   return (
@@ -20,6 +21,7 @@ export function TimeHeader({ isDesktop, onMenuPress }) {
           <Text style={styles.pageTitle}>Time & Attendance</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <TouchableOpacity style={styles.notifBtn}>
             <Bell size={20} color={ThemeColors.textPrimary} />
             <View style={styles.notifDot} />

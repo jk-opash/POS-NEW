@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { useStaff } from "@/context/StaffContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Search } from "lucide-react-native";
 import { useState } from "react";
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useStaff } from "@/hooks/useStaff";
 
 const SHIFT_TYPES = [
   {

@@ -42,4 +42,4 @@ example
 /ios
 /android
 .vercel
-.env*
+config.bat

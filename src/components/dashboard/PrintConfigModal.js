@@ -1,21 +1,26 @@
-import React from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
-  TextInput,
-  Platform,
-} from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X, Printer, Settings2, FileText, Share2, Type } from "lucide-react-native";
-import { usePrinterConfig } from "@/context/PrinterConfigContext";
+import {
+  FileText,
+  Printer,
+  Settings2,
+  Share2,
+  Type,
+  X,
+} from "lucide-react-native";
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export function PrintConfigModal({ visible, onClose }) {
-  const { config, updateConfig } = usePrinterConfig();
+  const { config = {}, updateConfig = () => {} } = {};
 
   if (!visible) return null;
 
@@ -26,8 +31,12 @@ export function PrintConfigModal({ visible, onClose }) {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text weight="bold" style={styles.title}>Bill / KOT Print Configuration</Text>
-              <Text style={styles.subtitle}>Manage receipts and kitchen printers</Text>
+              <Text weight="bold" style={styles.title}>
+                Bill / KOT Print Configuration
+              </Text>
+              <Text style={styles.subtitle}>
+                Manage receipts and kitchen printers
+              </Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textSecondary} />
@@ -35,18 +44,27 @@ export function PrintConfigModal({ visible, onClose }) {
           </View>
 
           {/* Body */}
-          <ScrollView style={styles.body} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Printer Settings */}
-            <Text weight="bold" style={styles.sectionTitle}>Hardware & Layout</Text>
+            <Text weight="bold" style={styles.sectionTitle}>
+              Hardware & Layout
+            </Text>
             <View style={styles.settingsGroup}>
               <View style={styles.settingRow}>
                 <View style={styles.settingIconBox}>
                   <Printer size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Print KOTs on Save</Text>
-                  <Text style={styles.settingDesc}>Automatically print Kitchen Order Tickets.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Print KOTs on Save
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Automatically print Kitchen Order Tickets.
+                  </Text>
                 </View>
                 <Switch
                   value={config.printKot}
@@ -60,23 +78,45 @@ export function PrintConfigModal({ visible, onClose }) {
                   <Settings2 size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Paper Size (Width)</Text>
-                  <Text style={styles.settingDesc}>Adjust layout for 58mm or 80mm rolls.</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Paper Size (Width)
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Adjust layout for 58mm or 80mm rolls.
+                  </Text>
                 </View>
                 <View style={styles.toggleRow}>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, config.paperSize === "58mm" && styles.toggleBtnActive]}
+                    style={[
+                      styles.toggleBtn,
+                      config.paperSize === "58mm" && styles.toggleBtnActive,
+                    ]}
                     onPress={() => updateConfig("paperSize", "58mm")}
                   >
-                    <Text weight={config.paperSize === "58mm" ? "bold" : "medium"} style={[styles.toggleText, config.paperSize === "58mm" && styles.toggleTextActive]}>
+                    <Text
+                      weight={config.paperSize === "58mm" ? "bold" : "medium"}
+                      style={[
+                        styles.toggleText,
+                        config.paperSize === "58mm" && styles.toggleTextActive,
+                      ]}
+                    >
                       58mm
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, config.paperSize === "80mm" && styles.toggleBtnActive]}
+                    style={[
+                      styles.toggleBtn,
+                      config.paperSize === "80mm" && styles.toggleBtnActive,
+                    ]}
                     onPress={() => updateConfig("paperSize", "80mm")}
                   >
-                    <Text weight={config.paperSize === "80mm" ? "bold" : "medium"} style={[styles.toggleText, config.paperSize === "80mm" && styles.toggleTextActive]}>
+                    <Text
+                      weight={config.paperSize === "80mm" ? "bold" : "medium"}
+                      style={[
+                        styles.toggleText,
+                        config.paperSize === "80mm" && styles.toggleTextActive,
+                      ]}
+                    >
                       80mm
                     </Text>
                   </TouchableOpacity>
@@ -85,15 +125,20 @@ export function PrintConfigModal({ visible, onClose }) {
             </View>
 
             {/* Customization */}
-            <Text weight="bold" style={styles.sectionTitle}>Receipt Customization</Text>
+            <Text weight="bold" style={styles.sectionTitle}>
+              Receipt Customization
+            </Text>
             <View style={styles.settingsGroup}>
-              
               <View style={styles.inputGroup}>
                 <View style={styles.inputLabelRow}>
                   <Type size={16} color={ThemeColors.textSecondary} />
-                  <Text weight="semibold" style={styles.inputLabel}>Header Text</Text>
+                  <Text weight="semibold" style={styles.inputLabel}>
+                    Header Text
+                  </Text>
                 </View>
-                <Text style={styles.settingDesc}>Prints at the very top (e.g. Name, Address, Tax ID).</Text>
+                <Text style={styles.settingDesc}>
+                  Prints at the very top (e.g. Name, Address, Tax ID).
+                </Text>
                 <TextInput
                   style={styles.textArea}
                   multiline
@@ -108,9 +153,13 @@ export function PrintConfigModal({ visible, onClose }) {
               <View style={[styles.inputGroup, styles.settingRowNoBorder]}>
                 <View style={styles.inputLabelRow}>
                   <FileText size={16} color={ThemeColors.textSecondary} />
-                  <Text weight="semibold" style={styles.inputLabel}>Footer Text</Text>
+                  <Text weight="semibold" style={styles.inputLabel}>
+                    Footer Text
+                  </Text>
                 </View>
-                <Text style={styles.settingDesc}>Prints at the bottom (e.g. Thank you message, WiFi password).</Text>
+                <Text style={styles.settingDesc}>
+                  Prints at the bottom (e.g. Thank you message, WiFi password).
+                </Text>
                 <TextInput
                   style={styles.textArea}
                   multiline
@@ -121,19 +170,25 @@ export function PrintConfigModal({ visible, onClose }) {
                   placeholderTextColor={ThemeColors.textMuted}
                 />
               </View>
-
             </View>
 
             {/* Advanced Settings */}
-            <Text weight="bold" style={styles.sectionTitle}>Advanced</Text>
+            <Text weight="bold" style={styles.sectionTitle}>
+              Advanced
+            </Text>
             <View style={styles.settingsGroup}>
               <View style={[styles.settingRow, styles.settingRowNoBorder]}>
                 <View style={styles.settingIconBox}>
                   <Share2 size={20} color={ThemeColors.primary} />
                 </View>
                 <View style={styles.settingInfo}>
-                  <Text weight="semibold" style={styles.settingName}>Category-Based Routing</Text>
-                  <Text style={styles.settingDesc}>Send specific items to specific printers (e.g. Drinks to Bar).</Text>
+                  <Text weight="semibold" style={styles.settingName}>
+                    Category-Based Routing
+                  </Text>
+                  <Text style={styles.settingDesc}>
+                    Send specific items to specific printers (e.g. Drinks to
+                    Bar).
+                  </Text>
                 </View>
                 <Switch
                   value={config.kotRouting}
@@ -142,13 +197,14 @@ export function PrintConfigModal({ visible, onClose }) {
                 />
               </View>
             </View>
-
           </ScrollView>
 
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity style={styles.doneBtn} onPress={onClose}>
-              <Text weight="bold" style={styles.doneText}>Done</Text>
+              <Text weight="bold" style={styles.doneText}>
+                Done
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -311,8 +367,8 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     minHeight: 80,
     ...Platform.select({
-      web: { outlineStyle: "none" }
-    })
+      web: { outlineStyle: "none" },
+    }),
   },
   footer: {
     flexDirection: "row",
