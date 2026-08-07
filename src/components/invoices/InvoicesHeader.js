@@ -4,6 +4,7 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Bell, Menu } from "lucide-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 const MONTHS = [
   { label: "All Months", value: "all" },
@@ -56,6 +57,7 @@ export function InvoicesHeader({
           <Text style={styles.pageTitle}>Invoices</Text>
         </View>
         <View style={styles.headerRight}>
+          <HeaderQuickNav />
           <Text weight="medium" style={styles.headerDate}>
             {dateString}
           </Text>

@@ -1,29 +1,37 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Modal, TouchableOpacity, TextInput } from 'react-native';
-import { Text } from '@/components/ui/Text';
-import { ThemeColors, ThemeRadius, ThemeSpacing } from '@/theme/theme';
-import { X, Check } from 'lucide-react-native';
-import { useMenu } from '@/context/MenuContext';
-import { MENU_CATEGORIES } from '@/constants/menu';
+import { Text } from "@/components/ui/Text";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { Check, X } from "lucide-react-native";
+import { useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-export function BulkActionModal({ visible, onClose, selectedIds, onClearSelection }) {
-  const { bulkUpdate } = useMenu();
-  const [activeTab, setActiveTab] = useState('Discount');
-  
+export function BulkActionModal({
+  visible,
+  onClose,
+  selectedIds,
+  onClearSelection,
+}) {
+  const [activeTab, setActiveTab] = useState("Discount");
+
   // Discount state
-  const [discountType, setDiscountType] = useState('%');
-  const [discountValue, setDiscountValue] = useState('');
+  const [discountType, setDiscountType] = useState("%");
+  const [discountValue, setDiscountValue] = useState("");
 
   // Category state
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const handleApply = () => {
     const updates = {};
-    if (activeTab === 'Discount' && discountValue) {
+    if (activeTab === "Discount" && discountValue) {
       // In a real app we might store discount rules or apply flat reduction to sellingPrice
       // We will just store a generic discount field for demo
       updates.bulkDiscount = `${discountValue}${discountType}`;
-    } else if (activeTab === 'Category' && selectedCategory) {
+    } else if (activeTab === "Category" && selectedCategory) {
       updates.category = selectedCategory;
     }
 
@@ -37,20 +45,28 @@ export function BulkActionModal({ visible, onClose, selectedIds, onClearSelectio
       <View style={styles.overlay}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text weight="bold" style={styles.title}>Bulk Edit ({selectedIds.length} items)</Text>
+            <Text weight="bold" style={styles.title}>
+              Bulk Edit ({selectedIds.length} items)
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={ThemeColors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.tabsRow}>
-            {['Discount', 'Category'].map(tab => (
-              <TouchableOpacity 
+            {["Discount", "Category"].map((tab) => (
+              <TouchableOpacity
                 key={tab}
                 style={[styles.tab, activeTab === tab && styles.tabActive]}
                 onPress={() => setActiveTab(tab)}
               >
-                <Text weight="semibold" style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                <Text
+                  weight="semibold"
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.tabTextActive,
+                  ]}
+                >
                   {tab}
                 </Text>
               </TouchableOpacity>
@@ -58,27 +74,35 @@ export function BulkActionModal({ visible, onClose, selectedIds, onClearSelectio
           </View>
 
           <View style={styles.body}>
-            {activeTab === 'Discount' && (
+            {activeTab === "Discount" && (
               <View>
-                <Text weight="medium" style={styles.label}>Apply Discount</Text>
+                <Text weight="medium" style={styles.label}>
+                  Apply Discount
+                </Text>
                 <View style={styles.discountRow}>
-                  <TextInput 
-                    style={styles.input} 
-                    placeholder="Value" 
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Value"
                     keyboardType="numeric"
                     value={discountValue}
                     onChangeText={setDiscountValue}
                   />
                   <View style={styles.typeToggle}>
-                    <TouchableOpacity 
-                      style={[styles.typeBtn, discountType === '%' && styles.typeBtnActive]}
-                      onPress={() => setDiscountType('%')}
+                    <TouchableOpacity
+                      style={[
+                        styles.typeBtn,
+                        discountType === "%" && styles.typeBtnActive,
+                      ]}
+                      onPress={() => setDiscountType("%")}
                     >
                       <Text style={styles.typeBtnText}>%</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.typeBtn, discountType === '₹' && styles.typeBtnActive]}
-                      onPress={() => setDiscountType('₹')}
+                    <TouchableOpacity
+                      style={[
+                        styles.typeBtn,
+                        discountType === "₹" && styles.typeBtnActive,
+                      ]}
+                      onPress={() => setDiscountType("₹")}
                     >
                       <Text style={styles.typeBtnText}>₹</Text>
                     </TouchableOpacity>
@@ -87,18 +111,36 @@ export function BulkActionModal({ visible, onClose, selectedIds, onClearSelectio
               </View>
             )}
 
-            {activeTab === 'Category' && (
+            {activeTab === "Category" && (
               <View>
-                <Text weight="medium" style={styles.label}>Move to Category</Text>
+                <Text weight="medium" style={styles.label}>
+                  Move to Category
+                </Text>
                 <View style={styles.categoriesWrap}>
-                  {MENU_CATEGORIES.map(cat => (
-                    <TouchableOpacity 
+                  {[].map((cat) => (
+                    <TouchableOpacity
                       key={cat}
-                      style={[styles.catChip, selectedCategory === cat && styles.catChipActive]}
+                      style={[
+                        styles.catChip,
+                        selectedCategory === cat && styles.catChipActive,
+                      ]}
                       onPress={() => setSelectedCategory(cat)}
                     >
-                      {selectedCategory === cat && <Check size={14} color={ThemeColors.emerald} style={{marginRight: 4}}/>}
-                      <Text style={[styles.catChipText, selectedCategory === cat && styles.catChipTextActive]}>{cat}</Text>
+                      {selectedCategory === cat && (
+                        <Check
+                          size={14}
+                          color={ThemeColors.emerald}
+                          style={{ marginRight: 4 }}
+                        />
+                      )}
+                      <Text
+                        style={[
+                          styles.catChipText,
+                          selectedCategory === cat && styles.catChipTextActive,
+                        ]}
+                      >
+                        {cat}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -108,10 +150,14 @@ export function BulkActionModal({ visible, onClose, selectedIds, onClearSelectio
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.btnSecondary} onPress={onClose}>
-              <Text weight="bold" style={styles.btnSecondaryText}>Cancel</Text>
+              <Text weight="bold" style={styles.btnSecondaryText}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.btnPrimary} onPress={handleApply}>
-              <Text weight="bold" style={styles.btnPrimaryText}>Apply Changes</Text>
+              <Text weight="bold" style={styles.btnPrimaryText}>
+                Apply Changes
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -123,17 +169,17 @@ export function BulkActionModal({ visible, onClose, selectedIds, onClearSelectio
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: ThemeSpacing.lg,
   },
   container: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
     shadowColor: ThemeColors.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.15,
@@ -141,9 +187,9 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: ThemeSpacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: ThemeColors.border,
@@ -158,14 +204,14 @@ const styles = StyleSheet.create({
     borderRadius: ThemeRadius.full,
   },
   tabsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: ThemeColors.borderSubtle,
   },
   tab: {
     flex: 1,
     paddingVertical: ThemeSpacing.md,
-    alignItems: 'center',
+    alignItems: "center",
   },
   tabActive: {
     borderBottomWidth: 2,
@@ -188,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: ThemeSpacing.sm,
   },
   discountRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: ThemeSpacing.md,
   },
   input: {
@@ -202,35 +248,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   typeToggle: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: ThemeColors.bg,
     borderWidth: 1,
     borderColor: ThemeColors.border,
     borderRadius: ThemeRadius.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   typeBtn: {
     width: 44,
     height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   typeBtnActive: {
     backgroundColor: ThemeColors.border,
   },
   typeBtnText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: ThemeColors.textPrimary,
   },
   categoriesWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: ThemeSpacing.sm,
   },
   catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: ThemeSpacing.md,
     paddingVertical: ThemeSpacing.sm,
     borderRadius: ThemeRadius.full,
@@ -248,10 +294,10 @@ const styles = StyleSheet.create({
   },
   catChipTextActive: {
     color: ThemeColors.emerald,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: ThemeSpacing.xl,
     gap: ThemeSpacing.md,
     borderTopWidth: 1,
@@ -259,7 +305,7 @@ const styles = StyleSheet.create({
   },
   btnSecondary: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: ThemeSpacing.md,
     borderRadius: ThemeRadius.md,
     backgroundColor: ThemeColors.surface,
@@ -272,7 +318,7 @@ const styles = StyleSheet.create({
   },
   btnPrimary: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: ThemeSpacing.md,
     borderRadius: ThemeRadius.md,
     backgroundColor: ThemeColors.emerald,

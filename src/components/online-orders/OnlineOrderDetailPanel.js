@@ -2,7 +2,7 @@ import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { ShoppingBag, X } from "lucide-react-native";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { PLATFORM_COLORS } from "@/screens/online-orders/OnlineOrdersScreen";
+import { PLATFORM_COLORS } from "@/app/online-orders/index";
 import { OrderActionButtons } from "./OnlineOrderCard";
 
 export function OnlineOrderDetailPanel({ selectedOrder, onClose, onUpdateStatus }) {

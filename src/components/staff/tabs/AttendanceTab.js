@@ -1,9 +1,9 @@
 import { Text } from "@/components/ui/Text";
-import { useStaff } from "@/context/StaffContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Search } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { useStaff } from "@/hooks/useStaff";
 
 export default function AttendanceTab() {
   const { attendanceLogs } = useStaff();
@@ -128,7 +128,10 @@ export default function AttendanceTab() {
                         {timeIn}
                       </Text>
                       <Text style={{ color: ThemeColors.textMuted }}> → </Text>
-                      <Text weight="bold" style={{ color: ThemeColors.emerald }}>
+                      <Text
+                        weight="bold"
+                        style={{ color: ThemeColors.emerald }}
+                      >
                         {timeOut}
                       </Text>
                     </Text>
@@ -146,7 +149,11 @@ export default function AttendanceTab() {
                 <Text
                   style={[
                     styles.col,
-                    { flex: 1, minWidth: 180, color: ThemeColors.textSecondary },
+                    {
+                      flex: 1,
+                      minWidth: 180,
+                      color: ThemeColors.textSecondary,
+                    },
                   ]}
                   numberOfLines={1}
                 >

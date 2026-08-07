@@ -1,10 +1,7 @@
 import { Sidebar } from "@/components/Sidebar";
-import { useStaff } from "@/context/StaffContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { persistor, store } from "@/store";
 import { ThemeColors } from "@/theme/theme";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "@/store";
 import {
   Outfit_400Regular,
   Outfit_500Medium,
@@ -19,6 +16,8 @@ import { Drawer } from "expo-router/drawer";
 import { useEffect } from "react";
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Provider, useSelector } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({
@@ -70,10 +69,7 @@ export default function RootLayout() {
             >
               <Drawer
                 drawerContent={(props) => (
-                  <Sidebar
-                    {...props}
-                    isCollapsed={false}
-                  />
+                  <Sidebar {...props} isCollapsed={false} />
                 )}
                 screenOptions={{
                   headerShown: false,
@@ -82,8 +78,7 @@ export default function RootLayout() {
                     ? { display: "none", width: 0 }
                     : {
                         width: drawerWidth,
-                        backgroundColor:
-                          "transparent",
+                        backgroundColor: "transparent",
                         borderRightWidth: 0,
                         elevation: 0,
                         shadowOpacity: 0,
@@ -103,18 +98,22 @@ export default function RootLayout() {
 }
 
 function AuthGuard({ children }) {
-  const { currentUser } = useStaff();
   const segments = useSegments();
   const router = useRouter();
+  const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
     const inOrderGroup = segments[0] === "order";
     const inLoginGroup = segments[0] === "login";
 
-    if (!currentUser && !inLoginGroup && !inOrderGroup) {
+    if (!token && !inLoginGroup && !inOrderGroup) {
+      // If the user is not logged in, redirect them to login page
       router.replace("/login");
+    } else if (token && inLoginGroup) {
+      // If the user is already logged in, redirect them away from the login page
+      router.replace("/table");
     }
-  }, [currentUser, segments]);
+  }, [segments, token]);
 
   return children;
 }

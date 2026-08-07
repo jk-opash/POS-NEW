@@ -1,12 +1,9 @@
-import React from "react";
-import { View, StyleSheet, TextInput, Switch, TouchableOpacity } from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { useSettings } from "@/context/SettingsContext";
+import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { SettingsRow } from "../SettingsRow";
 
-export function BusinessSettings() {
-  const { settings, updateSetting } = useSettings();
+export function BusinessSettings({ settings, updateSetting }) {
   const { business } = settings;
 
   const handleChange = (key, value) => {
@@ -18,21 +15,25 @@ export function BusinessSettings() {
     updateSetting("business", "verticalFlags", {
       isRetail: newVertical === "RETAIL",
       isFNB: newVertical === "FNB",
-      isServices: newVertical === "SERVICES"
+      isServices: newVertical === "SERVICES",
     });
   };
 
   return (
     <View style={styles.container}>
-      <Text weight="bold" style={styles.headerTitle}>Business Settings</Text>
-      <Text style={styles.headerSubtitle}>Manage your company's primary identity and contact information.</Text>
+      <Text weight="bold" style={styles.headerTitle}>
+        Business Settings
+      </Text>
+      <Text style={styles.headerSubtitle}>
+        Manage your company's primary identity and contact information.
+      </Text>
 
       <View style={styles.card}>
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Logo URL</Text>
-          <TextInput 
-            style={styles.input} 
-            value={business.logoUrl} 
+          <TextInput
+            style={styles.input}
+            value={business.logoUrl}
             onChangeText={(t) => handleChange("logoUrl", t)}
             placeholder="https://..."
             placeholderTextColor={ThemeColors.textMuted}
@@ -42,20 +43,26 @@ export function BusinessSettings() {
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Business Vertical</Text>
           <View style={styles.verticalSelector}>
-            {['RETAIL', 'FNB', 'SERVICES'].map((vert) => (
+            {["RETAIL", "FNB", "SERVICES"].map((vert) => (
               <TouchableOpacity
                 key={vert}
                 style={[
                   styles.verticalBtn,
-                  business.vertical === vert && styles.verticalBtnActive
+                  business.vertical === vert && styles.verticalBtnActive,
                 ]}
                 onPress={() => handleVerticalChange(vert)}
               >
-                <Text style={[
-                  styles.verticalBtnText,
-                  business.vertical === vert && styles.verticalBtnTextActive
-                ]}>
-                  {vert === 'FNB' ? 'Food & Beverage' : vert === 'RETAIL' ? 'Retail / Grocery' : 'Services'}
+                <Text
+                  style={[
+                    styles.verticalBtnText,
+                    business.vertical === vert && styles.verticalBtnTextActive,
+                  ]}
+                >
+                  {vert === "FNB"
+                    ? "Food & Beverage"
+                    : vert === "RETAIL"
+                      ? "Retail / Grocery"
+                      : "Services"}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -65,17 +72,17 @@ export function BusinessSettings() {
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Business Name</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.name} 
+            <TextInput
+              style={styles.input}
+              value={business.name}
               onChangeText={(t) => handleChange("name", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Business Type</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.type} 
+            <TextInput
+              style={styles.input}
+              value={business.type}
               onChangeText={(t) => handleChange("type", t)}
             />
           </View>
@@ -84,41 +91,46 @@ export function BusinessSettings() {
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Registration Number</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.regNumber} 
+            <TextInput
+              style={styles.input}
+              value={business.regNumber}
               onChangeText={(t) => handleChange("regNumber", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>GST / VAT Number</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.gstVat} 
+            <TextInput
+              style={styles.input}
+              value={business.gstVat}
               onChangeText={(t) => handleChange("gstVat", t)}
             />
           </View>
         </SettingsRow>
       </View>
 
-      <Text weight="bold" style={[styles.headerTitle, { marginTop: ThemeSpacing.xl }]}>Contact & Social</Text>
-      
+      <Text
+        weight="bold"
+        style={[styles.headerTitle, { marginTop: ThemeSpacing.xl }]}
+      >
+        Contact & Social
+      </Text>
+
       <View style={styles.card}>
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Email Address</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.email} 
+            <TextInput
+              style={styles.input}
+              value={business.email}
               keyboardType="email-address"
               onChangeText={(t) => handleChange("email", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Phone Number</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.phone} 
+            <TextInput
+              style={styles.input}
+              value={business.phone}
               keyboardType="phone-pad"
               onChangeText={(t) => handleChange("phone", t)}
             />
@@ -127,9 +139,9 @@ export function BusinessSettings() {
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Website</Text>
-          <TextInput 
-            style={styles.input} 
-            value={business.website} 
+          <TextInput
+            style={styles.input}
+            value={business.website}
             keyboardType="url"
             onChangeText={(t) => handleChange("website", t)}
           />
@@ -138,56 +150,61 @@ export function BusinessSettings() {
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Instagram Handle</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.instagram} 
+            <TextInput
+              style={styles.input}
+              value={business.instagram}
               onChangeText={(t) => handleChange("instagram", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Facebook Handle</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.facebook} 
+            <TextInput
+              style={styles.input}
+              value={business.facebook}
               onChangeText={(t) => handleChange("facebook", t)}
             />
           </View>
         </SettingsRow>
       </View>
 
-      <Text weight="bold" style={[styles.headerTitle, { marginTop: ThemeSpacing.xl }]}>Address & Location</Text>
-      
+      <Text
+        weight="bold"
+        style={[styles.headerTitle, { marginTop: ThemeSpacing.xl }]}
+      >
+        Address & Location
+      </Text>
+
       <View style={styles.card}>
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Street Address</Text>
-          <TextInput 
-            style={styles.input} 
-            value={business.address} 
+          <TextInput
+            style={styles.input}
+            value={business.address}
             onChangeText={(t) => handleChange("address", t)}
           />
         </View>
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>City</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.city} 
+            <TextInput
+              style={styles.input}
+              value={business.city}
               onChangeText={(t) => handleChange("city", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>State / Province</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.state} 
+            <TextInput
+              style={styles.input}
+              value={business.state}
               onChangeText={(t) => handleChange("state", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Postal Code</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.postalCode} 
+            <TextInput
+              style={styles.input}
+              value={business.postalCode}
               onChangeText={(t) => handleChange("postalCode", t)}
             />
           </View>
@@ -195,17 +212,17 @@ export function BusinessSettings() {
         <SettingsRow>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Country</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.country} 
+            <TextInput
+              style={styles.input}
+              value={business.country}
               onChangeText={(t) => handleChange("country", t)}
             />
           </View>
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Time Zone</Text>
-            <TextInput 
-              style={styles.input} 
-              value={business.timeZone} 
+            <TextInput
+              style={styles.input}
+              value={business.timeZone}
               onChangeText={(t) => handleChange("timeZone", t)}
             />
           </View>
@@ -218,7 +235,12 @@ export function BusinessSettings() {
 export const styles = StyleSheet.create({
   container: { flex: 1, paddingBottom: 40 },
   headerTitle: { fontSize: 24, color: ThemeColors.textPrimary },
-  headerSubtitle: { fontSize: 14, color: ThemeColors.textMuted, marginTop: 4, marginBottom: ThemeSpacing.xl },
+  headerSubtitle: {
+    fontSize: 14,
+    color: ThemeColors.textMuted,
+    marginTop: 4,
+    marginBottom: ThemeSpacing.xl,
+  },
   card: {
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.lg,
@@ -266,15 +288,15 @@ export const styles = StyleSheet.create({
     gap: ThemeSpacing.md,
   },
   switchRowText: {
-    color: ThemeColors.textPrimary, 
+    color: ThemeColors.textPrimary,
     fontSize: 14,
-    flex: 1, 
-    flexWrap: 'wrap'
+    flex: 1,
+    flexWrap: "wrap",
   },
   verticalSelector: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: ThemeSpacing.sm,
-    flexWrap: 'wrap'
+    flexWrap: "wrap",
   },
   verticalBtn: {
     paddingVertical: 10,
@@ -291,10 +313,10 @@ export const styles = StyleSheet.create({
   verticalBtnText: {
     fontSize: 13,
     color: ThemeColors.textSecondary,
-    fontWeight: '500'
+    fontWeight: "500",
   },
   verticalBtnTextActive: {
     color: ThemeColors.emerald,
-    fontWeight: 'bold'
-  }
+    fontWeight: "bold",
+  },
 });

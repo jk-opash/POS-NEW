@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Platform,
-} from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X, Percent, FileText } from "lucide-react-native";
-import { useTax } from "@/context/TaxContext";
+import { FileText, Percent, X } from "lucide-react-native";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export function AddTaxModal({ visible, onClose, editingRule }) {
-  const { addTaxRule, updateTaxRule } = useTax();
+  const { addTaxRule, updateTaxRule } = [];
   const [name, setName] = useState("");
   const [rate, setRate] = useState("");
 
@@ -29,7 +28,7 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
 
   const handleSave = () => {
     if (!name.trim() || !rate.trim()) return;
-    
+
     const parsedRate = parseFloat(rate);
     if (isNaN(parsedRate)) return;
 
@@ -66,9 +65,15 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
 
           <View style={styles.body}>
             <View style={styles.inputGroup}>
-              <Text weight="medium" style={styles.label}>Tax Name</Text>
+              <Text weight="medium" style={styles.label}>
+                Tax Name
+              </Text>
               <View style={styles.inputWrap}>
-                <FileText size={18} color={ThemeColors.textMuted} style={styles.inputIcon} />
+                <FileText
+                  size={18}
+                  color={ThemeColors.textMuted}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., CGST, VAT"
@@ -80,9 +85,15 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text weight="medium" style={styles.label}>Tax Rate (%)</Text>
+              <Text weight="medium" style={styles.label}>
+                Tax Rate (%)
+              </Text>
               <View style={styles.inputWrap}>
-                <Percent size={18} color={ThemeColors.textMuted} style={styles.inputIcon} />
+                <Percent
+                  size={18}
+                  color={ThemeColors.textMuted}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   placeholder="0.00"
@@ -97,17 +108,21 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
 
           <View style={styles.footer}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text weight="semibold" style={styles.cancelText}>Cancel</Text>
+              <Text weight="semibold" style={styles.cancelText}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
                 styles.saveBtn,
-                (!name.trim() || !rate.trim()) && styles.saveBtnDisabled
+                (!name.trim() || !rate.trim()) && styles.saveBtnDisabled,
               ]}
               onPress={handleSave}
               disabled={!name.trim() || !rate.trim()}
             >
-              <Text weight="semibold" style={styles.saveText}>Save Rule</Text>
+              <Text weight="semibold" style={styles.saveText}>
+                Save Rule
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -180,8 +195,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: ThemeColors.textPrimary,
     ...Platform.select({
-      web: { outlineStyle: "none" }
-    })
+      web: { outlineStyle: "none" },
+    }),
   },
   footer: {
     flexDirection: "row",

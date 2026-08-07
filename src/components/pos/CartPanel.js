@@ -1,6 +1,5 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
-import { usePOS } from "@/context/POSContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
 import {
@@ -10,11 +9,11 @@ import {
   Info,
   PauseCircle,
   Percent,
+  Phone,
   Plus,
   Printer,
-  Utensils,
   User,
-  Phone,
+  Utensils,
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import {
@@ -30,6 +29,7 @@ import Animated, {
   FadeOut,
   LinearTransition,
 } from "react-native-reanimated";
+import { useSelector } from "react-redux";
 import { CartItem } from "./CartItem";
 import { ItemNoteModal } from "./ItemNoteModal";
 
@@ -51,6 +51,8 @@ export function CartPanel({
   onViewParkedSales,
   onUpdateQuantity,
   onVoidItem,
+  onVoidLockedItem,
+  onDecreaseLockedItem,
   onAssignStaff,
   onDiscount,
   onParkSale,
@@ -59,13 +61,15 @@ export function CartPanel({
   onUpdateCartItem,
   onNewTakeaway,
   onPrintBill,
+  onSetCustomer,
 }) {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
   const [selectedModifiers, setSelectedModifiers] = useState([]);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [selectedItemForNote, setSelectedItemForNote] = useState(null);
   const [taxDetailsVisible, setTaxDetailsVisible] = useState(false);
-  const { customer, setCustomer } = usePOS();
+  const posState = useSelector((state) => state.pos) || {};
+  const { customer = null } = posState;
 
   const [expandedSections, setExpandedSections] = useState({
     "header-cart": true,
@@ -95,11 +99,12 @@ export function CartPanel({
 
     if (runningOrder.length > 0) {
       runningOrder.forEach((item) => {
-        const kotNum = item.kotNumber || "Sent";
+        // Support both camelCase (kotNumber) and snake_case (kot_number) from DB
+        const kotNum = item.kot_number || item.kotNumber || "Sent";
         if (!kotsMap.has(kotNum)) {
           kotsMap.set(kotNum, new Map());
         }
-        kotsMap.get(kotNum).set(item.id, { ...item, isLockedItem: false });
+        kotsMap.get(kotNum).set(item.id, { ...item, isLockedItem: true });
       });
     }
 
@@ -127,7 +132,8 @@ export function CartPanel({
         const sectionId = `header-${kotNum}`;
         rows.push({
           type: "header",
-          title: kotNum === "Sent" ? "Sent Items" : `KOT #${kotNum}`,
+          // Show the full KOT number as the section title
+          title: kotNum === "Sent" ? "📋 Sent Items" : `🍽 ${kotNum}`,
           id: sectionId,
         });
 
@@ -212,6 +218,8 @@ export function CartPanel({
           isLocked={item.item.isLockedItem}
           onUpdateQuantity={onUpdateQuantity}
           onVoidItem={onVoidItem}
+          onVoidLockedItem={onVoidLockedItem}
+          onDecreaseLockedItem={onDecreaseLockedItem}
           onAssignStaff={onAssignStaff}
           onPress={handleOpenNoteModal}
           index={index}
@@ -403,26 +411,76 @@ export function CartPanel({
       <View style={styles.totalsContainer}>
         {/* // add here name and mobile number field when select the takeaway option  */}
         {orderType === "Takeaway" && (
-          <View style={{ flexDirection: "row", gap: ThemeSpacing.sm, marginBottom: ThemeSpacing.sm }}>
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: ThemeColors.background, borderWidth: 1, borderColor: ThemeColors.border, borderRadius: ThemeRadius.md, paddingHorizontal: ThemeSpacing.sm }}>
-              <User size={16} color={ThemeColors.textSecondary} style={{ marginRight: ThemeSpacing.xs }} />
+          <View
+            style={{
+              flexDirection: "row",
+              gap: ThemeSpacing.sm,
+              marginBottom: ThemeSpacing.sm,
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: ThemeColors.background,
+                borderWidth: 1,
+                borderColor: ThemeColors.border,
+                borderRadius: ThemeRadius.md,
+                paddingHorizontal: ThemeSpacing.sm,
+              }}
+            >
+              <User
+                size={16}
+                color={ThemeColors.textSecondary}
+                style={{ marginRight: ThemeSpacing.xs }}
+              />
               <TextInput
-                style={{ flex: 1, paddingVertical: ThemeSpacing.sm, color: ThemeColors.textPrimary, fontSize: 14 }}
+                style={{
+                  flex: 1,
+                  paddingVertical: ThemeSpacing.sm,
+                  color: ThemeColors.textPrimary,
+                  fontSize: 14,
+                }}
                 placeholder="Customer Name"
                 placeholderTextColor={ThemeColors.textSecondary}
                 value={customer?.name || ""}
-                onChangeText={(text) => setCustomer({ ...customer, name: text })}
+                onChangeText={(text) =>
+                  onSetCustomer({ ...customer, name: text })
+                }
               />
             </View>
-            <View style={{ flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: ThemeColors.background, borderWidth: 1, borderColor: ThemeColors.border, borderRadius: ThemeRadius.md, paddingHorizontal: ThemeSpacing.sm }}>
-              <Phone size={16} color={ThemeColors.textSecondary} style={{ marginRight: ThemeSpacing.xs }} />
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: ThemeColors.background,
+                borderWidth: 1,
+                borderColor: ThemeColors.border,
+                borderRadius: ThemeRadius.md,
+                paddingHorizontal: ThemeSpacing.sm,
+              }}
+            >
+              <Phone
+                size={16}
+                color={ThemeColors.textSecondary}
+                style={{ marginRight: ThemeSpacing.xs }}
+              />
               <TextInput
-                style={{ flex: 1, paddingVertical: ThemeSpacing.sm, color: ThemeColors.textPrimary, fontSize: 14 }}
+                style={{
+                  flex: 1,
+                  paddingVertical: ThemeSpacing.sm,
+                  color: ThemeColors.textPrimary,
+                  fontSize: 14,
+                }}
                 placeholder="Phone Number"
                 placeholderTextColor={ThemeColors.textSecondary}
                 value={customer?.phone || ""}
                 keyboardType="phone-pad"
-                onChangeText={(text) => setCustomer({ ...customer, phone: text })}
+                onChangeText={(text) =>
+                  onSetCustomer({ ...customer, phone: text })
+                }
               />
             </View>
           </View>

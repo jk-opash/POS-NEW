@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { ADDON_GROUPS } from "@/constants/menu";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { X } from "lucide-react-native";
 import { useEffect, useState } from "react";
@@ -32,15 +31,16 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
   }, [visible, product]);
 
   const handleConfirm = () => {
-    onConfirm(product, selectedVariant, selectedAddons, selectedSpiceLevel);
+    const finalSpiceLevel = product.spice_level_enabled ? selectedSpiceLevel : null;
+    onConfirm(product, selectedVariant, selectedAddons, finalSpiceLevel);
     onClose();
   };
 
   const handleAddonToggle = (addon, group) => {
     setSelectedAddons((prev) => {
-      const isSelected = prev.find((a) => a.id === addon.id);
+      const isSelected = prev.find((a) => a.name === addon.name);
       if (isSelected) {
-        return prev.filter((a) => a.id !== addon.id);
+        return prev.filter((a) => a.name !== addon.name);
       } else {
         return [...prev, addon];
       }
@@ -50,15 +50,18 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
   if (!visible || !product) return null;
 
   const hasVariants = product.variants && product.variants.length > 0;
-  const hasAddonGroups = (product.addonGroups && product.addonGroups.length > 0) || (product.customAddonGroups && product.customAddonGroups.length > 0);
-  const showSpiceLevel = product.spiceLevelEnabled === true;
+  const hasAddonGroups =
+    product.addon_categories && product.addon_categories.length > 0;
+  const showSpiceLevel = product.spice_level_enabled === true;
 
-  let totalPrice = product.pricing?.sellingPrice || 0;
+  console.log("product ====> ", product);
+
+  let totalPrice = Number(product.pricing?.sellingPrice || product.price || 0);
   if (selectedVariant) {
-    totalPrice = selectedVariant.price;
+    totalPrice = Number(selectedVariant.price) || 0;
   }
   selectedAddons.forEach((addon) => {
-    if (addon.price) totalPrice += addon.price;
+    if (addon.price) totalPrice += Number(addon.price);
   });
 
   return (
@@ -85,11 +88,11 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
                   Variation
                 </Text>
                 <View style={styles.chipsContainer}>
-                  {product.variants.map((v) => {
-                    const isSelected = selectedVariant?.id === v.id;
+                  {product.variants.map((v, index) => {
+                    const isSelected = selectedVariant?.name === v.name;
                     return (
                       <TouchableOpacity
-                        key={v.id}
+                        key={v.id || index}
                         style={[styles.chip, isSelected && styles.chipActive]}
                         onPress={() => setSelectedVariant(v)}
                       >
@@ -154,127 +157,70 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
                 <Text weight="bold" style={styles.sectionTitle}>
                   Add-ons
                 </Text>
-                
-                {/* Legacy global addon groups */}
-                {product.addonGroups && product.addonGroups.map((groupId) => {
-                  const group = ADDON_GROUPS.find((g) => g.id === groupId);
-                  if (!group) return null;
 
-                  const filteredAddons = group.addons.filter((a) =>
-                    a.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                  );
+                {/* Addon Categories from API */}
+                {product.addon_categories &&
+                  product.addon_categories.map((group) => {
+                    if (!group || !group.options) return null;
 
-                  if (filteredAddons.length === 0) return null;
-                  const isSingleSelect = group.maxSelect === 1;
+                    const filteredAddons = group.options.filter((a) =>
+                      a.name.toLowerCase().includes(searchQuery.toLowerCase()),
+                    );
 
-                  return (
-                    <View key={group.id} style={styles.addonGroup}>
-                      <View style={styles.groupHeader}>
-                        <Text weight="bold" style={styles.groupTitle}>
-                          {group.name}
-                        </Text>
-                        <Text style={styles.groupSubtitle}>
-                          {isSingleSelect ? "Choose 1" : "Choose any"}
-                        </Text>
-                      </View>
+                    if (filteredAddons.length === 0) return null;
+                    const isSingleSelect = group.maxSelection === 1;
 
-                      <View style={styles.chipsContainer}>
-                        {filteredAddons.map((addon) => {
-                          const isSelected = selectedAddons.some(
-                            (a) => a.id === addon.id,
-                          );
-                          return (
-                            <TouchableOpacity
-                              key={addon.id}
-                              style={[
-                                styles.chip,
-                                isSelected && styles.chipActive,
-                              ]}
-                              onPress={() => handleAddonToggle(addon, group)}
-                            >
-                              <Text
-                                weight={isSelected ? "bold" : "medium"}
+                    return (
+                      <View key={group.id || group.name} style={styles.addonGroup}>
+                        <View style={styles.groupHeader}>
+                          <Text weight="bold" style={styles.groupTitle}>
+                            {group.name}
+                          </Text>
+                          <Text style={styles.groupSubtitle}>
+                            {isSingleSelect ? "Choose 1" : "Choose any"}
+                          </Text>
+                        </View>
+
+                        <View style={styles.chipsContainer}>
+                          {filteredAddons.map((addon, idx) => {
+                            const isSelected = selectedAddons.some(
+                              (a) => a.name === addon.name,
+                            );
+                            return (
+                              <TouchableOpacity
+                                key={addon.id || idx}
                                 style={[
-                                  styles.chipText,
-                                  isSelected && styles.chipTextActive,
+                                  styles.chip,
+                                  isSelected && styles.chipActive,
                                 ]}
+                                onPress={() => handleAddonToggle(addon, group)}
                               >
-                                {addon.name}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.chipPrice,
-                                  isSelected && styles.chipPriceActive,
-                                ]}
-                              >
-                                {addon.price > 0 ? `+₹${addon.price}` : "Free"}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
+                                <Text
+                                  weight={isSelected ? "bold" : "medium"}
+                                  style={[
+                                    styles.chipText,
+                                    isSelected && styles.chipTextActive,
+                                  ]}
+                                >
+                                  {addon.name}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.chipPrice,
+                                    isSelected && styles.chipPriceActive,
+                                  ]}
+                                >
+                                  {addon.price > 0
+                                    ? `+₹${addon.price}`
+                                    : "Free"}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
                       </View>
-                    </View>
-                  );
-                })}
-
-                {/* Per-item custom addon groups */}
-                {product.customAddonGroups && product.customAddonGroups.map((group) => {
-                  const filteredAddons = group.addons.filter((a) =>
-                    a.name.toLowerCase().includes(searchQuery.toLowerCase()),
-                  );
-
-                  if (filteredAddons.length === 0) return null;
-                  const isSingleSelect = group.maxSelect === 1;
-
-                  return (
-                    <View key={group.id} style={styles.addonGroup}>
-                      <View style={styles.groupHeader}>
-                        <Text weight="bold" style={styles.groupTitle}>
-                          {group.name}
-                        </Text>
-                        <Text style={styles.groupSubtitle}>
-                          {isSingleSelect ? "Choose 1" : "Choose any"}
-                        </Text>
-                      </View>
-
-                      <View style={styles.chipsContainer}>
-                        {filteredAddons.map((addon) => {
-                          const isSelected = selectedAddons.some(
-                            (a) => a.id === addon.id,
-                          );
-                          return (
-                            <TouchableOpacity
-                              key={addon.id}
-                              style={[
-                                styles.chip,
-                                isSelected && styles.chipActive,
-                              ]}
-                              onPress={() => handleAddonToggle(addon, group)}
-                            >
-                              <Text
-                                weight={isSelected ? "bold" : "medium"}
-                                style={[
-                                  styles.chipText,
-                                  isSelected && styles.chipTextActive,
-                                ]}
-                              >
-                                {addon.name}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.chipPrice,
-                                  isSelected && styles.chipPriceActive,
-                                ]}
-                              >
-                                {addon.price > 0 ? `+₹${addon.price}` : "Free"}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
               </View>
             )}
           </View>

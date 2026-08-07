@@ -4,10 +4,15 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Eye } from "lucide-react-native";
 
 export function TableItem({ table, onPress, onLongPress }) {
-  const hasOrder = table.order && (Array.isArray(table.order) ? table.order.length > 0 : Object.keys(table.order).length > 0);
+  const hasOrder =
+    table.order &&
+    (Array.isArray(table.order)
+      ? table.order.length > 0
+      : Object.keys(table.order).length > 0);
   const isOccupied = table.status === "Occupied" || hasOrder;
   const isReserved = table.status === "Reserved" && !hasOrder;
-  const isAvailable = (!table.status || table.status === "Available") && !hasOrder;
+  const isAvailable =
+    (!table.status || table.status === "Available") && !hasOrder;
 
   const isCircle = table.shape === "circle" || table.shape === "round";
   const isSquare = table.shape === "square";

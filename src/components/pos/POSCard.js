@@ -3,7 +3,7 @@ import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 export function POSCard({ product, inCart, onAddToCart }) {
-  const price = product.pricing?.sellingPrice || 0;
+  const price = Number(product.pricing?.sellingPrice || product.price || product.base_price || 0);
 
   let typeColor = ThemeColors.border;
 
@@ -14,19 +14,19 @@ export function POSCard({ product, inCart, onAddToCart }) {
     product.category === "Bar / Beverages" ||
     product.station === "Beverage";
 
-  if (product.foodType === "Dessert" || isDessert) {
+  if (product.food_type === "Dessert" || isDessert) {
     typeColor = ThemeColors.blue;
-  } else if (product.foodType === "Beverage" || isDrink) {
+  } else if (product.food_type === "Beverage" || isDrink) {
     typeColor = ThemeColors.violet;
-  } else if (product.foodType === "Veg") {
+  } else if (product.food_type === "Veg") {
     typeColor = ThemeColors.veg;
-  } else if (product.foodType === "Non-Veg") {
+  } else if (product.food_type === "Non-Veg") {
     typeColor = ThemeColors.nonVeg;
-  } else if (product.foodType === "Egg") {
+  } else if (product.food_type === "Egg") {
     typeColor = ThemeColors.egg;
-  } else if (product.foodType === "Vegan") {
+  } else if (product.food_type === "Vegan") {
     typeColor = ThemeColors.vegan;
-  } else if (product.foodType === "Jain") {
+  } else if (product.food_type === "Jain") {
     typeColor = ThemeColors.jain;
   }
 

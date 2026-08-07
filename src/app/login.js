@@ -1,6 +1,6 @@
 import { Text } from "@/components/ui/Text";
-import { useStaff } from "@/context/StaffContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { clearError, performLogin } from "@/store/slices/authSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useRouter } from "expo-router";
 import {
@@ -11,11 +11,15 @@ import {
   Mail,
   Monitor,
   Package,
+  Shield,
   ShoppingCart,
   Store,
+  User,
 } from "lucide-react-native";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -25,6 +29,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 const FeatureCard = ({ icon: Icon, title, description }) => (
   <View style={styles.featureCard}>
@@ -46,23 +51,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("anand@dailygrind.co");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useStaff();
+  const [loginType, setLoginType] = useState("admin"); // 'admin' or 'team'
+
+  const dispatch = useDispatch();
   const router = useRouter();
+  const { loading, error } = useSelector((state) => state.auth);
   const { isMobile, isTablet, isDesktop } = useResponsive();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
-      setError("Please enter both email and password.");
+      Alert.alert("Error", "Please enter both email and password.");
       return;
     }
 
-    const success = login(email, password);
-    if (success) {
-      setError("");
-      router.replace("/");
-    } else {
-      setError("Invalid credentials. Please try again.");
+    dispatch(clearError());
+
+    try {
+      const resultAction = await dispatch(
+        performLogin({ email, password, loginType }),
+      );
+      if (performLogin.fulfilled.match(resultAction)) {
+        if (loginType === "admin") {
+          router.replace("/operations");
+        } else {
+          router.replace("/");
+        }
+      }
+    } catch (err) {
+      console.log("Login Exception:", err);
     }
   };
 
@@ -90,7 +106,6 @@ export default function LoginScreen() {
               style={styles.leftPanel}
               resizeMode="cover"
             >
-              {/* Dark Overlay for readability */}
               <View
                 style={[
                   StyleSheet.absoluteFillObject,
@@ -98,7 +113,6 @@ export default function LoginScreen() {
                 ]}
               />
 
-              {/* Background Decorative Circles */}
               <View style={[styles.decorativeCircle, styles.circleTopLeft]} />
               <View
                 style={[styles.decorativeCircle, styles.circleBottomRight]}
@@ -163,6 +177,62 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.formContainer}>
+                {/* Login Type Selector */}
+                <View style={styles.typeSelector}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeOption,
+                      loginType === "admin" && styles.typeOptionActive,
+                    ]}
+                    onPress={() => setLoginType("admin")}
+                  >
+                    <Shield
+                      size={16}
+                      color={
+                        loginType === "admin"
+                          ? ThemeColors.emerald
+                          : ThemeColors.textSecondary
+                      }
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      weight={loginType === "admin" ? "bold" : "medium"}
+                      style={[
+                        styles.typeText,
+                        loginType === "admin" && styles.typeTextActive,
+                      ]}
+                    >
+                      Owner / Admin
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeOption,
+                      loginType === "team" && styles.typeOptionActive,
+                    ]}
+                    onPress={() => setLoginType("team")}
+                  >
+                    <User
+                      size={16}
+                      color={
+                        loginType === "team"
+                          ? ThemeColors.emerald
+                          : ThemeColors.textSecondary
+                      }
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text
+                      weight={loginType === "team" ? "bold" : "medium"}
+                      style={[
+                        styles.typeText,
+                        loginType === "team" && styles.typeTextActive,
+                      ]}
+                    >
+                      Staff / Team
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
                 <View style={styles.inputGroup}>
                   <Text weight="semibold" style={styles.label}>
                     Email address
@@ -180,7 +250,7 @@ export default function LoginScreen() {
                       value={email}
                       onChangeText={(text) => {
                         setEmail(text);
-                        setError("");
+                        if (error) dispatch(clearError());
                       }}
                       autoCapitalize="none"
                       keyboardType="email-address"
@@ -212,7 +282,7 @@ export default function LoginScreen() {
                       value={password}
                       onChangeText={(text) => {
                         setPassword(text);
-                        setError("");
+                        if (error) dispatch(clearError());
                       }}
                       secureTextEntry={!showPassword}
                     />
@@ -230,17 +300,22 @@ export default function LoginScreen() {
 
                 {error ? (
                   <Text weight="regular" style={styles.errorText}>
-                    {error}
+                    {typeof error === "string" ? error : "Login failed."}
                   </Text>
                 ) : null}
 
                 <TouchableOpacity
-                  style={styles.loginButton}
+                  style={[styles.loginButton, loading && { opacity: 0.7 }]}
                   onPress={handleLogin}
+                  disabled={loading}
                 >
-                  <Text weight="semibold" style={styles.loginButtonText}>
-                    Sign in
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator color={ThemeColors.white} />
+                  ) : (
+                    <Text weight="semibold" style={styles.loginButtonText}>
+                      Sign in
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -389,6 +464,36 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
     elevation: 3,
   },
+  typeSelector: {
+    flexDirection: "row",
+    backgroundColor: ThemeColors.bg,
+    borderRadius: ThemeRadius.md,
+    padding: 4,
+    marginBottom: ThemeSpacing.xxl,
+  },
+  typeOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: ThemeSpacing.md,
+    borderRadius: ThemeRadius.sm,
+  },
+  typeOptionActive: {
+    backgroundColor: ThemeColors.white,
+    shadowColor: ThemeColors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  typeText: {
+    fontSize: 14,
+    color: ThemeColors.textSecondary,
+  },
+  typeTextActive: {
+    color: ThemeColors.emerald,
+  },
   inputGroup: {
     marginBottom: ThemeSpacing.xl,
   },
@@ -425,6 +530,7 @@ const styles = StyleSheet.create({
     fontFamily: "Outfit_400Regular",
     fontSize: 14,
     color: ThemeColors.textPrimary,
+    outlineStyle: "none",
   },
   loginButton: {
     backgroundColor: ThemeColors.emerald,

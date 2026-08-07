@@ -1,45 +1,29 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { persistReducer, persistStore } from "redux-persist";
 
-import branchReducer from './slices/branchSlice';
-import posReducer from './slices/posSlice';
-import inventoryReducer from './slices/inventorySlice';
-import hardwareReducer from './slices/hardwareSlice';
-import billingReducer from './slices/billingSlice';
-import menuReducer from './slices/menuSlice';
-import settingsReducer from './slices/settingsSlice';
-import ordersReducer from './slices/ordersSlice';
-import kdsReducer from './slices/kdsSlice';
-import staffReducer from './slices/staffSlice';
-import permissionsReducer from './slices/permissionsSlice';
-import onlineReducer from './slices/onlineSlice';
-import shiftReducer from './slices/shiftSlice';
-import supportReducer from './slices/supportSlice';
-import syncReducer from './slices/syncSlice';
+import authReducer from "./slices/authSlice";
+import branchReducer from "./slices/branchSlice";
+import inventoryReducer from "./slices/inventorySlice";
+import invoiceReducer from "./slices/invoiceSlice";
+import menuReducer from "./slices/menuSlice";
+import posReducer from "./slices/posSlice";
+import settingsReducer from "./slices/settingsSlice";
 
 const rootReducer = combineReducers({
   branch: branchReducer,
+  auth: authReducer,
+  menu: menuReducer,
   pos: posReducer,
   inventory: inventoryReducer,
-  hardware: hardwareReducer,
-  billing: billingReducer,
-  menu: menuReducer,
+  invoice: invoiceReducer,
   settings: settingsReducer,
-  orders: ordersReducer,
-  kds: kdsReducer,
-  staff: staffReducer,
-  permissions: permissionsReducer,
-  online: onlineReducer,
-  shift: shiftReducer,
-  support: supportReducer,
-  sync: syncReducer,
 });
 
 const persistConfig = {
-  key: 'root',
+  key: "root",
   storage: AsyncStorage,
-  whitelist: ['branch', 'settings', 'hardware'], // Only persist some global slices to avoid huge local storage initially
+  whitelist: ["branch", "auth"], // Persist auth so user stays logged in
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

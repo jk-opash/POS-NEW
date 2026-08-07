@@ -1,22 +1,34 @@
-import React, { useState } from "react";
-import {
-  Modal,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Switch,
-  Platform,
-} from "react-native";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X, Plus, Percent, Edit2, Trash2, Check, FileText } from "lucide-react-native";
-import { useDiscount } from "@/context/DiscountContext";
+import {
+  Check,
+  Edit2,
+  FileText,
+  Percent,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react-native";
+import { useState } from "react";
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export function DiscountConfigModal({ visible, onClose }) {
-  const { discountRules, addDiscountRule, updateDiscountRule, deleteDiscountRule } = useDiscount();
-  
+  const {
+    discountRules = [],
+    addDiscountRule = () => {},
+    updateDiscountRule = () => {},
+    deleteDiscountRule = () => {},
+  } = {};
+
   // State for the "Add/Edit" sub-form
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -46,9 +58,18 @@ export function DiscountConfigModal({ visible, onClose }) {
     if (isNaN(parsedValue)) return;
 
     if (editingId) {
-      updateDiscountRule(editingId, { name: name.trim(), type, value: parsedValue });
+      updateDiscountRule(editingId, {
+        name: name.trim(),
+        type,
+        value: parsedValue,
+      });
     } else {
-      addDiscountRule({ name: name.trim(), type, value: parsedValue, active: true });
+      addDiscountRule({
+        name: name.trim(),
+        type,
+        value: parsedValue,
+        active: true,
+      });
     }
     setShowForm(false);
   };
@@ -62,7 +83,9 @@ export function DiscountConfigModal({ visible, onClose }) {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text weight="bold" style={styles.title}>Discount Configuration</Text>
+              <Text weight="bold" style={styles.title}>
+                Discount Configuration
+              </Text>
               <Text style={styles.subtitle}>Manage global discount rules</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -77,11 +100,17 @@ export function DiscountConfigModal({ visible, onClose }) {
                 <Text weight="bold" style={styles.formTitle}>
                   {editingId ? "Edit Discount" : "Add New Discount"}
                 </Text>
-                
+
                 <View style={styles.inputGroup}>
-                  <Text weight="medium" style={styles.label}>Discount Name</Text>
+                  <Text weight="medium" style={styles.label}>
+                    Discount Name
+                  </Text>
                   <View style={styles.inputWrap}>
-                    <FileText size={18} color={ThemeColors.textMuted} style={styles.inputIcon} />
+                    <FileText
+                      size={18}
+                      color={ThemeColors.textMuted}
+                      style={styles.inputIcon}
+                    />
                     <TextInput
                       style={styles.input}
                       placeholder="e.g., Happy Hour"
@@ -93,21 +122,41 @@ export function DiscountConfigModal({ visible, onClose }) {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text weight="medium" style={styles.label}>Discount Type</Text>
+                  <Text weight="medium" style={styles.label}>
+                    Discount Type
+                  </Text>
                   <View style={styles.typeToggleRow}>
                     <TouchableOpacity
-                      style={[styles.typeToggleBtn, type === "percentage" && styles.typeToggleBtnActive]}
+                      style={[
+                        styles.typeToggleBtn,
+                        type === "percentage" && styles.typeToggleBtnActive,
+                      ]}
                       onPress={() => setType("percentage")}
                     >
-                      <Text weight={type === "percentage" ? "bold" : "medium"} style={[styles.typeToggleText, type === "percentage" && styles.typeToggleTextActive]}>
+                      <Text
+                        weight={type === "percentage" ? "bold" : "medium"}
+                        style={[
+                          styles.typeToggleText,
+                          type === "percentage" && styles.typeToggleTextActive,
+                        ]}
+                      >
                         Percentage
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.typeToggleBtn, type === "fixed" && styles.typeToggleBtnActive]}
+                      style={[
+                        styles.typeToggleBtn,
+                        type === "fixed" && styles.typeToggleBtnActive,
+                      ]}
                       onPress={() => setType("fixed")}
                     >
-                      <Text weight={type === "fixed" ? "bold" : "medium"} style={[styles.typeToggleText, type === "fixed" && styles.typeToggleTextActive]}>
+                      <Text
+                        weight={type === "fixed" ? "bold" : "medium"}
+                        style={[
+                          styles.typeToggleText,
+                          type === "fixed" && styles.typeToggleTextActive,
+                        ]}
+                      >
                         Fixed Amount
                       </Text>
                     </TouchableOpacity>
@@ -120,9 +169,20 @@ export function DiscountConfigModal({ visible, onClose }) {
                   </Text>
                   <View style={styles.inputWrap}>
                     {type === "percentage" ? (
-                      <Percent size={18} color={ThemeColors.textMuted} style={styles.inputIcon} />
+                      <Percent
+                        size={18}
+                        color={ThemeColors.textMuted}
+                        style={styles.inputIcon}
+                      />
                     ) : (
-                      <Text style={[styles.inputIcon, { fontSize: 16, color: ThemeColors.textMuted }]}>$</Text>
+                      <Text
+                        style={[
+                          styles.inputIcon,
+                          { fontSize: 16, color: ThemeColors.textMuted },
+                        ]}
+                      >
+                        $
+                      </Text>
                     )}
                     <TextInput
                       style={styles.input}
@@ -136,62 +196,104 @@ export function DiscountConfigModal({ visible, onClose }) {
                 </View>
 
                 <View style={styles.formActions}>
-                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowForm(false)}>
-                    <Text weight="semibold" style={styles.cancelText}>Cancel</Text>
+                  <TouchableOpacity
+                    style={styles.cancelBtn}
+                    onPress={() => setShowForm(false)}
+                  >
+                    <Text weight="semibold" style={styles.cancelText}>
+                      Cancel
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.saveBtn, (!name.trim() || !value.trim()) && styles.saveBtnDisabled]}
+                    style={[
+                      styles.saveBtn,
+                      (!name.trim() || !value.trim()) && styles.saveBtnDisabled,
+                    ]}
                     onPress={handleSaveForm}
                     disabled={!name.trim() || !value.trim()}
                   >
-                    <Text weight="semibold" style={styles.saveText}>Save Discount</Text>
+                    <Text weight="semibold" style={styles.saveText}>
+                      Save Discount
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
               <>
                 <View style={styles.listHeader}>
-                  <Text weight="semibold" style={styles.listTitle}>Active Rules</Text>
-                  <TouchableOpacity style={styles.addBtn} onPress={handleAddClick}>
+                  <Text weight="semibold" style={styles.listTitle}>
+                    Active Rules
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.addBtn}
+                    onPress={handleAddClick}
+                  >
                     <Plus size={16} color={ThemeColors.primary} />
-                    <Text weight="semibold" style={styles.addBtnText}>Add Discount</Text>
+                    <Text weight="semibold" style={styles.addBtnText}>
+                      Add Discount
+                    </Text>
                   </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+                <ScrollView
+                  style={styles.scrollArea}
+                  contentContainerStyle={styles.scrollContent}
+                >
                   {discountRules.length === 0 ? (
                     <View style={styles.emptyState}>
                       <Percent size={32} color={ThemeColors.borderSubtle} />
-                      <Text style={styles.emptyStateText}>No discounts configured.</Text>
+                      <Text style={styles.emptyStateText}>
+                        No discounts configured.
+                      </Text>
                     </View>
                   ) : (
                     discountRules.map((rule) => (
                       <View key={rule.id} style={styles.ruleCard}>
                         <View style={styles.ruleInfo}>
                           <View style={styles.ruleTitleRow}>
-                            <Text weight="bold" style={styles.ruleName}>{rule.name}</Text>
+                            <Text weight="bold" style={styles.ruleName}>
+                              {rule.name}
+                            </Text>
                             {rule.active && (
                               <View style={styles.activeBadge}>
                                 <Check size={10} color={ThemeColors.emerald} />
-                                <Text style={styles.activeBadgeText}>Active</Text>
+                                <Text style={styles.activeBadgeText}>
+                                  Active
+                                </Text>
                               </View>
                             )}
                           </View>
                           <Text style={styles.ruleDetails}>
-                            {rule.type === "percentage" ? `${rule.value}%` : `$${rule.value.toFixed(2)}`} off
+                            {rule.type === "percentage"
+                              ? `${rule.value}%`
+                              : `$${rule.value.toFixed(2)}`}{" "}
+                            off
                           </Text>
                         </View>
                         <View style={styles.ruleActions}>
                           <Switch
                             value={rule.active}
-                            onValueChange={(val) => updateDiscountRule(rule.id, { active: val })}
-                            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                            onValueChange={(val) =>
+                              updateDiscountRule(rule.id, { active: val })
+                            }
+                            style={{
+                              transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
+                            }}
                           />
                           <View style={styles.actionDivider} />
-                          <TouchableOpacity style={styles.iconBtn} onPress={() => handleEditClick(rule)}>
-                            <Edit2 size={16} color={ThemeColors.textSecondary} />
+                          <TouchableOpacity
+                            style={styles.iconBtn}
+                            onPress={() => handleEditClick(rule)}
+                          >
+                            <Edit2
+                              size={16}
+                              color={ThemeColors.textSecondary}
+                            />
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.iconBtn} onPress={() => deleteDiscountRule(rule.id)}>
+                          <TouchableOpacity
+                            style={styles.iconBtn}
+                            onPress={() => deleteDiscountRule(rule.id)}
+                          >
                             <Trash2 size={16} color={ThemeColors.red} />
                           </TouchableOpacity>
                         </View>
@@ -391,8 +493,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: ThemeColors.textPrimary,
     ...Platform.select({
-      web: { outlineStyle: "none" }
-    })
+      web: { outlineStyle: "none" },
+    }),
   },
   typeToggleRow: {
     flexDirection: "row",

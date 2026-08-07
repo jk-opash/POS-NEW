@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { usePermissions } from "@/context/PermissionsContext";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Check, Plus, Shield, Trash2 } from "lucide-react-native";
 import { useState } from "react";
@@ -11,9 +10,31 @@ import {
   View,
 } from "react-native";
 
+const MOCK_PERMS = [
+  { key: "inventory.view", label: "View Inventory", group: "Inventory" },
+  { key: "inventory.edit", label: "Edit Inventory", group: "Inventory" },
+  { key: "settings.view", label: "View Settings", group: "Settings" },
+  { key: "settings.edit", label: "Edit Settings", group: "Settings" },
+];
+
+const MOCK_ROLES = [
+  { id: "1", name: "Admin", isSystem: true, permissions: ["inventory.view", "inventory.edit", "settings.view", "settings.edit"] },
+  { id: "2", name: "Staff", isSystem: false, permissions: ["inventory.view"] }
+];
+
+function usePermissions() {
+  const [roles, setRoles] = useState(MOCK_ROLES);
+  return {
+    roles,
+    allPermissions: MOCK_PERMS,
+    togglePermission: () => {},
+    addRole: () => {},
+    deleteRole: () => {}
+  };
+}
+
 export function RolesPermissionsSettings() {
-  const { roles, allPermissions, togglePermission, addRole, deleteRole } =
-    usePermissions();
+  const { roles, allPermissions, togglePermission, addRole, deleteRole } = usePermissions();
   const [newRoleName, setNewRoleName] = useState("");
 
   // Group permissions by category
