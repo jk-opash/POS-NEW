@@ -8,7 +8,7 @@ import { fetchInventoryLedger } from "@/store/slices/inventorySlice";
 export function AdjustmentsTab() {
   const dispatch = useDispatch();
   const { activeBranch } = useSelector((state) => state.branch);
-  const { ledger, isLedgerLoading: loading } = useSelector((state) => state.inventory);
+  const { ledger, isLedgerLoading: loading, error } = useSelector((state) => state.inventory);
 
   const stockAdjustments = ledger.filter(
     (item) => item.movement_type === "ADJUSTMENT"

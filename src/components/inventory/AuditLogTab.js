@@ -9,7 +9,7 @@ import { fetchInventoryLedger } from "@/store/slices/inventorySlice";
 export function AuditLogTab() {
   const dispatch = useDispatch();
   const { activeBranch } = useSelector((state) => state.branch);
-  const { ledger: stockLedger, isLedgerLoading: loading } = useSelector(
+  const { ledger: stockLedger, isLedgerLoading: loading, error } = useSelector(
     (state) => state.inventory
   );
 

@@ -355,8 +355,14 @@ export default function TablesScreen() {
           if (tbl?.merged_tables?.length) {
             for (const ot of tbl.merged_tables)
               await createTable({
-                ...ot,
-                id: undefined,
+                name: ot.name,
+                capacity: ot.capacity,
+                shape: ot.shape || "rectangle",
+                position_x: ot.position_x || ot.x || 0,
+                position_y: ot.position_y || ot.y || 0,
+                status: "Available",
+                rotation: ot.rotation || 0,
+                is_active: ot.is_active !== undefined ? ot.is_active : true,
                 zone_id: activeFloor,
                 branch_id: currentBranchId,
               });

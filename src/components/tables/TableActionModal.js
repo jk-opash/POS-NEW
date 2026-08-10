@@ -35,9 +35,9 @@ export function TableActionModal({
 }) {
   if (!table) return null;
 
-  const isAvailable = table.status === "Available";
-  const isOccupied = table.status === "Occupied";
-  const isReserved = table.status === "Reserved";
+  const isAvailable = table.status?.toLowerCase() === "available";
+  const isOccupied = table.status?.toLowerCase() === "occupied";
+  const isReserved = table.status?.toLowerCase() === "reserved";
 
   const hasOrder =
     table.order &&
@@ -388,6 +388,7 @@ export function TableActionModal({
                       </Text>
                     </TouchableOpacity>
 
+                  <View style={[styles.statusGrid, { marginTop: ThemeSpacing.md }]}>
                     <TouchableOpacity
                       style={[
                         styles.statusBtn,
@@ -405,7 +406,7 @@ export function TableActionModal({
                       <Text
                         style={[
                           styles.statusBtnText,
-                          { color: ThemeColors.blue },
+                          { color: ThemeColors.blue, textAlign: "center" },
                         ]}
                         adjustsFontSizeToFit
                         numberOfLines={2}
@@ -431,15 +432,16 @@ export function TableActionModal({
                       <Text
                         style={[
                           styles.statusBtnText,
-                          { color: ThemeColors.red },
+                          { color: ThemeColors.red, textAlign: "center" },
                         ]}
                         adjustsFontSizeToFit
-                        numberOfLines={1}
+                        numberOfLines={2}
                       >
                         Cancel Reservation
                       </Text>
                     </TouchableOpacity>
-                  </>
+                  </View>
+                </>
                 )}
 
                 {/* Occupied (No Order) Logic */}
@@ -490,7 +492,7 @@ export function TableActionModal({
             )}
 
             {/* Unmerge Table Option */}
-            {table.originalTables && table.originalTables.length > 0 && (
+            {(table.originalTables?.length > 0 || table.merged_tables?.length > 0) && (
               <TouchableOpacity
                 style={[
                   styles.secondaryBtn,

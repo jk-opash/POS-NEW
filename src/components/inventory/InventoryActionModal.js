@@ -4,6 +4,8 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { AlertCircle, Save, X } from "lucide-react-native";
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { adjustInventoryStock } from "@/store/slices/inventorySlice";
 import {
   Modal,
   StyleSheet,
@@ -19,7 +21,9 @@ export function InventoryActionModal({
   initialProductId = "",
 }) {
   const { isMobile } = useResponsive();
-  const { inventory, logStockMovement, adjustStock } = [];
+  const dispatch = useDispatch();
+  const inventory = useSelector((state) => state.inventory.items || []);
+  const currentUser = useSelector((state) => state.auth?.user);
 
   const [productId, setProductId] = React.useState(initialProductId);
   const [adjustmentType, setAdjustmentType] = React.useState("remove");
@@ -60,20 +64,21 @@ export function InventoryActionModal({
         finalQty = -finalQty;
       }
 
-      if (type === "adjustments") {
-        adjustStock(product.id, product.name, finalQty, reason, "Admin");
-      } else {
-        logStockMovement({
-          productId: product.id,
-          itemName: product.name,
-          quantityChange: finalQty,
-          reason: type === "quarantine" ? `Quarantine: ${reason}` : reason,
-          notes: notes,
-          performedBy: "Admin", // Hardcoded for mock
-        });
-      }
+      const movementType = type === "quarantine" ? "Quarantine" : "Adjustment";
+      const finalReason = type === "quarantine" ? `Quarantine: ${reason}` : reason;
 
-      onClose();
+      dispatch(adjustInventoryStock({
+        item_id: product.id,
+        quantity_change: finalQty,
+        movement_type: movementType,
+        reason: finalReason,
+        performed_by: currentUser?.id
+      }))
+      .unwrap()
+      .then(() => {
+        onClose();
+      })
+      .catch((err) => setError(err.message || "Failed to adjust stock"));
     } else {
       // Stub for other types
       onClose();

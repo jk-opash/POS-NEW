@@ -10,6 +10,8 @@ import menuReducer from "./slices/menuSlice";
 import posReducer from "./slices/posSlice";
 import settingsReducer from "./slices/settingsSlice";
 
+import { socketMiddleware } from "./socketMiddleware";
+
 const rootReducer = combineReducers({
   branch: branchReducer,
   auth: authReducer,
@@ -33,7 +35,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // required for redux-persist
-    }),
+    }).concat(socketMiddleware),
 });
 
 export const persistor = persistStore(store);

@@ -61,6 +61,18 @@ export const deleteInventoryItem = createAsyncThunk(
   }
 );
 
+export const adjustInventoryStock = createAsyncThunk(
+  "inventory/adjustStock",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await inventoryApi.adjustStock(payload);
+      return response.data?.data || response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 export const fetchInventoryLedger = createAsyncThunk(
   "inventory/fetchLedger",
   async (branchId, { rejectWithValue }) => {

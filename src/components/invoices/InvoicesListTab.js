@@ -31,7 +31,7 @@ export function InvoicesListTab({
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(null);
   const [isListView, setIsListView] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = isListView ? 10 : 12;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -216,6 +216,7 @@ export function InvoicesListTab({
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.tableContainer}
+        bounces={false}
         contentContainerStyle={{ minWidth: "100%" }}
       >
         <View style={{ width: "100%" }}>

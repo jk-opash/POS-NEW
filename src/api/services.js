@@ -24,14 +24,16 @@ export const branchApi = {
 
 export const businessApi = {
   getById: (businessId) => axiosClient.get(`/business/${businessId}`),
-  update: (businessId, data) => axiosClient.put(`/business/${businessId}`, data),
+  update: (businessId, data) =>
+    axiosClient.put(`/business/${businessId}`, data),
 };
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 
 export const menuApi = {
   getItems: (branchId) => axiosClient.get(`/menu/items/branch/${branchId}`),
-  getCategories: (branchId) => axiosClient.get(`/menu/categories/branch/${branchId}`),
+  getCategories: (branchId) =>
+    axiosClient.get(`/menu/categories/branch/${branchId}`),
   createItem: (data) => axiosClient.post("/menu/items", data),
   updateItem: (id, data) => axiosClient.put(`/menu/items/${id}`, data),
   deleteItem: (id) => axiosClient.delete(`/menu/items/${id}`),
@@ -47,22 +49,15 @@ export const invoiceApi = {
 // ─── Inventory ────────────────────────────────────────────────────────────────
 
 export const inventoryApi = {
-  getItems: (branchId) => axiosClient.get(`/inventory/items/branch/${branchId}`),
+  getItems: (branchId) =>
+    axiosClient.get(`/inventory/items/branch/${branchId}`),
   getItemById: (id) => axiosClient.get(`/inventory/items/${id}`),
   createItem: (data) => axiosClient.post("/inventory/items", data),
   updateItem: (id, data) => axiosClient.put(`/inventory/items/${id}`, data),
   deleteItem: (id) => axiosClient.delete(`/inventory/items/${id}`),
-  getLedger: (branchId) => axiosClient.get(`/inventory/ledger/branch/${branchId}`),
-};
-
-// ─── Customer ─────────────────────────────────────────────────────────────────
-
-export const customerApi = {
-  getByBranch: (branchId) => axiosClient.get(`/customer/branch/${branchId}`),
-  getById: (id) => axiosClient.get(`/customer/${id}`),
-  create: (data) => axiosClient.post("/customer", data),
-  update: (id, data) => axiosClient.put(`/customer/${id}`, data),
-  delete: (id) => axiosClient.delete(`/customer/${id}`),
+  getLedger: (branchId) =>
+    axiosClient.get(`/inventory/ledger/branch/${branchId}`),
+  adjustStock: (data) => axiosClient.post("/inventory/stock/adjust", data),
 };
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
@@ -71,7 +66,8 @@ export const orderApi = {
   create: (data) => axiosClient.post("/order", data),
   update: (orderId, data) => axiosClient.put(`/order/${orderId}`, data),
   delete: (orderId) => axiosClient.delete(`/order/${orderId}`),
-  getPending: (branchId) => axiosClient.get(`/order?branch_id=${branchId}&status=Pending`),
+  getPending: (branchId) =>
+    axiosClient.get(`/order?branch_id=${branchId}&status=Pending`),
   getAll: (branchId) => axiosClient.get(`/order?branch_id=${branchId}`),
   updateKds: (orderId, data) => axiosClient.put(`/order/${orderId}/kds`, data),
 };
