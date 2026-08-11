@@ -3,6 +3,8 @@ import { fetchActiveOrders } from "./slices/posSlice";
 import { fetchZonesAndTables } from "./slices/branchSlice";
 import { fetchMenuData } from "./slices/menuSlice";
 import { fetchInventoryItems } from "./slices/inventorySlice";
+import { logoutUser, setSessionConflict, clearSessionConflict } from "./slices/authSlice";
+import { Alert } from "react-native";
 
 export const socketMiddleware = (store) => (next) => (action) => {
   // Pass the action down first so state gets updated
@@ -17,35 +19,58 @@ export const socketMiddleware = (store) => (next) => (action) => {
     const currentUser = state.auth?.user;
     const currentToken = state.auth?.token;
 
-    if (currentUser?.branch_id && currentToken) {
-      socketService.connect(currentUser.branch_id, currentToken);
+    if (currentToken) {
+      const branchId = currentUser?.branch_id;
+      socketService.connect(branchId, currentToken);
 
-      // Listen for order updates
-      socketService.on("orderCreated", () => {
-        store.dispatch(fetchActiveOrders(currentUser.branch_id));
+      if (branchId) {
+        // Listen for order updates
+        socketService.on("orderCreated", () => {
+          store.dispatch(fetchActiveOrders(branchId));
+        });
+
+        socketService.on("orderUpdated", () => {
+          store.dispatch(fetchActiveOrders(branchId));
+        });
+
+        socketService.on("orderDeleted", () => {
+          store.dispatch(fetchActiveOrders(branchId));
+        });
+
+        // Listen for table status updates
+        socketService.on("tableStatusChanged", () => {
+          store.dispatch(fetchZonesAndTables(branchId));
+        });
+
+        // Listen for menu updates
+        socketService.on("menuChanged", () => {
+          store.dispatch(fetchMenuData(branchId));
+        });
+
+        // Listen for inventory updates
+        socketService.on("inventoryChanged", () => {
+          store.dispatch(fetchInventoryItems(branchId));
+        });
+      }
+
+      // Session Conflict Management
+      socketService.on("session_conflict", (data) => {
+        store.dispatch(setSessionConflict(data?.message));
       });
 
-      socketService.on("orderUpdated", () => {
-        store.dispatch(fetchActiveOrders(currentUser.branch_id));
+      socketService.on("session_conflict_resolved", () => {
+        store.dispatch(clearSessionConflict());
       });
 
-      socketService.on("orderDeleted", () => {
-        store.dispatch(fetchActiveOrders(currentUser.branch_id));
+      socketService.on("session_conflict_failed", (data) => {
+        Alert.alert("Error", data?.error || "Invalid PIN");
       });
 
-      // Listen for table status updates
-      socketService.on("tableStatusChanged", () => {
-        store.dispatch(fetchZonesAndTables(currentUser.branch_id));
-      });
-
-      // Listen for menu updates
-      socketService.on("menuChanged", () => {
-        store.dispatch(fetchMenuData(currentUser.branch_id));
-      });
-
-      // Listen for inventory updates
-      socketService.on("inventoryChanged", () => {
-        store.dispatch(fetchInventoryItems(currentUser.branch_id));
+      socketService.on("session_expired", (data) => {
+        store.dispatch(logoutUser());
+        setTimeout(() => {
+          Alert.alert("Session Expired", data?.message || "You were logged in from another device.");
+        }, 500);
       });
     }
   }

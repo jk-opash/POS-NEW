@@ -14,7 +14,11 @@ import {
   updateTablePosition as rtkUpdateTablePosition,
   updateTableRotation as rtkUpdateTableRotation,
 } from "@/store/slices/branchSlice";
-import { setActiveTable, setOrderType, createOrder, restoreOrder, resetOrder } from "@/store/slices/posSlice";
+import {
+  restoreOrder,
+  setActiveTable,
+  setOrderType,
+} from "@/store/slices/posSlice";
 
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useRouter } from "expo-router";
@@ -45,11 +49,11 @@ export default function TablesScreen() {
 
   const currentBranchId =
     activeBranch && activeBranch !== "br-1" ? activeBranch : user?.branch_id;
-  
+
   // Branch details needed for generating the Order Number
-  const branchDetails = useSelector((state) => state.branch.branches || []).find(
-    (b) => b.id === currentBranchId
-  );
+  const branchDetails = useSelector(
+    (state) => state.branch.branches || [],
+  ).find((b) => b.id === currentBranchId);
   const branchCode = branchDetails?.branch_code || "BR";
 
   // ─── Generate Order Number (follows the same pattern as Invoice) ─────────
@@ -200,19 +204,16 @@ export default function TablesScreen() {
                   }}
                   onPress={() => {
                     if (!isEditMode) {
+                      dispatch(setActiveTable(table));
+                      dispatch(setOrderType("Dine-In"));
                       if (table.status === "Occupied") {
                         // ── Occupied Table: Restore existing order from DB ────────
-                        dispatch(setActiveTable(table));
-                        dispatch(setOrderType("Dine-In"));
-                        dispatch(restoreOrder({
-                          branchId: currentBranchId,
-                          tableId: table.id,
-                        }));
-                      } else {
-                        // ── Available Table: Start a fresh session ───────────────────
-                        dispatch(resetOrder());
-                        dispatch(setActiveTable(table));
-                        dispatch(setOrderType("Dine-In"));
+                        dispatch(
+                          restoreOrder({
+                            branchId: currentBranchId,
+                            tableId: table.id,
+                          }),
+                        );
                       }
 
                       router.push("/pos");

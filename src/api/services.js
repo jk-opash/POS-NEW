@@ -72,6 +72,13 @@ export const orderApi = {
   updateKds: (orderId, data) => axiosClient.put(`/order/${orderId}/kds`, data),
 };
 
+// ─── Expense ──────────────────────────────────────────────────────────────────
+
+export const expenseApi = {
+  getByBranch: (branchId) => axiosClient.get(`/expense?branch_id=${branchId}`),
+  create: (data) => axiosClient.post("/expense", data),
+};
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export const authApi = {

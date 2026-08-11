@@ -9,7 +9,6 @@ import {
   MonitorPlay,
   Receipt,
   Settings,
-  Smartphone,
   Store,
   UtensilsCrossed,
 } from "lucide-react-native";
@@ -37,11 +36,11 @@ const MENU_SECTIONS = [
   {
     title: "KITCHEN",
     items: [
-      {
-        key: "online-orders",
-        label: "Online Orders",
-        Icon: Smartphone,
-      },
+      // {
+      //   key: "online-orders",
+      //   label: "Online Orders",
+      //   Icon: Smartphone,
+      // },
       { key: "kds", label: "KOT / KDS", Icon: MonitorPlay },
       { key: "waiter", label: "Waiter / Serve", Icon: UtensilsCrossed },
     ],
@@ -99,6 +98,7 @@ export function Sidebar({ isCollapsed }) {
     waiter: "/waiter",
     inventory: "/inventory",
     invoices: "/invoices",
+    expenses: "/expenses",
     staff: "/staff",
     pos: "/pos",
     suppliers: "/suppliers",
@@ -127,6 +127,7 @@ export function Sidebar({ isCollapsed }) {
       "/waiter": "waiter",
       "/menu": "menu",
       "/invoices": "invoices",
+      "/expenses": "expenses",
       "/qr-ordering": "qr-ordering",
       "/online-orders": "online-orders",
       "/inventory": "inventory",

@@ -9,6 +9,7 @@ import invoiceReducer from "./slices/invoiceSlice";
 import menuReducer from "./slices/menuSlice";
 import posReducer from "./slices/posSlice";
 import settingsReducer from "./slices/settingsSlice";
+import expenseReducer from "./slices/expenseSlice";
 
 import { socketMiddleware } from "./socketMiddleware";
 
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
   inventory: inventoryReducer,
   invoice: invoiceReducer,
   settings: settingsReducer,
+  expense: expenseReducer,
 });
 
 const persistConfig = {

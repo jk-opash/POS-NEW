@@ -20,18 +20,30 @@ import {
   Menu,
   Save,
   Store,
+  UserCircle,
 } from "lucide-react-native";
 
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 import { BranchDetails } from "@/components/settings/tabs/BranchDetails";
 import { BusinessDetails } from "@/components/settings/tabs/BusinessDetails";
-import { fetchSettings, updateBusiness, updateBranchSettings } from "@/store/slices/settingsSlice";
+import {
+  fetchSettings,
+  updateBranchSettings,
+  updateBusiness,
+} from "@/store/slices/settingsSlice";
+import { UserProfileCard } from "@/components/settings/tabs/UserProfile";
 import { useDispatch, useSelector } from "react-redux";
 
 const GROUPS = [
   {
     name: "General settings",
     items: [
+      {
+        id: "profile",
+        label: "My Profile",
+        icon: UserCircle,
+        description: "View your login details and role",
+      },
       {
         id: "business",
         label: "Business Details",
@@ -52,6 +64,10 @@ const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 function renderContent(activeTab, settings, updateSetting) {
   switch (activeTab) {
+    case "profile":
+      return (
+        <UserProfileCard settings={settings} updateSetting={updateSetting} />
+      );
     case "business":
       return (
         <BusinessDetails settings={settings} updateSetting={updateSetting} />
@@ -74,6 +90,8 @@ function renderContent(activeTab, settings, updateSetting) {
       return null;
   }
 }
+
+
 
 function SidebarNav({ activeTab, onSelect }) {
   return (
@@ -216,9 +234,12 @@ export default function SettingsPage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { activeBranch } = useSelector((state) => state.branch);
-  const { business: reduxBusiness, branch: reduxBranch, isLoading: loading, isSaving: saving } = useSelector(
-    (state) => state.settings
-  );
+  const {
+    business: reduxBusiness,
+    branch: reduxBranch,
+    isLoading: loading,
+    isSaving: saving,
+  } = useSelector((state) => state.settings);
 
   const [settings, setSettings] = useState(defaultSettings);
 
@@ -287,10 +308,21 @@ export default function SettingsPage() {
       const businessId = user?.business_id || user?.businesses?.[0]?.id;
       const promises = [];
       if (businessId) {
-        promises.push(dispatch(updateBusiness({ businessId, data: settings.business })).unwrap());
+        promises.push(
+          dispatch(
+            updateBusiness({ businessId, data: settings.business }),
+          ).unwrap(),
+        );
       }
       if (activeBranch) {
-        promises.push(dispatch(updateBranchSettings({ branchId: activeBranch, data: settings.branch })).unwrap());
+        promises.push(
+          dispatch(
+            updateBranchSettings({
+              branchId: activeBranch,
+              data: settings.branch,
+            }),
+          ).unwrap(),
+        );
       }
       await Promise.all(promises);
       Alert.alert("Success", "Settings saved successfully");
@@ -541,8 +573,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hubRowText: { flex: 1, gap: 2 },
-  hubRowLabel: { fontSize: 15, color: ThemeColors.textPrimary },
-  hubRowDesc: { fontSize: 12, color: ThemeColors.textMuted },
+  hubRowLabel: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
+    marginBottom: 2,
+  },
+  hubRowDesc: {
+    fontSize: 13,
+    color: ThemeColors.textMuted,
+  },
+
   content: { flex: 1 },
   contentHeader: {
     flexDirection: "row",

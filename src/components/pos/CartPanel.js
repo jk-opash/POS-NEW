@@ -82,6 +82,19 @@ export function CartPanel({
     }));
   };
 
+  const validateTakeawayCustomer = () => {
+    if (orderType === "Takeaway") {
+      if (!customer?.name?.trim() || !customer?.phone?.trim()) {
+        showAlert(
+          "Customer Details Required",
+          "Please enter customer name and phone number for takeaway orders."
+        );
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleOpenNoteModal = (item) => {
     setSelectedItemForNote(item);
     setNoteModalVisible(true);
@@ -585,6 +598,7 @@ export function CartPanel({
                       "Please add items or select an active table to checkout.",
                     );
                   } else {
+                    if (!validateTakeawayCustomer()) return;
                     onCheckout?.({
                       paymentMethod: selectedPaymentMethod,
                       modifiers: selectedModifiers,
@@ -640,6 +654,7 @@ export function CartPanel({
                       "Please add items to hold this order.",
                     );
                   } else {
+                    if (!validateTakeawayCustomer()) return;
                     onParkSale();
                   }
                 }}
@@ -667,6 +682,7 @@ export function CartPanel({
                       "Please add new items to send to the Kitchen.",
                     );
                   } else {
+                    if (!validateTakeawayCustomer()) return;
                     onSendToKitchen?.({ print: false });
                   }
                 }}
@@ -725,6 +741,7 @@ export function CartPanel({
                   //       "Please add items before proceeding to checkout.",
                   //     );
                   //   } else {
+                  //     if (!validateTakeawayCustomer()) return;
                   //     onCheckout?.({
                   //       paymentMethod: selectedPaymentMethod,
                   //       modifiers: selectedModifiers,
@@ -742,6 +759,7 @@ export function CartPanel({
                       "Please create a KOT before proceeding to checkout.",
                     );
                   } else {
+                    if (!validateTakeawayCustomer()) return;
                     onCheckout?.({
                       paymentMethod: selectedPaymentMethod,
                       modifiers: selectedModifiers,
@@ -776,6 +794,7 @@ export function CartPanel({
                         "Please add items before proceeding to checkout.",
                       );
                     } else {
+                      if (!validateTakeawayCustomer()) return;
                       onCheckout?.({
                         paymentMethod: selectedPaymentMethod,
                         modifiers: selectedModifiers,
@@ -793,6 +812,7 @@ export function CartPanel({
                         "Please create a KOT before proceeding to checkout.",
                       );
                     } else {
+                      if (!validateTakeawayCustomer()) return;
                       onCheckout?.({
                         paymentMethod: selectedPaymentMethod,
                         modifiers: selectedModifiers,

@@ -42,8 +42,6 @@ import {
   setCustomer,
   setOrderType,
   setTaxRate,
-  updateKDSItemStatus,
-  updateKDSOrderStatus,
   updateQuantity,
   voidItem,
 } from "@/store/slices/posSlice";
@@ -221,32 +219,22 @@ export default function POSScreen() {
   const completeOrderInKDS = () => {};
   const activeOrders = kdsOrders;
 
-  // ── KDS Action Handlers ───────────────────────────────────────────────
-  // Update a full KOT ticket status (START PREP / BUMP TICKET buttons)
-  const updateOrderStatus = (id, status) => {
-    dispatch(updateKDSOrderStatus({ id, status }));
-  };
-  // Update a single item status within a KOT ticket
-  const updateItemStatus = (orderId, itemId, status) => {
-    dispatch(updateKDSItemStatus({ orderId, itemId, status }));
-  };
-
   const takeawaySessions = {};
 
   const tables = useSelector((state) => state.branch?.tables) || [];
   const floors = useSelector((state) => state.branch?.floors) || [];
 
   const handleSetActiveTable = (table) => {
-    dispatch(setActiveTable(table));
-    dispatch(setOrderType("Dine-In"));
-
     if (table.status === "Occupied") {
+      dispatch(setActiveTable(table));
       dispatch(restoreOrder({ branchId, tableId: table.id }));
     } else {
-      // It's an available table. Do not create the DB order yet. Just clear Redux state.
+      // Clear old order data first, then set the new table
       dispatch(resetOrder());
+      dispatch(setActiveTable(table));
     }
   };
+
   const handleSetOrderType = (type) => dispatch(setOrderType(type));
 
   useEffect(() => {
