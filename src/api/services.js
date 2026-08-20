@@ -72,6 +72,43 @@ export const orderApi = {
   updateKds: (orderId, data) => axiosClient.put(`/order/${orderId}/kds`, data),
 };
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
+export const authApi = {
+  login: (endpoint, credentials) => axiosClient.post(endpoint, credentials),
+};
+
+// ─── Audit Logs ─────────────────────────────────────────────────────────────────
+
+export const auditLogApi = {
+  getAll: (branchId) =>
+    axiosClient.get("/audit-logs", { params: { branch_id: branchId } }),
+};
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+export const analyticsApi = {
+  getDashboard: (params) => axiosClient.get("/analytics/dashboard", { params }),
+};
+
+// ─── Supplier ─────────────────────────────────────────────────────────────────
+export const supplierApi = {
+  getAll: (businessId) =>
+    axiosClient.get(`/supplier?business_id=${businessId}`),
+  create: (data) => axiosClient.post("/supplier", data),
+  update: (id, data) => axiosClient.put(`/supplier/${id}`, data),
+  delete: (id) => axiosClient.delete(`/supplier/${id}`),
+};
+
+// ─── Team Member ──────────────────────────────────────────────────────────────
+export const teamMemberApi = {
+  getAll: (businessId) =>
+    axiosClient.get(`/team-member?businessId=${businessId}`),
+  getById: (id) => axiosClient.get(`/team-member/${id}`),
+  create: (data) => axiosClient.post("/team-member", data),
+  update: (id, data) => axiosClient.put(`/team-member/${id}`, data),
+  delete: (id) => axiosClient.delete(`/team-member/${id}`),
+};
+
 // ─── Expense ──────────────────────────────────────────────────────────────────
 
 export const expenseApi = {
@@ -79,8 +116,16 @@ export const expenseApi = {
   create: (data) => axiosClient.post("/expense", data),
 };
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// ─── Utility Bill ─────────────────────────────────────────────────────────────
+export const utilityBillApi = {
+  getByBranch: (branchId) =>
+    axiosClient.get(`/utility-bill?branch_id=${branchId}`),
+  create: (data) => axiosClient.post("/utility-bill", data),
+};
 
-export const authApi = {
-  login: (endpoint, credentials) => axiosClient.post(endpoint, credentials),
+// ─── Withdrawal ───────────────────────────────────────────────────────────────
+export const withdrawalApi = {
+  getByBranch: (branchId) =>
+    axiosClient.get(`/withdrawal?branch_id=${branchId}`),
+  create: (data) => axiosClient.post("/withdrawal", data),
 };

@@ -118,7 +118,21 @@ export default function POSScreen() {
   ) => dispatch(addToCart({ product, variant, addons, quantity, spiceLevel }));
   const handleUpdateQuantityRedux = (id, quantity) =>
     dispatch(updateQuantity({ id, quantity }));
-  const handleVoidItemRedux = (id) => dispatch(voidItem(id));
+  const handleVoidItemRedux = (id) => {
+    const item = cart.find((i) => i.id === id);
+    Alert.alert(
+      "Remove Item",
+      `Are you sure you want to remove ${item?.product?.name || "this item"} from the cart?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => dispatch(voidItem(id)),
+        },
+      ],
+    );
+  };
   const handleVoidLockedItemRedux = (item) => {
     Alert.alert(
       "Remove KOT Item",
@@ -202,6 +216,7 @@ export default function POSScreen() {
             style: "destructive",
             onPress: () => {
               dispatch(resetOrder());
+              dispatch(setActiveTable(null));
               dispatch(setOrderType("Takeaway"));
             },
           },
@@ -209,6 +224,7 @@ export default function POSScreen() {
       );
     } else {
       dispatch(resetOrder());
+      dispatch(setActiveTable(null));
       dispatch(setOrderType("Takeaway"));
     }
   };

@@ -1,23 +1,35 @@
+import { Loader } from "@/components/common/Loader";
+import { useResponsive } from "@/hooks/useResponsive";
+import { fetchTeamMembers } from "@/store/slices/teamMemberSlice";
 import { ThemeColors } from "@/theme/theme";
 import { useNavigation } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useResponsive } from "@/hooks/useResponsive";
+import { useDispatch, useSelector } from "react-redux";
 
+import EmployeeModal from "@/components/staff/EmployeeModal";
+import { StaffFab } from "@/components/staff/StaffFab";
 import { StaffHeader } from "@/components/staff/StaffHeader";
 import DirectoryTab from "@/components/staff/tabs/DirectoryTab";
-import AttendanceTab from "@/components/staff/tabs/AttendanceTab";
-import ShiftsTab from "@/components/staff/tabs/ShiftsTab";
-import { StaffFab } from "@/components/staff/StaffFab";
-import EmployeeModal from "@/components/staff/EmployeeModal";
 
 export default function StaffPage() {
   const navigation = useNavigation();
-  const { isDesktop, isWebDesktop } = useResponsive();
+  const { isWebDesktop } = useResponsive();
   const [activeTab, setActiveTab] = useState("directory");
 
   const [employeeModalVisible, setEmployeeModalVisible] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  const dispatch = useDispatch();
+  const auth = useSelector((state) => state.auth);
+  const { loading, teamMembers } = useSelector((state) => state.teamMember);
+  const businessId = auth.user?.businesses?.[0]?.id || auth.user?.business_id;
+
+  useEffect(() => {
+    if (businessId) {
+      dispatch(fetchTeamMembers(businessId));
+    }
+  }, [businessId, dispatch]);
 
   const handleFabPress = () => {
     if (activeTab === "directory" || activeTab === "shifts") {
@@ -39,6 +51,10 @@ export default function StaffPage() {
     year: "numeric",
   });
 
+  if (loading && teamMembers.length === 0) {
+    return <Loader />;
+  }
+
   return (
     <View style={styles.root}>
       <StaffHeader
@@ -49,11 +65,7 @@ export default function StaffPage() {
         setActiveTab={setActiveTab}
       />
       <View style={styles.contentArea}>
-        {activeTab === "directory" && (
-          <DirectoryTab onEditEmployee={handleEditEmployee} />
-        )}
-        {activeTab === "attendance" && <AttendanceTab />}
-        {activeTab === "shifts" && <ShiftsTab />}
+        <DirectoryTab onEditEmployee={handleEditEmployee} />
       </View>
       <StaffFab activeTab={activeTab} onPress={handleFabPress} />
       <EmployeeModal

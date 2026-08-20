@@ -8,76 +8,78 @@ import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
+import { hasPermission } from "@/utils/permissions";
 import { useNavigation, useRouter } from "expo-router";
 import {
-  ArrowUpFromLine,
-  Banknote,
   Bell,
-  Clock,
   CreditCard,
   FileText,
-  History,
   Menu,
-  MessageSquare,
   Monitor,
   Package,
-  Percent,
-  PlusCircle,
   QrCode,
   Receipt,
-  RefreshCw,
   Sun,
-  Tags,
+  Truck,
   User,
 } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
 
 const OPERATIONS_OPTIONS = [
-  { id: "orders", label: "Orders", icon: Receipt, route: "/operations/orders" },
-  // { id: "customers", label: "Customers", icon: Users, route: "/operations/crm" },
-  { id: "expense", label: "Expense", icon: CreditCard, route: "/operations/expenses" },
-  { id: "inventory", label: "Inventory", icon: Package, route: "/operations/inventory" },
+  { key: "orders", label: "Orders", icon: Receipt, path: "/operations/orders" },
+  { key: "menu", label: "Menu", icon: FileText, path: "/operations/menu" },
   {
-    id: "billing-user",
+    key: "inventory",
+    label: "Inventory",
+    icon: Package,
+    path: "/operations/inventory",
+  },
+  {
+    key: "suppliers",
+    label: "Suppliers",
+    icon: Truck,
+    path: "/operations/suppliers",
+  },
+  {
+    key: "expense",
+    label: "Expense",
+    icon: CreditCard,
+    path: "/operations/expenses",
+  },
+  {
+    key: "billing-user",
     label: "Billing User Profile",
     icon: User,
-    route: "/operations/staff",
+    path: "/operations/staff",
   },
-  { id: "day-end", label: "Day End", icon: Sun, route: "/operations/day-end" },
+  { key: "day-end", label: "Day End", icon: Sun, path: "/operations/day-end" },
   {
-    id: "feedback",
-    label: "Feedback",
-    icon: MessageSquare,
-    route: "/operations/feedback",
+    key: "tables-qr",
+    label: "Tables QR",
+    icon: QrCode,
+    path: "/operations/tables-qr",
   },
-  { id: "tables-qr", label: "Tables QR", icon: QrCode, route: "/operations/tables-qr" },
   {
-    id: "extra-history",
-    label: "Extra Information History",
-    icon: FileText,
-    route: null,
+    key: "logs",
+    label: "Logs",
+    icon: Monitor,
+    path: "/operations/logs",
   },
-  { id: "cash-flow", label: "Cash Flow", icon: Banknote, route: null },
-  { id: "withdrawal", label: "Withdrawal", icon: ArrowUpFromLine, route: null },
-  { id: "cash-topup", label: "Cash Top-Up", icon: PlusCircle, route: null },
-  { id: "manual-sync", label: "Manual Sync", icon: RefreshCw, route: null },
-  { id: "live-view", label: "Live View", icon: Monitor, route: null },
-  {
-    id: "day-end-history",
-    label: "Day End History",
-    icon: History,
-    route: null,
-  },
-];
-
-const CONFIGURATION_OPTIONS = [
-  { id: "menu", label: "Menu", icon: FileText, route: "/operations/menu" },
-  { id: "tax", label: "Tax", icon: Percent, route: null },
-  { id: "discount", label: "Discount", icon: Tags, route: null },
-  { id: "billing-screen", label: "Billing Screen", icon: Monitor, route: null },
-  { id: "service-renewal", label: "Service Renewal", icon: Clock, route: null },
+  // { key: "discount", label: "Discount", icon: Tags, path: null },
+  // { key: "billing-screen", label: "Billing Screen", icon: Monitor, path: null },
+  // {
+  //   key: "extra-history",
+  //   label: "Extra Information History",
+  //   icon: FileText,
+  //   path: null,
+  // },
+  // { key: "cash-flow", label: "Cash Flow", icon: Banknote, path: null },
+  // { key: "withdrawal", label: "Withdrawal", icon: ArrowUpFromLine, path: null },
+  // { key: "cash-topup", label: "Cash Top-Up", icon: PlusCircle, path: null },
+  // { key: "manual-sync", label: "Manual Sync", icon: RefreshCw, path: null },
 ];
 
 export default function OperationsPage() {
@@ -92,6 +94,7 @@ export default function OperationsPage() {
   } = useResponsive();
   const navigation = useNavigation();
   const router = useRouter();
+  const authUser = useSelector((state) => state.auth.user);
 
   const [discountModalVisible, setDiscountModalVisible] = useState(false);
   const [renewalModalVisible, setRenewalModalVisible] = useState(false);
@@ -110,25 +113,25 @@ export default function OperationsPage() {
           : 3;
   const gap = ThemeSpacing.lg;
 
-  const handlePress = (id, route, label) => {
-    if (id === "discount") {
+  const handlePress = (key, path, label) => {
+    if (key === "discount") {
       setDiscountModalVisible(true);
-    } else if (id === "service-renewal") {
+    } else if (key === "service-renewal") {
       setRenewalModalVisible(true);
-    } else if (id === "billing-screen") {
+    } else if (key === "billing-screen") {
       setBillingModalVisible(true);
-    } else if (id === "print") {
+    } else if (key === "print") {
       setPrintModalVisible(true);
-    } else if (id === "tax") {
+    } else if (key === "tax") {
       setTaxModalVisible(true);
-    } else if (route) {
-      router.push(route);
+    } else if (path) {
+      router.push(path);
     } else {
       showAlert("Coming Soon", `${label} is currently under construction.`);
     }
   };
 
-  const isUnderConstruction = (id, route) => {
+  const isUnderConstruction = (key, path) => {
     const specialIds = [
       "discount",
       "service-renewal",
@@ -136,7 +139,7 @@ export default function OperationsPage() {
       "print",
       "tax",
     ];
-    return !route && !specialIds.includes(id);
+    return !path && !specialIds.includes(key);
   };
 
   const renderGrid = (options) => (
@@ -147,17 +150,17 @@ export default function OperationsPage() {
           ? `calc(${100 / numColumns}% - ${(gap * (numColumns - 1)) / numColumns}px)`
           : (width - ThemeSpacing.xl * 2 - gap * (numColumns - 1)) / numColumns;
 
-        const muted = isUnderConstruction(item.id, item.route);
+        const muted = isUnderConstruction(item.key, item.path);
 
         return (
           <TouchableOpacity
-            key={item.id}
+            key={item.key}
             style={[
               styles.tile,
               { width: itemWidth },
               muted && { opacity: 0.5 },
             ]}
-            onPress={() => handlePress(item.id, item.route, item.label)}
+            onPress={() => handlePress(item.key, item.path, item.label)}
             activeOpacity={0.7}
           >
             <Icon size={36} color={ThemeColors.textPrimary} strokeWidth={1.2} />
@@ -183,7 +186,7 @@ export default function OperationsPage() {
                 <Menu size={24} color={ThemeColors.textPrimary} />
               </TouchableOpacity>
             )}
-            <Text style={styles.pageTitle}>Operations & Configuration</Text>
+            <Text style={styles.pageTitle}>Operations</Text>
           </View>
           <View style={styles.headerRight}>
             <HeaderQuickNav />
@@ -200,16 +203,14 @@ export default function OperationsPage() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.section}>
-          <Text weight="bold" style={styles.sectionTitle}>
+          {/* <Text weight="bold" style={styles.sectionTitle}>
             Operations
-          </Text>
-          {renderGrid(OPERATIONS_OPTIONS)}
-        </View>
-        <View style={styles.section}>
-          <Text weight="bold" style={styles.sectionTitle}>
-            Set the configuration for your restaurant
-          </Text>
-          {renderGrid(CONFIGURATION_OPTIONS)}
+          </Text> */}
+          {renderGrid(
+            OPERATIONS_OPTIONS.filter((item) =>
+              hasPermission(authUser, item.key),
+            ),
+          )}
         </View>
       </ScrollView>
 

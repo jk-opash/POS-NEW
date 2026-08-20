@@ -1,16 +1,16 @@
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import React, { useState } from "react";
+import { Plus, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Modal,
+  ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
-  ScrollView,
 } from "react-native";
-import { X, Plus, Calendar } from "lucide-react-native";
 
 const CATEGORIES = [
   "Supplies & Ingredients",
@@ -29,18 +29,25 @@ export function ExpenseModal({ visible, onClose, onSubmit, isLoading }) {
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    if (!amount || isNaN(Number(amount))) return;
+    setError("");
+    if (!amount.trim()) return setError("Amount is required.");
+    if (isNaN(Number(amount)) || Number(amount) <= 0)
+      return setError("Please enter a valid positive amount.");
+    if (!description.trim()) return setError("Description is required.");
+
     onSubmit({
       amount: Number(amount),
       category,
-      description,
+      description: description.trim(),
     });
     // Reset form
     setAmount("");
     setCategory(CATEGORIES[0]);
     setDescription("");
+    setError("");
   };
 
   return (
@@ -57,6 +64,17 @@ export function ExpenseModal({ visible, onClose, onSubmit, isLoading }) {
           </View>
 
           <ScrollView style={styles.content}>
+            {error ? (
+              <Text
+                style={{
+                  color: ThemeColors.error,
+                  marginBottom: 12,
+                  fontSize: 14,
+                }}
+              >
+                {error}
+              </Text>
+            ) : null}
             <View style={styles.field}>
               <Text weight="medium" style={styles.label}>
                 Amount

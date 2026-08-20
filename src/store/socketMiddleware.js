@@ -1,10 +1,17 @@
-import socketService from "../services/socketService";
-import { fetchActiveOrders } from "./slices/posSlice";
-import { fetchZonesAndTables } from "./slices/branchSlice";
-import { fetchMenuData } from "./slices/menuSlice";
-import { fetchInventoryItems } from "./slices/inventorySlice";
-import { logoutUser, setSessionConflict, clearSessionConflict } from "./slices/authSlice";
 import { Alert } from "react-native";
+import socketService from "../services/socketService";
+import {
+  clearSessionConflict,
+  logoutUser,
+  setSessionConflict,
+  updateAuthUserPermissions,
+} from "./slices/authSlice";
+import { fetchZonesAndTables } from "./slices/branchSlice";
+import { fetchInventoryItems } from "./slices/inventorySlice";
+import { fetchMenuData } from "./slices/menuSlice";
+import { fetchActiveOrders } from "./slices/posSlice";
+import { fetchTeamMembers } from "./slices/teamMemberSlice";
+import { teamMemberApi } from "../api/services";
 
 export const socketMiddleware = (store) => (next) => (action) => {
   // Pass the action down first so state gets updated
@@ -51,6 +58,34 @@ export const socketMiddleware = (store) => (next) => (action) => {
         socketService.on("inventoryChanged", () => {
           store.dispatch(fetchInventoryItems(branchId));
         });
+
+        // Listen for team member updates
+        socketService.on("teamMemberChanged", async (payload) => {
+          const state = store.getState();
+          const authUser = state.auth?.user;
+          const userBusinessId =
+            authUser?.businesses?.[0]?.id || authUser?.business_id;
+
+          // Re-fetch all team members for the list
+          if (userBusinessId) {
+            store.dispatch(fetchTeamMembers(userBusinessId));
+          }
+
+          // If the changed member is the currently logged-in user,
+          // fetch their fresh data and update auth.user so Sidebar/Nav updates immediately
+          const changedId = payload?.id;
+          if (changedId && authUser?.id && changedId === authUser.id) {
+            try {
+              const response = await teamMemberApi.getById(changedId);
+              const freshMember = response?.data?.data;
+              if (freshMember?.role) {
+                store.dispatch(updateAuthUserPermissions({ role: freshMember.role }));
+              }
+            } catch (e) {
+              // silently ignore
+            }
+          }
+        });
       }
 
       // Session Conflict Management
@@ -69,7 +104,10 @@ export const socketMiddleware = (store) => (next) => (action) => {
       socketService.on("session_expired", (data) => {
         store.dispatch(logoutUser());
         setTimeout(() => {
-          Alert.alert("Session Expired", data?.message || "You were logged in from another device.");
+          Alert.alert(
+            "Session Expired",
+            data?.message || "You were logged in from another device.",
+          );
         }, 500);
       });
     }

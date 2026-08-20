@@ -15,8 +15,10 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
   const { addTaxRule, updateTaxRule } = [];
   const [name, setName] = useState("");
   const [rate, setRate] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    setError(""); // Reset error on open
     if (editingRule) {
       setName(editingRule.name);
       setRate(String(editingRule.rate));
@@ -27,10 +29,12 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
   }, [editingRule, visible]);
 
   const handleSave = () => {
-    if (!name.trim() || !rate.trim()) return;
+    setError("");
+    if (!name.trim()) return setError("Tax Name is required.");
+    if (!rate.trim()) return setError("Tax Rate is required.");
 
     const parsedRate = parseFloat(rate);
-    if (isNaN(parsedRate)) return;
+    if (isNaN(parsedRate) || parsedRate < 0) return setError("Please enter a valid positive rate.");
 
     if (editingRule) {
       updateTaxRule(editingRule.id, {
@@ -64,6 +68,11 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
           </View>
 
           <View style={styles.body}>
+            {error ? (
+              <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
+                {error}
+              </Text>
+            ) : null}
             <View style={styles.inputGroup}>
               <Text weight="medium" style={styles.label}>
                 Tax Name

@@ -18,14 +18,17 @@ export function CreateTicketModal({ visible, onClose }) {
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("Hardware");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    if (!subject || !description) return;
+    setError("");
+    if (!subject.trim()) return setError("Subject is required.");
+    if (!description.trim()) return setError("Description is required.");
 
     addTicket({
-      subject,
+      subject: subject.trim(),
       category,
-      description,
+      description: description.trim(),
       priority: "Medium",
     });
 
@@ -33,6 +36,7 @@ export function CreateTicketModal({ visible, onClose }) {
     setSubject("");
     setCategory("Hardware");
     setDescription("");
+    setError("");
     onClose();
   };
 
@@ -53,6 +57,11 @@ export function CreateTicketModal({ visible, onClose }) {
           </View>
 
           <View style={styles.form}>
+            {error ? (
+              <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
+                {error}
+              </Text>
+            ) : null}
             <View style={styles.field}>
               <Text style={styles.label}>Subject</Text>
               <TextInput

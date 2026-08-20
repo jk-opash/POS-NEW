@@ -1,5 +1,6 @@
 import { invoiceApi, orderApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import Toast from "react-native-toast-message";
 
 // ─── API #1: Create Order ──────────────────────────────────────────────────────
 // Fired when: Table card is tapped (Dine-In) OR new Takeaway session is started
@@ -125,12 +126,18 @@ export const removeRunningOrderItem = createAsyncThunk(
   "pos/removeRunningOrderItem",
   async (
     { orderId, itemId, currentRunningOrder, totals },
-    { rejectWithValue },
+    { dispatch, rejectWithValue },
   ) => {
     try {
       const newRunningOrder = currentRunningOrder.filter(
         (item) => item.id !== itemId,
       );
+
+      if (newRunningOrder.length === 0) {
+        // If the order becomes empty, delete the whole order
+        await dispatch(deleteOrderAsync(orderId)).unwrap();
+        return { itemId, isDeleted: true };
+      }
 
       const res = await orderApi.update(orderId, {
         running_order: newRunningOrder,
@@ -152,7 +159,7 @@ export const decreaseRunningOrderItemQty = createAsyncThunk(
   "pos/decreaseRunningOrderItemQty",
   async (
     { orderId, itemId, currentRunningOrder, totals },
-    { rejectWithValue },
+    { dispatch, rejectWithValue },
   ) => {
     try {
       const newRunningOrder = currentRunningOrder.reduce((acc, item) => {
@@ -164,6 +171,11 @@ export const decreaseRunningOrderItemQty = createAsyncThunk(
         // quantity === 1 → drop it (removed)
         return acc;
       }, []);
+
+      if (newRunningOrder.length === 0) {
+        await dispatch(deleteOrderAsync(orderId)).unwrap();
+        return { newRunningOrder, isDeleted: true };
+      }
 
       const res = await orderApi.update(orderId, {
         running_order: newRunningOrder,
@@ -491,6 +503,11 @@ const posSlice = createSlice({
     });
     builder.addCase(createOrder.rejected, (state, action) => {
       console.warn("[POS] createOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create order.",
+      });
     });
 
     // restoreOrder: rebuild Redux state from existing DB order when re-entering an Occupied table
@@ -510,28 +527,69 @@ const posSlice = createSlice({
     });
     builder.addCase(restoreOrder.rejected, (state, action) => {
       console.warn("[POS] restoreOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to restore order.",
+      });
     });
 
     builder.addCase(removeRunningOrderItem.fulfilled, (state, action) => {
-      const { itemId } = action.payload;
-      state.runningOrder = state.runningOrder.filter(
-        (item) => item.id !== itemId,
-      );
+      const { itemId, isDeleted } = action.payload;
+      if (!isDeleted) {
+        state.runningOrder = state.runningOrder.filter(
+          (item) => item.id !== itemId,
+        );
+        Toast.show({
+          type: "success",
+          text1: "Item Removed",
+          text2: "Item successfully removed from KOT.",
+        });
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "Order Deleted",
+          text2: "The empty order has been deleted.",
+        });
+      }
     });
     builder.addCase(removeRunningOrderItem.rejected, (state, action) => {
       console.warn("[POS] removeRunningOrderItem failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to remove item.",
+      });
     });
 
     builder.addCase(decreaseRunningOrderItemQty.fulfilled, (state, action) => {
-      const { newRunningOrder } = action.payload;
-      // Replace runningOrder with the server-confirmed list (already has updated qty or item removed)
-      state.runningOrder = newRunningOrder.map((item) => ({
-        ...item,
-        isLockedItem: true,
-      }));
+      const { newRunningOrder, isDeleted } = action.payload;
+      if (!isDeleted) {
+        // Replace runningOrder with the server-confirmed list
+        state.runningOrder = newRunningOrder.map((item) => ({
+          ...item,
+          isLockedItem: true,
+        }));
+        Toast.show({
+          type: "success",
+          text1: "Quantity Updated",
+          text2: "Item quantity decreased.",
+        });
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "Order Deleted",
+          text2: "The empty order has been deleted.",
+        });
+      }
     });
     builder.addCase(decreaseRunningOrderItemQty.rejected, (state, action) => {
       console.warn("[POS] decreaseRunningOrderItemQty failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update item quantity.",
+      });
     });
 
     // saveKOT: move cart -> runningOrder in Redux, add ticket to KDS board
@@ -575,6 +633,11 @@ const posSlice = createSlice({
     });
     builder.addCase(saveKOT.rejected, (state, action) => {
       console.warn("[POS] saveKOT failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to send KOT.",
+      });
     });
 
     // fetchAllOrders (fetches full history)
@@ -585,15 +648,33 @@ const posSlice = createSlice({
 
     // deleteOrderAsync
     builder.addCase(deleteOrderAsync.fulfilled, (state) => {
-      // Free the table locally by clearing the active session
+      // Clear the current active order
       state.activeOrderId = null;
       state.activeOrderNumber = null;
-      state.cart = [];
       state.runningOrder = [];
+      state.cart = [];
+      state.customer = null;
+      state.orderType = "Dine-In";
+      state.totals = {
+        subtotal: 0,
+        taxAmount: 0,
+        discount: 0,
+        grandTotal: 0,
+      };
       state.activeTable = null;
+      Toast.show({
+        type: "info",
+        text1: "Order Deleted",
+        text2: "The order has been removed.",
+      });
     });
     builder.addCase(deleteOrderAsync.rejected, (state, action) => {
       console.warn("[POS] deleteOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete order.",
+      });
     });
 
     // createInvoiceAsync
@@ -607,6 +688,11 @@ const posSlice = createSlice({
     });
     builder.addCase(createInvoiceAsync.rejected, (state, action) => {
       console.warn("[POS] createInvoice failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create invoice.",
+      });
     });
 
     // fetchActiveOrders: Parse orders into kdsTickets

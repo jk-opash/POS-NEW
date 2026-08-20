@@ -1,5 +1,6 @@
 import { expenseApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import Toast from "react-native-toast-message";
 
 export const fetchExpenses = createAsyncThunk(
   "expense/fetchExpenses",
@@ -10,7 +11,7 @@ export const fetchExpenses = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 export const createExpense = createAsyncThunk(
@@ -22,7 +23,7 @@ export const createExpense = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 const expenseSlice = createSlice({
@@ -36,7 +37,7 @@ const expenseSlice = createSlice({
     clearExpenses: (state) => {
       state.expenses = [];
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -50,6 +51,11 @@ const expenseSlice = createSlice({
         state.expenses = action.payload || [];
       })
       .addCase(fetchExpenses.rejected, (state, action) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: action.payload?.message || action.payload || "Request failed.",
+        });
         state.isLoading = false;
         state.error = action.payload;
       })
@@ -65,6 +71,11 @@ const expenseSlice = createSlice({
         }
       })
       .addCase(createExpense.rejected, (state, action) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: action.payload?.message || action.payload || "Request failed.",
+        });
         state.isLoading = false;
         state.error = action.payload;
       });

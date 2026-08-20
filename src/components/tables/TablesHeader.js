@@ -1,10 +1,7 @@
+import { CommonHeader } from "@/components/common/CommonHeader";
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { useNavigation } from "expo-router";
-import { Check, Edit2, Menu } from "lucide-react-native";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function TablesHeader({
   isDesktop,
@@ -15,99 +12,44 @@ export function TablesHeader({
   setActiveFloor,
   onMergePress,
 }) {
-  const navigation = useNavigation();
-
   return (
-    <SafeAreaView edges={["top"]} style={styles.headerSafe}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          {!isDesktop && (
-            <TouchableOpacity
-              onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
-              style={styles.menuBtn}
-            >
-              <Menu size={24} color={ThemeColors.textPrimary} />
-            </TouchableOpacity>
-          )}
-          <Text style={styles.pageTitle}>Table View</Text>
-        </View>
-
-        <View style={styles.headerRight}>
-          <HeaderQuickNav />
-            {!isEditMode && (
-              <TouchableOpacity
-                style={styles.mergeActionBtn}
-                onPress={onMergePress}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.mergeActionBtnText}>Merge Tables</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-      <View style={styles.toolbarRow}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.floorTabs}
-        >
-          {floors.map((floor) => {
-            const isActive = activeFloor === floor.id;
-            return (
-              <TouchableOpacity
-                key={floor.id}
-                onPress={() => setActiveFloor(floor.id)}
-                style={[styles.floorTab, isActive && styles.floorTabActive]}
-              >
-                <Text
-                  weight={isActive ? "bold" : "medium"}
-                  style={[
-                    styles.floorTabText,
-                    isActive && styles.floorTabTextActive,
-                  ]}
+    <CommonHeader
+      title="Table View"
+      bottomContent={
+        <View style={styles.toolbarRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.floorTabs}
+          >
+            {floors.map((floor) => {
+              const isActive = activeFloor === floor.id;
+              return (
+                <TouchableOpacity
+                  key={floor.id}
+                  onPress={() => setActiveFloor(floor.id)}
+                  style={[styles.floorTab, isActive && styles.floorTabActive]}
                 >
-                  {floor.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+                  <Text
+                    weight={isActive ? "bold" : "medium"}
+                    style={[
+                      styles.floorTabText,
+                      isActive && styles.floorTabTextActive,
+                    ]}
+                  >
+                    {floor.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  headerSafe: {
-    backgroundColor: ThemeColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: ThemeSpacing.xxl,
-    paddingVertical: ThemeSpacing.md,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.md,
-  },
-  pageTitle: {
-    fontSize: 26,
-    color: ThemeColors.textPrimary,
-  },
-  menuBtn: {
-    padding: 4,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.lg,
-  },
   toolbarRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -138,18 +80,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
   },
   editBtnText: {
-    color: ThemeColors.white,
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  mergeActionBtn: {
-    backgroundColor: ThemeColors.emerald,
-    paddingHorizontal: ThemeSpacing.lg,
-    paddingVertical: ThemeSpacing.sm,
-    borderRadius: ThemeRadius.full,
-    marginLeft: ThemeSpacing.md,
-  },
-  mergeActionBtnText: {
     color: ThemeColors.white,
     fontSize: 14,
     fontWeight: "bold",

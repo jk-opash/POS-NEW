@@ -1,17 +1,20 @@
+import { Loader } from "@/components/common/Loader";
 import { Text } from "@/components/ui/Text";
+import { fetchInventoryLedger } from "@/store/slices/inventorySlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Clock } from "lucide-react-native";
-import { ScrollView, StyleSheet, View, ActivityIndicator } from "react-native";
 import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchInventoryLedger } from "@/store/slices/inventorySlice";
 
 export function AuditLogTab() {
   const dispatch = useDispatch();
   const { activeBranch } = useSelector((state) => state.branch);
-  const { ledger: stockLedger, isLedgerLoading: loading, error } = useSelector(
-    (state) => state.inventory
-  );
+  const {
+    ledger: stockLedger,
+    isLedgerLoading: loading,
+    error,
+  } = useSelector((state) => state.inventory);
 
   useEffect(() => {
     if (activeBranch) {
@@ -46,8 +49,7 @@ export function AuditLogTab() {
 
         {loading ? (
           <View style={{ padding: 40, alignItems: "center" }}>
-            <ActivityIndicator size="large" color={ThemeColors.primary} />
-            <Text style={{ color: ThemeColors.textMuted, marginTop: 10 }}>Loading audit log...</Text>
+            <Loader text="Loading audit log..." />
           </View>
         ) : error ? (
           <View style={{ padding: 40, alignItems: "center" }}>
@@ -65,7 +67,10 @@ export function AuditLogTab() {
             return (
               <View key={item.id} style={styles.tableRow}>
                 <Text
-                  style={[styles.col, { width: 100, color: ThemeColors.textMuted }]}
+                  style={[
+                    styles.col,
+                    { width: 100, color: ThemeColors.textMuted },
+                  ]}
                 >
                   {item.id.slice(0, 8)}
                 </Text>
@@ -82,7 +87,9 @@ export function AuditLogTab() {
                   ]}
                 >
                   <Clock size={12} color={ThemeColors.textMuted} />
-                  <Text style={{ fontSize: 13, color: ThemeColors.textSecondary }}>
+                  <Text
+                    style={{ fontSize: 13, color: ThemeColors.textSecondary }}
+                  >
                     {new Date(item.created_at).toLocaleString()}
                   </Text>
                 </View>
@@ -107,11 +114,20 @@ export function AuditLogTab() {
                 <Text
                   style={[
                     styles.col,
-                    { flex: 1, minWidth: 250, color: ThemeColors.textSecondary },
+                    {
+                      flex: 1,
+                      minWidth: 250,
+                      color: ThemeColors.textSecondary,
+                    },
                   ]}
                   numberOfLines={2}
                 >
-                  <Text style={{ fontWeight: "bold", color: ThemeColors.textPrimary }}>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: ThemeColors.textPrimary,
+                    }}
+                  >
                     {item.item?.name || "Unknown Item"}
                   </Text>
                   {" ("}
@@ -122,11 +138,12 @@ export function AuditLogTab() {
                         qtyChange > 0
                           ? ThemeColors.emerald
                           : qtyChange < 0
-                          ? ThemeColors.rose
-                          : ThemeColors.textSecondary,
+                            ? ThemeColors.rose
+                            : ThemeColors.textSecondary,
                     }}
                   >
-                    {qtyChange > 0 ? "+" : ""}{qtyChange}
+                    {qtyChange > 0 ? "+" : ""}
+                    {qtyChange}
                   </Text>
                   {") - "}
                   {item.reason || "No reason provided"}

@@ -1,4 +1,3 @@
-import { deleteMenuItem as deleteMenuItemThunk, updateMenuItemStatus, createMenuItem as createMenuItemThunk, updateMenuItem as updateMenuItemThunk, fetchMenuData } from "@/store/slices/menuSlice";
 import { BulkActionModal } from "@/components/menu/BulkActionModal";
 import { MenuEmptyState } from "@/components/menu/MenuEmptyState";
 import { MenuHeader } from "@/components/menu/MenuHeader";
@@ -6,6 +5,13 @@ import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { MenuItemWizardModal } from "@/components/menu/MenuItemWizardModal";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  createMenuItem as createMenuItemThunk,
+  deleteMenuItem as deleteMenuItemThunk,
+  fetchMenuData,
+  updateMenuItemStatus,
+  updateMenuItem as updateMenuItemThunk,
+} from "@/store/slices/menuSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useNavigation } from "expo-router";
 import { CheckSquare, ChevronDown, ChevronUp, Plus } from "lucide-react-native";
@@ -32,7 +38,7 @@ export default function MenuScreen() {
   const [collapsedSections, setCollapsedSections] = useState(() => {
     const initial = {};
     [].forEach((cat) => {
-      initial[cat] = true;
+      initial[cat] = false;
     });
     return initial;
   });
@@ -117,9 +123,7 @@ export default function MenuScreen() {
     const id = menuItem._id || menuItem.id;
     if (isSelectMode) {
       setSelectedIds((prev) =>
-        prev.includes(id)
-          ? prev.filter((i) => i !== id)
-          : [...prev, id],
+        prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
       );
     } else {
       setSelectedMenuItem(menuItem);
@@ -174,10 +178,14 @@ export default function MenuScreen() {
   };
 
   const SIDEBAR_ITEMS = ["All", ...categories];
-  const filterOptions = SIDEBAR_ITEMS.map((cat) => ({
-    label: cat === "All" ? "All Items" : cat,
-    value: cat,
-  }));
+  const filterOptions = SIDEBAR_ITEMS.map((cat) => {
+    const catName = cat === "All" ? "All Items" : cat.name || cat;
+    const catValue = cat === "All" ? "All" : cat.name || cat;
+    return {
+      label: catName,
+      value: catValue,
+    };
+  });
 
   return (
     <View style={styles.root}>
@@ -315,7 +323,7 @@ export default function MenuScreen() {
         <Text style={styles.fabText}>Add MenuItem</Text>
       </TouchableOpacity>
 
-      <MenuItemWizardModal 
+      <MenuItemWizardModal
         visible={isWizardVisible}
         onClose={() => setIsWizardVisible(false)}
         onSave={handleSaveMenuItem}

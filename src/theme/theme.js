@@ -9,23 +9,23 @@ export const ThemeColors = {
   border: "#E2E8F0",
   borderSubtle: "#F1F5F9",
 
-  // Petpooja Branding
-  primary: "#1B2838", // Dark navy sidebar
-  primaryLight: "#243447",
-  accent: "#FF6B35", // Petpooja Orange
-  accentDim: "#FFF0E8", // Light orange background
-  accentDark: "#E55A2B", // Darker orange for press states
+  // Modern Premium Branding
+  primary: "#0F172A", // Dark slate sidebar
+  primaryLight: "#1E293B",
+  accent: "#3B82F6", // Vibrant Blue
+  accentDim: "#EFF6FF", // Light blue background
+  accentDark: "#2563EB", // Darker blue for press states
+
+  // Success / Positive
+  emerald: "#059669",
+  emeraldChart: "#10B981",
+  emeraldDim: "#DCFCE7",
 
   // Text
   textPrimary: "#0F172A",
   textSecondary: "#4B5563",
   textMuted: "#9CA3AF",
   textWhite: "#FFFFFF",
-
-  // Success / Positive
-  emerald: "#059669",
-  emeraldChart: "#10B981",
-  emeraldDim: "#DCFCE7",
 
   // Danger / Negative
   red: "#DC2626",

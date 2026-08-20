@@ -15,6 +15,7 @@ import {
   updateTableRotation as rtkUpdateTableRotation,
 } from "@/store/slices/branchSlice";
 import {
+  resetOrder,
   restoreOrder,
   setActiveTable,
   setOrderType,
@@ -38,6 +39,9 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
+
+const TABLE_FLOOR_WIDTH = 1000;
+const TABLE_FLOOR_HEIGHT = 1000;
 
 export default function TablesScreen() {
   const {
@@ -183,9 +187,13 @@ export default function TablesScreen() {
         onMergePress={() => setShowMergeModal(true)}
       />
 
-      <ScrollView contentContainerStyle={styles.canvasScrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.canvasScrollContent}
+      >
         <ScrollView
           horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.canvasScrollContent}
         >
           <GestureDetector gesture={pinchGesture}>
@@ -214,6 +222,8 @@ export default function TablesScreen() {
                             tableId: table.id,
                           }),
                         );
+                      } else {
+                        dispatch(resetOrder());
                       }
 
                       router.push("/pos");
@@ -238,6 +248,7 @@ export default function TablesScreen() {
         dineInCount={dineInCount}
         reservedCount={reservedCount}
       />
+
       <TablesZoomControls
         isSmallScreen={isSmallScreen}
         isEditMode={isEditMode}
@@ -247,6 +258,16 @@ export default function TablesScreen() {
       />
 
       <View style={styles.fabContainer}>
+        {!isEditMode && (
+          <TouchableOpacity
+            style={[styles.fab, isEditMode && styles.fabActive]}
+            activeOpacity={0.8}
+            onPress={() => setShowMergeModal(true)}
+          >
+            <Text style={styles.mergeFabText}>Merge Tables</Text>
+          </TouchableOpacity>
+        )}
+
         {isEditMode && (
           <TouchableOpacity
             style={[styles.fab, styles.addFab]}
@@ -379,8 +400,20 @@ export default function TablesScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ThemeColors.surfaceElevated },
-  canvasScrollContent: { flexGrow: 1 },
-  canvasArea: { width: 1000, height: 1000, position: "relative" },
+  canvasScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: ThemeSpacing.xxl,
+  },
+  canvasArea: {
+    width: TABLE_FLOOR_WIDTH,
+    height: TABLE_FLOOR_HEIGHT,
+    position: "relative",
+    borderWidth: 2,
+    borderColor: ThemeColors.textMuted,
+    borderStyle: "dotted",
+  },
   fabContainer: {
     position: "absolute",
     bottom: ThemeSpacing.xl,
@@ -413,5 +446,27 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  mergeFabContainer: {
+    position: "absolute",
+    bottom: ThemeSpacing.xl,
+    left: ThemeSpacing.xxl,
+    alignItems: "flex-start",
+  },
+  mergeFab: {
+    backgroundColor: ThemeColors.emerald,
+    paddingHorizontal: ThemeSpacing.xl,
+    paddingVertical: 14,
+    borderRadius: ThemeRadius.full,
+    shadowColor: ThemeColors.emerald,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  mergeFabText: {
+    color: ThemeColors.white,
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

@@ -1,3 +1,4 @@
+import { Loader } from "@/components/common/Loader";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
@@ -26,12 +27,12 @@ import {
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 import { BranchDetails } from "@/components/settings/tabs/BranchDetails";
 import { BusinessDetails } from "@/components/settings/tabs/BusinessDetails";
+import { UserProfileCard } from "@/components/settings/tabs/UserProfile";
 import {
   fetchSettings,
   updateBranchSettings,
   updateBusiness,
 } from "@/store/slices/settingsSlice";
-import { UserProfileCard } from "@/components/settings/tabs/UserProfile";
 import { useDispatch, useSelector } from "react-redux";
 
 const GROUPS = [
@@ -90,8 +91,6 @@ function renderContent(activeTab, settings, updateSetting) {
       return null;
   }
 }
-
-
 
 function SidebarNav({ activeTab, onSelect }) {
   return (
@@ -420,11 +419,7 @@ export default function SettingsPage() {
               contentContainerStyle={styles.contentScroll}
             >
               {loading ? (
-                <ActivityIndicator
-                  size="large"
-                  color={ThemeColors.accent}
-                  style={{ marginTop: 50 }}
-                />
+                <Loader />
               ) : (
                 renderContent(activeTab, settings, updateSetting)
               )}

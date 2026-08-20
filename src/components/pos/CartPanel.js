@@ -3,7 +3,6 @@ import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
 import {
-  Check,
   ChevronDown,
   ChevronUp,
   Info,
@@ -74,6 +73,7 @@ export function CartPanel({
   const [expandedSections, setExpandedSections] = useState({
     "header-cart": true,
   });
+  const [showCustomerValidation, setShowCustomerValidation] = useState(false);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -85,13 +85,15 @@ export function CartPanel({
   const validateTakeawayCustomer = () => {
     if (orderType === "Takeaway") {
       if (!customer?.name?.trim() || !customer?.phone?.trim()) {
+        setShowCustomerValidation(true);
         showAlert(
           "Customer Details Required",
-          "Please enter customer name and phone number for takeaway orders."
+          "Please enter customer name and phone number for takeaway orders.",
         );
         return false;
       }
     }
+    setShowCustomerValidation(false);
     return true;
   };
 
@@ -438,7 +440,10 @@ export function CartPanel({
                 alignItems: "center",
                 backgroundColor: ThemeColors.background,
                 borderWidth: 1,
-                borderColor: ThemeColors.border,
+                borderColor:
+                  showCustomerValidation && !customer?.name?.trim()
+                    ? ThemeColors.rose
+                    : ThemeColors.border,
                 borderRadius: ThemeRadius.md,
                 paddingHorizontal: ThemeSpacing.sm,
               }}
@@ -470,7 +475,10 @@ export function CartPanel({
                 alignItems: "center",
                 backgroundColor: ThemeColors.background,
                 borderWidth: 1,
-                borderColor: ThemeColors.border,
+                borderColor:
+                  showCustomerValidation && !customer?.phone?.trim()
+                    ? ThemeColors.rose
+                    : ThemeColors.border,
                 borderRadius: ThemeRadius.md,
                 paddingHorizontal: ThemeSpacing.sm,
               }}
@@ -499,7 +507,7 @@ export function CartPanel({
           </View>
         )}
 
-        <View style={styles.modifierRow}>
+        {/* <View style={styles.modifierRow}>
           <View style={{ flexDirection: "row", gap: ThemeSpacing.md }}>
             {["BOGO Offer", "Sales Return"].map((mod) => {
               const isActive = selectedModifiers.includes(mod);
@@ -541,7 +549,7 @@ export function CartPanel({
               );
             })}
           </View>
-        </View>
+        </View> */}
 
         <View style={styles.divider} />
 

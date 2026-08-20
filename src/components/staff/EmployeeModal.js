@@ -1,78 +1,148 @@
 import { Dropdown } from "@/components/ui/Dropdown";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  createTeamMember,
+  updateTeamMember,
+} from "@/store/slices/teamMemberSlice";
+import { hasPermission, roleDefaults } from "@/utils/permissions";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { X } from "lucide-react-native";
+import { CheckSquare, Square, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   Modal,
   ScrollView,
   StyleSheet,
-  Switch,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useStaff } from "@/hooks/useStaff";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
+
+const PERMISSIONS_LIST = [
+  "dashboard",
+  "tables",
+  "pos",
+  "kds",
+  "waiter",
+  "invoices",
+  "operations",
+  "orders",
+  "menu",
+  "day-end",
+  "inventory",
+  "suppliers",
+  "expense",
+  "billing-user",
+  "tables-qr",
+  "logs",
+];
+
+const ROLES = ["Manager", "Cashier", "Waiter", "Kitchen"];
 
 export default function EmployeeModal({ visible, onClose, employee }) {
-  const { addEmployee, updateEmployee } = useStaff();
+  const dispatch = useDispatch();
   const { isDesktop, isTablet } = useResponsive();
   const isLargeScreen = isDesktop || isTablet;
+
+  const { branches } = useSelector((state) => state.branch || { branches: [] });
 
   const isEditing = !!employee;
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
-    role: "Cashier",
-    department: "Sales",
-    store: "All Stores",
+    role_name: "Manager",
+    branch_id: "",
     status: "Active",
-    salary: "",
+    permissions: [],
   });
 
+  const [error, setError] = useState("");
+
   useEffect(() => {
+    setError(""); // Reset error on open
     if (employee) {
-      setFormData({ ...employee, salary: employee.salary?.toString() || "" });
+      const defaultRole = employee.role?.name || employee.role || "Manager";
+      setFormData({
+        ...employee,
+        first_name: employee.first_name || employee.name?.split(" ")[0] || "",
+        last_name: employee.last_name || employee.name?.split(" ")[1] || "",
+        email: employee.email || "",
+        phone: employee.phone || "",
+        role_name: defaultRole,
+        branch_id: employee.branch_id || employee.branch?.id || "",
+        status:
+          employee.status === "Active" ||
+          employee.status === "active" ||
+          employee.active
+            ? "Active"
+            : "Inactive",
+        permissions: employee.role?.permissions || employee.permissions || [],
+      });
     } else {
       setFormData({
-        firstName: "",
-        lastName: "",
+        first_name: "",
+        last_name: "",
         email: "",
         phone: "",
-        role: "Cashier",
-        department: "Sales",
-        store: "All Stores",
+        role_name: "Manager",
+        branch_id: branches?.[0]?.id || "",
         status: "Active",
-        salary: "",
+        permissions: [],
       });
     }
-  }, [employee, visible]);
+  }, [employee, visible, branches]);
 
   const handleSave = () => {
+    setError("");
+    if (!formData.first_name.trim()) return setError("First Name is required.");
+    if (!formData.role_name) return setError("Role is required.");
+    if (!formData.branch_id) return setError("Branch is required.");
+
+    // Only send the fields that the backend expects, just like POS-CLIENT
     const dataToSave = {
-      ...formData,
-      salary: parseFloat(formData.salary) || 0,
-      joinDate: isEditing
-        ? employee.joinDate
-        : new Date().toISOString().split("T")[0],
+      first_name: formData.first_name.trim(),
+      last_name: formData.last_name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      pin: formData.pin,
+      salary: formData.salary,
+      status: formData.status,
+      branch_id: formData.branch_id,
+      name: `${formData.first_name.trim()} ${formData.last_name.trim()}`.trim(),
+      role: {
+        name: formData.role_name,
+        permissions: formData.permissions,
+      },
     };
 
+    if (!isEditing) {
+      dataToSave.join_date = new Date().toISOString().split("T")[0];
+    }
+
     if (isEditing) {
-      updateEmployee(employee.id, dataToSave);
+      dispatch(updateTeamMember({ id: employee.id, data: dataToSave }));
     } else {
-      addEmployee(dataToSave);
+      dispatch(createTeamMember(dataToSave));
     }
     onClose();
   };
 
-  const renderInput = (label, key, placeholder, keyboardType = "default") => (
+  const renderInput = (
+    label,
+    key,
+    placeholder,
+    keyboardType = "default",
+    required = false,
+  ) => (
     <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>
+        {label} {required && "*"}
+      </Text>
       <TextInput
         style={styles.input}
         placeholder={placeholder}
@@ -83,6 +153,18 @@ export default function EmployeeModal({ visible, onClose, employee }) {
       />
     </View>
   );
+
+  const togglePermission = (perm) => {
+    setFormData((prev) => {
+      const perms = prev.permissions || [];
+      return {
+        ...prev,
+        permissions: perms.includes(perm)
+          ? perms.filter((p) => p !== perm)
+          : [...perms, perm],
+      };
+    });
+  };
 
   return (
     <Modal
@@ -101,16 +183,11 @@ export default function EmployeeModal({ visible, onClose, employee }) {
           ]}
         >
           <View style={styles.header}>
-            <View>
-              <Text weight="bold" style={styles.title}>
-                {isEditing ? "Edit Employee" : "Add New Employee"}
-              </Text>
-              <Text style={styles.subtitle}>
-                {isEditing ? `ID: ${employee.id}` : "Fill out employee details"}
-              </Text>
-            </View>
+            <Text weight="bold" style={styles.title}>
+              {isEditing ? "Edit Staff Profile" : "Add Staff Profile"}
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <X size={24} color={ThemeColors.textPrimary} />
+              <X size={20} color={ThemeColors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -118,57 +195,60 @@ export default function EmployeeModal({ visible, onClose, employee }) {
             style={styles.formContent}
             showsVerticalScrollIndicator={false}
           >
+            {error ? (
+              <Text
+                style={{
+                  color: ThemeColors.error,
+                  marginBottom: 12,
+                  fontSize: 14,
+                }}
+              >
+                {error}
+              </Text>
+            ) : null}
             <View style={styles.row}>
               <View style={styles.flex1}>
-                {renderInput("First Name", "firstName", "John")}
+                {renderInput(
+                  "First Name",
+                  "first_name",
+                  "Anand",
+                  "default",
+                  true,
+                )}
               </View>
               <View style={styles.flex1}>
-                {renderInput("Last Name", "lastName", "Doe")}
+                {renderInput("Last Name", "last_name", "Krishnan")}
               </View>
             </View>
-
-            {renderInput(
-              "Email Address",
-              "email",
-              "john.doe@example.com",
-              "email-address",
-            )}
-            {renderInput(
-              "Phone Number",
-              "phone",
-              "+1 234 567 8900",
-              "phone-pad",
-            )}
 
             <View style={styles.row}>
               <View style={styles.flex1}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Role</Text>
+                  <Text style={styles.label}>Status</Text>
                   <Dropdown
                     options={[
-                      { label: "Cashier", value: "Cashier" },
-                      { label: "Manager", value: "Manager" },
-                      { label: "Inventory", value: "Inventory" },
-                      { label: "Staff", value: "Staff" },
+                      { label: "Active", value: "Active" },
+                      { label: "Inactive", value: "Inactive" },
                     ]}
-                    value={formData.role}
-                    onChange={(val) => setFormData({ ...formData, role: val })}
+                    value={formData.status}
+                    onChange={(val) =>
+                      setFormData({ ...formData, status: val })
+                    }
                     style={styles.dropdownCustom}
                   />
                 </View>
               </View>
               <View style={styles.flex1}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Department</Text>
+                  <Text style={styles.label}>Role *</Text>
                   <Dropdown
-                    options={[
-                      { label: "Sales", value: "Sales" },
-                      { label: "Operations", value: "Operations" },
-                      { label: "Management", value: "Management" },
-                    ]}
-                    value={formData.department}
+                    options={ROLES.map((r) => ({ label: r, value: r }))}
+                    value={formData.role_name}
                     onChange={(val) =>
-                      setFormData({ ...formData, department: val })
+                      setFormData({
+                        ...formData,
+                        role_name: val,
+                      })
                     }
                     style={styles.dropdownCustom}
                   />
@@ -178,71 +258,66 @@ export default function EmployeeModal({ visible, onClose, employee }) {
 
             <View style={styles.row}>
               <View style={styles.flex1}>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Assigned Store</Text>
-                  <Dropdown
-                    options={[
-                      { label: "All Stores", value: "All Stores" },
-                      { label: "Surat Branch", value: "Surat Branch" },
-                      { label: "Mumbai Branch", value: "Mumbai Branch" },
-                    ]}
-                    value={formData.store}
-                    onChange={(val) => setFormData({ ...formData, store: val })}
-                    style={styles.dropdownCustom}
-                  />
-                </View>
+                {renderInput("Phone", "phone", "+91 98400 44001", "phone-pad")}
               </View>
               <View style={styles.flex1}>
-                {renderInput("Salary", "salary", "0.00", "numeric")}
+                {renderInput(
+                  "Email",
+                  "email",
+                  "anand@dailygrind.co",
+                  "email-address",
+                )}
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Status</Text>
-              <View style={styles.switchContainer}>
-                <View style={styles.switchTextGroup}>
-                  <Text
-                    style={[
-                      styles.switchLabel,
-                      {
-                        color:
-                          formData.status === "Active"
-                            ? ThemeColors.emerald
-                            : ThemeColors.textMuted,
-                      },
-                    ]}
-                  >
-                    {formData.status}
-                  </Text>
-                </View>
-                <Switch
-                  value={formData.status === "Active"}
-                  onValueChange={(val) =>
-                    setFormData({
-                      ...formData,
-                      status: val ? "Active" : "Inactive",
-                    })
-                  }
-                  trackColor={{
-                    false: ThemeColors.border,
-                    true: ThemeColors.emerald,
-                  }}
-                  thumbcolor={ThemeColors.white}
-                  ios_backgroundColor={ThemeColors.border}
-                />
+              <Text style={styles.label}>Permissions</Text>
+              <View style={styles.permissionsGrid}>
+                {PERMISSIONS_LIST.map((perm) => {
+                  const roleName = formData.role_name.toLowerCase();
+                  const defaults = roleDefaults[roleName] || [];
+                  const isDefault = defaults.includes(perm) || ["dashboard", "settings"].includes(perm);
+                  const isChecked = isDefault || (formData.permissions || []).includes(perm);
+
+                  return (
+                    <TouchableOpacity
+                      key={perm}
+                      style={[styles.permissionItem, isDefault && { opacity: 0.6, backgroundColor: '#f8fafc' }]}
+                      onPress={() => {
+                        if (!isDefault) togglePermission(perm);
+                      }}
+                      activeOpacity={isDefault ? 1 : 0.7}
+                    >
+                      {isChecked ? (
+                        <CheckSquare size={18} color={isDefault ? "#94A3B8" : "#0066FF"} />
+                      ) : (
+                        <Square size={18} color="#94A3B8" />
+                      )}
+                      <Text style={[styles.permissionText, isDefault && { color: ThemeColors.textSecondary }]}>
+                        {perm.charAt(0).toUpperCase() + perm.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+            <TouchableOpacity
+              style={[styles.btn, styles.cancelBtn]}
+              onPress={onClose}
+            >
               <Text weight="semibold" style={styles.cancelBtnText}>
                 Cancel
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+            <TouchableOpacity
+              style={[styles.btn, styles.saveBtn]}
+              onPress={handleSave}
+            >
               <Text weight="bold" style={styles.saveBtnText}>
-                {isEditing ? "Save Changes" : "Create Employee"}
+                Save Changes
               </Text>
             </TouchableOpacity>
           </View>
@@ -255,7 +330,7 @@ export default function EmployeeModal({ visible, onClose, employee }) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
   },
   overlayCenter: {
@@ -264,14 +339,14 @@ const styles = StyleSheet.create({
     padding: ThemeSpacing.xl,
   },
   modalContainer: {
-    backgroundColor: ThemeColors.surface,
+    backgroundColor: "#F0F2F5",
     borderTopLeftRadius: ThemeRadius.xl,
     borderTopRightRadius: ThemeRadius.xl,
-    height: "90%", // large modal
+    height: "90%",
   },
   modalContainerCentered: {
     width: "100%",
-    maxWidth: 600,
+    maxWidth: 640,
     height: "auto",
     maxHeight: "90%",
     borderRadius: ThemeRadius.xl,
@@ -280,111 +355,106 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: ThemeSpacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border,
+    paddingHorizontal: ThemeSpacing.xxl,
+    paddingVertical: ThemeSpacing.lg,
+    backgroundColor: ThemeColors.white,
+    borderTopLeftRadius: ThemeRadius.xl,
+    borderTopRightRadius: ThemeRadius.xl,
   },
   title: {
     fontSize: 20,
     color: ThemeColors.textPrimary,
   },
-  subtitle: {
-    fontSize: 14,
-    color: ThemeColors.textSecondary,
-    marginTop: 4,
-  },
   closeBtn: {
-    padding: 8,
+    padding: 6,
     backgroundColor: ThemeColors.bg,
     borderRadius: ThemeRadius.full,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
   },
   formContent: {
-    padding: ThemeSpacing.xl,
+    padding: ThemeSpacing.xxl,
   },
   row: {
     flexDirection: "row",
-    gap: ThemeSpacing.md,
+    gap: ThemeSpacing.xl,
+    marginBottom: ThemeSpacing.lg,
   },
   flex1: {
     flex: 1,
   },
   inputGroup: {
-    marginBottom: ThemeSpacing.lg,
+    flex: 1,
+    marginBottom: ThemeSpacing.md,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     color: ThemeColors.textSecondary,
     marginBottom: 8,
-    fontWeight: "500",
   },
   input: {
-    backgroundColor: ThemeColors.bg,
+    backgroundColor: ThemeColors.white,
     borderWidth: 1,
     borderColor: ThemeColors.border,
     borderRadius: ThemeRadius.md,
     padding: ThemeSpacing.md,
-    fontSize: 15,
+    fontSize: 14,
+    color: ThemeColors.textPrimary,
+  },
+  dropdownCustom: {
+    height: 44,
+    paddingHorizontal: ThemeSpacing.md,
+    borderRadius: ThemeRadius.md,
+    backgroundColor: ThemeColors.white,
+    borderColor: ThemeColors.border,
+    borderWidth: 1,
+  },
+  permissionsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 4,
+  },
+  permissionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: ThemeColors.white,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
+    gap: 8,
+  },
+  permissionText: {
+    fontSize: 14,
     color: ThemeColors.textPrimary,
   },
   footer: {
     flexDirection: "row",
-    padding: ThemeSpacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: ThemeColors.border,
-    backgroundColor: ThemeColors.surface,
+    justifyContent: "flex-end",
+    paddingHorizontal: ThemeSpacing.xxl,
+    paddingVertical: ThemeSpacing.lg,
     gap: ThemeSpacing.md,
   },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 16,
+  btn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     alignItems: "center",
-    backgroundColor: ThemeColors.bg,
     borderRadius: ThemeRadius.md,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
+  },
+  cancelBtn: {
+    backgroundColor: "#9370F6",
   },
   cancelBtnText: {
-    fontSize: 16,
-    color: ThemeColors.textPrimary,
-  },
-  saveBtn: {
-    flex: 2,
-    paddingVertical: 16,
-    alignItems: "center",
-    backgroundColor: ThemeColors.emerald,
-    borderRadius: ThemeRadius.md,
-  },
-  saveBtnText: {
-    fontSize: 16,
+    fontSize: 14,
     color: ThemeColors.white,
   },
-  dropdownCustom: {
-    height: 48, // matching text input height
-    paddingHorizontal: ThemeSpacing.md,
-    borderRadius: ThemeRadius.md,
-    backgroundColor: ThemeColors.bg,
-    borderColor: ThemeColors.border,
+  saveBtn: {
+    backgroundColor: "#7B51ED",
   },
-  switchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: ThemeColors.bg,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
-    borderRadius: ThemeRadius.md,
-    padding: ThemeSpacing.md,
-  },
-  switchTextGroup: {
-    flex: 1,
-    gap: 4,
-  },
-  switchLabel: {
-    fontSize: 15,
-    fontWeight: "bold",
-  },
-  switchSubText: {
-    fontSize: 13,
-    color: ThemeColors.textMuted,
+  saveBtnText: {
+    fontSize: 14,
+    color: ThemeColors.white,
   },
 });

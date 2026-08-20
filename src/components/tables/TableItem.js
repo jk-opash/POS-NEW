@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius } from "@/theme/theme";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Eye } from "lucide-react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 export function TableItem({ table, onPress, onLongPress }) {
   const hasOrder =
@@ -18,8 +18,8 @@ export function TableItem({ table, onPress, onLongPress }) {
   const isSquare = table.shape === "square";
   const isOval = table.shape === "oval";
 
-  let containerWidth = 80;
-  let bodyHeight = 60;
+  let containerWidth = 60;
+  let bodyHeight = 50;
   let borderRadius = ThemeRadius.lg;
 
   // Use the table's span to scale up the UI dynamically
@@ -27,12 +27,12 @@ export function TableItem({ table, onPress, onLongPress }) {
 
   if (isSquare || isCircle) {
     // Square/circle grows symmetrically
-    containerWidth = 80 + spanScale * 40;
+    containerWidth = 60 + spanScale * 60;
     bodyHeight = containerWidth;
   } else {
     // Rectangle/oval grows mainly in width
-    containerWidth = 80 + spanScale * 100;
-    bodyHeight = 60;
+    containerWidth = 60 + spanScale * 120;
+    bodyHeight = 50;
   }
 
   if (isCircle || isOval) {
@@ -268,7 +268,7 @@ export function TableItem({ table, onPress, onLongPress }) {
 
 const styles = StyleSheet.create({
   container: {
-    margin: 10,
+    margin: 5,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -299,7 +299,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
-    borderColor: ThemeColors.border,
   },
   tableText: {
     fontSize: 16,
