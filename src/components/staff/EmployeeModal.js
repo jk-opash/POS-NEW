@@ -37,6 +37,7 @@ const PERMISSIONS_LIST = [
   "billing-user",
   "tables-qr",
   "logs",
+  "support-ticket",
 ];
 
 const ROLES = ["Manager", "Cashier", "Waiter", "Kitchen"];

@@ -22,6 +22,7 @@ import {
   Sun,
   Truck,
   User,
+  LifeBuoy,
 } from "lucide-react-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -67,6 +68,12 @@ const OPERATIONS_OPTIONS = [
     label: "Logs",
     icon: Monitor,
     path: "/operations/logs",
+  },
+  {
+    key: "support-ticket",
+    label: "Support Ticket",
+    icon: LifeBuoy,
+    path: "/operations/support-ticket",
   },
   // { key: "discount", label: "Discount", icon: Tags, path: null },
   // { key: "billing-screen", label: "Billing Screen", icon: Monitor, path: null },

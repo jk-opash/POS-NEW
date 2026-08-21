@@ -129,3 +129,10 @@ export const withdrawalApi = {
     axiosClient.get(`/withdrawal?branch_id=${branchId}`),
   create: (data) => axiosClient.post("/withdrawal", data),
 };
+
+// ─── Support Ticket ───────────────────────────────────────────────────────────
+export const supportTicketApi = {
+  getAll: (params) => axiosClient.get("/support-ticket", { params }),
+  create: (data) => axiosClient.post("/support-ticket", data),
+  getById: (id) => axiosClient.get(`/support-ticket/${id}`),
+};

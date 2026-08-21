@@ -16,6 +16,7 @@ import supplierReducer from "./slices/supplierSlice";
 import teamMemberReducer from "./slices/teamMemberSlice";
 import utilityBillReducer from "./slices/utilityBillSlice";
 import withdrawalReducer from "./slices/withdrawalSlice";
+import supportTicketReducer from "./slices/supportTicketSlice";
 
 import { socketMiddleware } from "./socketMiddleware";
 
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   teamMember: teamMemberReducer,
   utilityBill: utilityBillReducer,
   withdrawal: withdrawalReducer,
+  supportTicket: supportTicketReducer,
 });
 
 const persistConfig = {
