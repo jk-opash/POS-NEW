@@ -136,3 +136,10 @@ export const supportTicketApi = {
   create: (data) => axiosClient.post("/support-ticket", data),
   getById: (id) => axiosClient.get(`/support-ticket/${id}`),
 };
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export const notificationApi = {
+  getByBranch: (branchId) =>
+    axiosClient.get("/notification", { params: { targetBranch: branchId } }),
+  markAsRead: (id) => axiosClient.patch(`/notification/${id}/read`),
+};

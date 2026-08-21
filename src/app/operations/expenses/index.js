@@ -289,6 +289,7 @@ export default function ExpensesPage() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: ThemeSpacing.sm, paddingRight: ThemeSpacing.xl }}
           style={{
+            flexGrow: 0,
             marginHorizontal: -ThemeSpacing.xl,
             paddingHorizontal: ThemeSpacing.xl,
             marginBottom: ThemeSpacing.md,

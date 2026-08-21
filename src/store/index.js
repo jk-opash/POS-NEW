@@ -17,6 +17,7 @@ import teamMemberReducer from "./slices/teamMemberSlice";
 import utilityBillReducer from "./slices/utilityBillSlice";
 import withdrawalReducer from "./slices/withdrawalSlice";
 import supportTicketReducer from "./slices/supportTicketSlice";
+import notificationReducer from "./slices/notificationSlice";
 
 import { socketMiddleware } from "./socketMiddleware";
 
@@ -36,12 +37,13 @@ const rootReducer = combineReducers({
   utilityBill: utilityBillReducer,
   withdrawal: withdrawalReducer,
   supportTicket: supportTicketReducer,
+  notification: notificationReducer,
 });
 
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["branch", "auth"], // Persist auth so user stays logged in
+  whitelist: ["branch", "auth", "notification"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
