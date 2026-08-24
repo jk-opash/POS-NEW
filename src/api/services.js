@@ -140,6 +140,6 @@ export const supportTicketApi = {
 // ─── Notifications ────────────────────────────────────────────────────────────
 export const notificationApi = {
   getByBranch: (branchId) =>
-    axiosClient.get("/notification", { params: { targetBranch: branchId } }),
-  markAsRead: (id) => axiosClient.patch(`/notification/${id}/read`),
+    axiosClient.get("/notifications", { params: { targetBranch: branchId } }),
+  markAsRead: (id) => axiosClient.patch(`/notifications/${id}/read`),
 };

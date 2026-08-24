@@ -52,8 +52,22 @@ export default function KDSPage() {
     if (activeStation !== "All" && order.station !== activeStation)
       return false;
     if (searchQuery && !order.orderNumber.includes(searchQuery)) return false;
-    if (order.status === "Completed" || order.status === "Cancelled" || order.status === "Served" || order.status === "Done")
+    if (
+      order.status === "Completed" ||
+      order.status === "Cancelled" ||
+      order.status === "Served" ||
+      order.status === "Done"
+    )
       return false;
+
+    // Check if there are any active items (Accepted or Preparing)
+    const hasActiveItems = order.items && order.items.some(item => {
+      const effectiveStatus = item.status || order.status || "Accepted";
+      return effectiveStatus === "Accepted" || effectiveStatus === "Preparing";
+    });
+
+    if (!hasActiveItems) return false;
+
     return true;
   });
 

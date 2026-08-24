@@ -1,4 +1,3 @@
-// ─── Petpooja-Style Restaurant POS Theme ──────────────────────────────────────
 export const ThemeColors = {
   // Base
   black: "#000000",

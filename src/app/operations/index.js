@@ -1,3 +1,4 @@
+import { CommonHeader } from "@/components/common/CommonHeader";
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 import { BillingConfigModal } from "@/components/dashboard/BillingConfigModal";
 import { DiscountConfigModal } from "@/components/dashboard/DiscountConfigModal";
@@ -182,28 +183,7 @@ export default function OperationsPage() {
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={["top"]} style={styles.headerSafe}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            {!isWebDesktop && (
-              <TouchableOpacity
-                onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
-                style={styles.menuBtn}
-              >
-                <Menu size={24} color={ThemeColors.textPrimary} />
-              </TouchableOpacity>
-            )}
-            <Text style={styles.pageTitle}>Operations</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <HeaderQuickNav />
-            <TouchableOpacity style={styles.notifBtn}>
-              <Bell size={24} color={ThemeColors.textSecondary} />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+      <CommonHeader title="Operations" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}

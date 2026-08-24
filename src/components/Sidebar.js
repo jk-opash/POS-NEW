@@ -11,6 +11,7 @@ import {
   MonitorPlay,
   Receipt,
   Settings,
+  Smartphone,
   Store,
   UtensilsCrossed,
 } from "lucide-react-native";
@@ -25,7 +26,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
-// ── Petpooja-style grouped menu structure ────────────────────────────────────
 const MENU_SECTIONS = [
   {
     title: null,
@@ -38,11 +38,11 @@ const MENU_SECTIONS = [
   {
     title: "KITCHEN",
     items: [
-      // {
-      //   key: "online-orders",
-      //   label: "Online Orders",
-      //   Icon: Smartphone,
-      // },
+      {
+        key: "online-orders",
+        label: "Online Orders",
+        Icon: Smartphone,
+      },
       { key: "kds", label: "KOT / KDS", Icon: MonitorPlay },
       { key: "waiter", label: "Waiter / Serve", Icon: UtensilsCrossed },
     ],
@@ -197,7 +197,6 @@ export function Sidebar({ isCollapsed }) {
             {item.label}
           </Text>
         )}
-        {/* Badge for online orders */}
         {item.badge && !isCollapsed && (
           <View style={styles.badgeContainer}>
             <Text weight="bold" style={styles.badgeText}>

@@ -5,8 +5,8 @@ import {
   createTeamMember,
   updateTeamMember,
 } from "@/store/slices/teamMemberSlice";
-import { hasPermission, roleDefaults } from "@/utils/permissions";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { roleDefaults } from "@/utils/permissions";
 import { CheckSquare, Square, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
@@ -38,6 +38,7 @@ const PERMISSIONS_LIST = [
   "tables-qr",
   "logs",
   "support-ticket",
+  "online-orders",
 ];
 
 const ROLES = ["Manager", "Cashier", "Waiter", "Kitchen"];
@@ -277,24 +278,41 @@ export default function EmployeeModal({ visible, onClose, employee }) {
                 {PERMISSIONS_LIST.map((perm) => {
                   const roleName = formData.role_name.toLowerCase();
                   const defaults = roleDefaults[roleName] || [];
-                  const isDefault = defaults.includes(perm) || ["dashboard", "settings"].includes(perm);
-                  const isChecked = isDefault || (formData.permissions || []).includes(perm);
+                  const isDefault =
+                    defaults.includes(perm) ||
+                    ["dashboard", "settings"].includes(perm);
+                  const isChecked =
+                    isDefault || (formData.permissions || []).includes(perm);
 
                   return (
                     <TouchableOpacity
                       key={perm}
-                      style={[styles.permissionItem, isDefault && { opacity: 0.6, backgroundColor: '#f8fafc' }]}
+                      style={[
+                        styles.permissionItem,
+                        isDefault && {
+                          opacity: 0.6,
+                          backgroundColor: "#f8fafc",
+                        },
+                      ]}
                       onPress={() => {
                         if (!isDefault) togglePermission(perm);
                       }}
                       activeOpacity={isDefault ? 1 : 0.7}
                     >
                       {isChecked ? (
-                        <CheckSquare size={18} color={isDefault ? "#94A3B8" : "#0066FF"} />
+                        <CheckSquare
+                          size={18}
+                          color={isDefault ? "#94A3B8" : "#0066FF"}
+                        />
                       ) : (
                         <Square size={18} color="#94A3B8" />
                       )}
-                      <Text style={[styles.permissionText, isDefault && { color: ThemeColors.textSecondary }]}>
+                      <Text
+                        style={[
+                          styles.permissionText,
+                          isDefault && { color: ThemeColors.textSecondary },
+                        ]}
+                      >
                         {perm.charAt(0).toUpperCase() + perm.slice(1)}
                       </Text>
                     </TouchableOpacity>

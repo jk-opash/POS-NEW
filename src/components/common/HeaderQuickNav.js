@@ -7,16 +7,29 @@ import {
   Monitor,
   MonitorPlay,
   ReceiptText,
+  Smartphone,
   UtensilsCrossed,
   Wrench,
 } from "lucide-react-native";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSelector } from "react-redux";
 
 const NAV_ITEMS = [
   { key: "dashboard", path: "/", icon: Home, label: "Dash" },
   { key: "tables", path: "/tables", icon: LayoutGrid, label: "Tables" },
   { key: "pos", path: "/pos", icon: Monitor, label: "POS" },
+  {
+    key: "online-orders",
+    path: "/online-orders",
+    icon: Smartphone,
+    label: "Online",
+  },
   { key: "kds", path: "/kds", icon: MonitorPlay, label: "KDS" },
   { key: "waiter", path: "/waiter", icon: UtensilsCrossed, label: "Waiter" },
   { key: "invoices", path: "/invoices", icon: ReceiptText, label: "invoices" },
@@ -27,6 +40,49 @@ export function HeaderQuickNav() {
   const router = useRouter();
   const pathname = usePathname();
   const authUser = useSelector((state) => state.auth.user);
+
+  const kdsOrders = useSelector((state) => state.pos?.kdsOrders || []);
+  const kdsCount = kdsOrders.filter((o) => {
+    if (
+      o.status === "Completed" ||
+      o.status === "Cancelled" ||
+      o.status === "Served" ||
+      o.status === "Done"
+    )
+      return false;
+    return (
+      o.items &&
+      o.items.some((i) => {
+        const st = i.status || o.status || "Accepted";
+        return st === "Accepted" || st === "Preparing";
+      })
+    );
+  }).length;
+
+  const waiterCount = kdsOrders.filter((o) => {
+    return (
+      o.items &&
+      o.items.some(
+        (i) =>
+          i.status === "Done" ||
+          i.status === "Completed" ||
+          i.status === "Ready",
+      )
+    );
+  }).length;
+
+  const onlineCount = kdsOrders.filter((o) => {
+    if (
+      o.status === "Completed" ||
+      o.status === "Accepted" ||
+      o.status === "Preparing" ||
+      o.status === "Cancelled" ||
+      o.status === "Served" ||
+      o.status === "Done"
+    )
+      return false;
+    return true;
+  }).length;
 
   // Highlight the current route if it matches
   const getIsActive = (path) => {
@@ -56,6 +112,27 @@ export function HeaderQuickNav() {
                 color={color}
                 strokeWidth={isActive ? 2.5 : 2}
               />
+              {item.key === "kds" && kdsCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {kdsCount > 99 ? "99+" : kdsCount}
+                  </Text>
+                </View>
+              )}
+              {item.key === "waiter" && waiterCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {waiterCount > 99 ? "99+" : waiterCount}
+                  </Text>
+                </View>
+              )}
+              {item.key === "online-orders" && onlineCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {onlineCount > 99 ? "99+" : onlineCount}
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           );
         },
@@ -97,5 +174,22 @@ const styles = StyleSheet.create({
           shadowRadius: 4,
           elevation: 2,
         }),
+  },
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: ThemeColors.red,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
   },
 });

@@ -41,6 +41,7 @@ export const saveKOT = createAsyncThunk(
         id: item.id,
         kot_number: kotNumber,
         isLockedItem: true,
+        added_at: item.added_at || new Date().toISOString(),
         quantity: item.quantity,
         status: item.status || "Accepted",
         note: item.note || null,
@@ -745,8 +746,9 @@ const posSlice = createSlice({
                 order.customer_info?.name || order.customer?.name || null,
               station: "Kitchen",
               status: ticketStatus, // ← restored from DB
-              startTime: order.created_at,
+              startTime: kotItems[0]?.added_at || order.created_at,
               priority: "Normal",
+              total: order.total_amount || 0,
               items: kotItems.map((ci) => ({
                 id: ci.id,
                 name: ci.product?.name || "Item",

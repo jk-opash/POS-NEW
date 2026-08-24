@@ -1,4 +1,7 @@
+import { createAudioPlayer } from "expo-audio";
 import { Alert } from "react-native";
+import Toast from "react-native-toast-message";
+import { teamMemberApi } from "../api/services";
 import socketService from "../services/socketService";
 import {
   clearSessionConflict,
@@ -9,15 +12,22 @@ import {
 import { fetchZonesAndTables } from "./slices/branchSlice";
 import { fetchInventoryItems } from "./slices/inventorySlice";
 import { fetchMenuData } from "./slices/menuSlice";
-import { fetchActiveOrders } from "./slices/posSlice";
-import { fetchTeamMembers } from "./slices/teamMemberSlice";
-import { teamMemberApi } from "../api/services";
 import {
-  fetchNotifications,
   addNotification,
+  fetchNotifications,
   syncOfflineReads,
 } from "./slices/notificationSlice";
-import Toast from "react-native-toast-message";
+import { fetchActiveOrders } from "./slices/posSlice";
+import { fetchTeamMembers } from "./slices/teamMemberSlice";
+
+let notificationPlayer = null;
+try {
+  notificationPlayer = createAudioPlayer(
+    require("../../assets/sounds/tethys.mp3"),
+  );
+} catch (e) {
+  console.log("Failed to initialize notification audio player", e);
+}
 
 export const socketMiddleware = (store) => (next) => (action) => {
   // Pass the action down first so state gets updated
@@ -96,7 +106,9 @@ export const socketMiddleware = (store) => (next) => (action) => {
               const response = await teamMemberApi.getById(changedId);
               const freshMember = response?.data?.data;
               if (freshMember?.role) {
-                store.dispatch(updateAuthUserPermissions({ role: freshMember.role }));
+                store.dispatch(
+                  updateAuthUserPermissions({ role: freshMember.role }),
+                );
               }
             } catch (e) {
               // silently ignore
@@ -106,8 +118,19 @@ export const socketMiddleware = (store) => (next) => (action) => {
 
         // Listen for notifications
         socketService.off("new_notification");
-        socketService.on("new_notification", (payload) => {
+        socketService.on("new_notification", async (payload) => {
           store.dispatch(addNotification(payload));
+
+          // Play notification sound
+          try {
+            if (notificationPlayer) {
+              notificationPlayer.seekTo(0);
+              notificationPlayer.play();
+            }
+          } catch (err) {
+            console.log("Error playing notification sound:", err);
+          }
+
           Toast.show({
             type: "info",
             text1: "🔔 " + (payload.title || "New Notification"),

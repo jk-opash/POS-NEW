@@ -25,6 +25,7 @@ import {
 } from "lucide-react-native";
 
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
+import { CommonHeader } from "@/components/common/CommonHeader";
 import { BranchDetails } from "@/components/settings/tabs/BranchDetails";
 import { BusinessDetails } from "@/components/settings/tabs/BusinessDetails";
 import { UserProfileCard } from "@/components/settings/tabs/UserProfile";
@@ -340,48 +341,29 @@ export default function SettingsPage() {
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={["top"]} style={styles.headerSafe}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            {!isWebDesktop && (
-              <TouchableOpacity
-                onPress={
-                  isMobile && !showHub
-                    ? () => setShowHub(true)
-                    : () => navigation.openDrawer()
-                }
-                style={styles.menuBtn}
-              >
-                <Menu size={22} color={ThemeColors.textPrimary} />
-              </TouchableOpacity>
+      <CommonHeader
+        title="Settings"
+        showBack={isMobile && !showHub}
+        onBack={isMobile && !showHub ? () => setShowHub(true) : undefined}
+        rightContent={
+          <TouchableOpacity
+            style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color={ThemeColors.white} />
+            ) : (
+              <>
+                <Save size={18} color={ThemeColors.white} />
+                <Text weight="semibold" style={styles.saveBtnText}>
+                  Save
+                </Text>
+              </>
             )}
-            <Text style={styles.pageTitle}>Settings</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <HeaderQuickNav />
-            <TouchableOpacity
-              style={[styles.saveBtn, saving && { opacity: 0.7 }]}
-              onPress={handleSave}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator size="small" color={ThemeColors.white} />
-              ) : (
-                <>
-                  <Save size={18} color={ThemeColors.white} />
-                  <Text weight="semibold" style={styles.saveBtnText}>
-                    Save
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.notifBtn}>
-              <Bell size={20} color={ThemeColors.textPrimary} />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+          </TouchableOpacity>
+        }
+      />
 
       <View style={styles.body}>
         {!isMobile && (
