@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -370,9 +371,16 @@ export function PaymentModal({
                       onPress={handlePayment}
                       disabled={isProcessing}
                     >
-                      <Text weight="bold" style={styles.payBtnText}>
-                        {isProcessing ? "Processing..." : "Pay Now"}
-                      </Text>
+                      {isProcessing ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <ActivityIndicator size="small" color={ThemeColors.white} />
+                          <Text weight="bold" style={styles.payBtnText}>Processing...</Text>
+                        </View>
+                      ) : (
+                        <Text weight="bold" style={styles.payBtnText}>
+                          Pay Now
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>

@@ -12,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 import { useDispatch } from "react-redux";
@@ -30,6 +31,7 @@ export function InventoryItemModal({ visible, onClose, branchId, initialData }) 
   const [reorderLevel, setReorderLevel] = useState("");
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -120,13 +122,20 @@ export function InventoryItemModal({ visible, onClose, branchId, initialData }) 
       status: stockNum > reorderNum ? "Normal" : stockNum === 0 ? "Out of Stock" : "Low",
     };
 
+    setIsSubmitting(true);
+    let actionPromise;
     if (initialData && initialData.id) {
-      dispatch(updateInventoryItem({ id: initialData.id, payload }));
+      actionPromise = dispatch(updateInventoryItem({ id: initialData.id, payload }));
     } else {
-      dispatch(createInventoryItem(payload));
+      actionPromise = dispatch(createInventoryItem(payload));
     }
 
-    onClose();
+    actionPromise.then(() => {
+      setIsSubmitting(false);
+      onClose();
+    }).catch(() => {
+      setIsSubmitting(false);
+    });
   };
 
   return (
@@ -270,14 +279,22 @@ export function InventoryItemModal({ visible, onClose, branchId, initialData }) 
             <TouchableOpacity style={styles.btnCancel} onPress={onClose}>
               <Text style={styles.btnCancelText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleSubmit}>
-              <Save
-                size={16}
-                color={ThemeColors.white}
-                style={{ marginRight: 8 }}
-              />
+            <TouchableOpacity 
+              style={[styles.btnPrimary, isSubmitting && { opacity: 0.7 }]} 
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} style={{ marginRight: 8 }} />
+              ) : (
+                <Save
+                  size={16}
+                  color={ThemeColors.white}
+                  style={{ marginRight: 8 }}
+                />
+              )}
               <Text weight="bold" style={styles.btnPrimaryText}>
-                {initialData ? "Save Changes" : "Save Item"}
+                {isSubmitting ? "Saving..." : (initialData ? "Save Changes" : "Save Item")}
               </Text>
             </TouchableOpacity>
           </View>

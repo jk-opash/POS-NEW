@@ -164,10 +164,6 @@ export default function SuppliersPage() {
     </View>
   );
 
-  if (loading && suppliers.length === 0) {
-    return <Loader />;
-  }
-
   return (
     <View style={styles.root}>
       <SupplierHeader
@@ -179,28 +175,32 @@ export default function SuppliersPage() {
       />
 
       <View style={[styles.tableContainer]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ width: "100%" }}
-        >
-          <View style={{ minWidth: 900, width: "100%" }}>
-            <FlatList
-              data={paginatedSuppliers}
-              keyExtractor={(item) => item.id}
-              ListHeaderComponent={renderDesktopHeader}
-              renderItem={({ item }) => (
-                <SupplierListItem
-                  item={item}
-                  onEdit={(sup) => setSelectedSupplierId(sup.id)}
-                  onDelete={(sup) => setSupplierToDelete(sup)}
-                />
-              )}
-              ListEmptyComponent={renderEmptyState}
-              showsVerticalScrollIndicator={false}
+        {loading && suppliers.length === 0 ? (
+          <Loader />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ width: "100%" }}
+          >
+            <View style={{ minWidth: 900, width: "100%" }}>
+              <FlatList
+                data={paginatedSuppliers}
+                keyExtractor={(item) => item.id}
+                ListHeaderComponent={renderDesktopHeader}
+                renderItem={({ item }) => (
+                  <SupplierListItem
+                    item={item}
+                    onEdit={(sup) => setSelectedSupplierId(sup.id)}
+                    onDelete={(sup) => setSupplierToDelete(sup)}
+                  />
+                )}
+                ListEmptyComponent={renderEmptyState}
+                showsVerticalScrollIndicator={false}
             />
           </View>
         </ScrollView>
+        )}
         {renderPagination()}
       </View>
 

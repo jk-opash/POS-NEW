@@ -9,7 +9,9 @@ class SocketService {
       this.socket.disconnect();
     }
 
-    const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const apiUrl =
+      process.env.EXPO_PUBLIC_API_URL ||
+      "https://pos-backend-qcky.onrender.com/api";
     const socketUrl = apiUrl.replace("/api", "");
 
     this.socket = io(socketUrl, {

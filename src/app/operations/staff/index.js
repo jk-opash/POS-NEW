@@ -51,10 +51,6 @@ export default function StaffPage() {
     year: "numeric",
   });
 
-  if (loading && teamMembers.length === 0) {
-    return <Loader />;
-  }
-
   return (
     <View style={styles.root}>
       <StaffHeader
@@ -65,7 +61,11 @@ export default function StaffPage() {
         setActiveTab={setActiveTab}
       />
       <View style={styles.contentArea}>
-        <DirectoryTab onEditEmployee={handleEditEmployee} />
+        {loading && teamMembers.length === 0 ? (
+          <Loader />
+        ) : (
+          <DirectoryTab onEditEmployee={handleEditEmployee} />
+        )}
       </View>
       <StaffFab activeTab={activeTab} onPress={handleFabPress} />
       <EmployeeModal

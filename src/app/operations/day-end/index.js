@@ -118,10 +118,6 @@ export default function DayEndPage() {
     },
   ];
 
-  if (loading && !stats) {
-    return <Loader />;
-  }
-
   const isWideLayout = isDesktop || isWebDesktop;
 
   return (
@@ -154,12 +150,18 @@ export default function DayEndPage() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* KPI Cards */}
-        <View style={styles.sectionHeader}>
-          <Text weight="bold" style={styles.sectionTitle}>
-            SALES METRICS
-          </Text>
-        </View>
+        {loading && !stats ? (
+          <View style={{ flex: 1, minHeight: 400 }}>
+            <Loader />
+          </View>
+        ) : (
+          <>
+            {/* KPI Cards */}
+            <View style={styles.sectionHeader}>
+              <Text weight="bold" style={styles.sectionTitle}>
+                SALES METRICS
+              </Text>
+            </View>
         <View style={styles.kpiGrid}>
           {[
             {
@@ -502,6 +504,8 @@ export default function DayEndPage() {
         </View>
 
         <View style={{ height: 60 }} />
+        </>
+        )}
       </ScrollView>
     </View>
   );

@@ -12,6 +12,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 export function InventoryActionModal({
@@ -31,6 +32,7 @@ export function InventoryActionModal({
   const [reason, setReason] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [error, setError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -67,6 +69,7 @@ export function InventoryActionModal({
       const movementType = type === "quarantine" ? "Quarantine" : "Adjustment";
       const finalReason = type === "quarantine" ? `Quarantine: ${reason}` : reason;
 
+      setIsSubmitting(true);
       dispatch(adjustInventoryStock({
         item_id: product.id,
         quantity_change: finalQty,
@@ -76,9 +79,13 @@ export function InventoryActionModal({
       }))
       .unwrap()
       .then(() => {
+        setIsSubmitting(false);
         onClose();
       })
-      .catch((err) => setError(err.message || "Failed to adjust stock"));
+      .catch((err) => {
+        setIsSubmitting(false);
+        setError(err.message || "Failed to adjust stock");
+      });
     } else {
       // Stub for other types
       onClose();
@@ -377,14 +384,22 @@ export function InventoryActionModal({
             <TouchableOpacity style={styles.btnCancel} onPress={onClose}>
               <Text style={styles.btnCancelText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleSubmit}>
-              <Save
-                size={16}
-                color={ThemeColors.white}
-                style={{ marginRight: 8 }}
-              />
+            <TouchableOpacity 
+              style={[styles.btnPrimary, isSubmitting && { opacity: 0.7 }]} 
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} style={{ marginRight: 8 }} />
+              ) : (
+                <Save
+                  size={16}
+                  color={ThemeColors.white}
+                  style={{ marginRight: 8 }}
+                />
+              )}
               <Text weight="bold" style={styles.btnPrimaryText}>
-                Submit
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Text>
             </TouchableOpacity>
           </View>

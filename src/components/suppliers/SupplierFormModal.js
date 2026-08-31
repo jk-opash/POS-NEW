@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -41,6 +42,7 @@ export function SupplierFormModal({ visible, onClose }) {
   });
 
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (key, val) => {
     setFormData((prev) => ({ ...prev, [key]: val }));
@@ -54,6 +56,7 @@ export function SupplierFormModal({ visible, onClose }) {
     if (!formData.businessName.trim()) {
       return setError("Business Name is required.");
     }
+    setIsSubmitting(true);
     dispatch(
       createSupplier({
         business_id: businessId,
@@ -124,7 +127,10 @@ export function SupplierFormModal({ visible, onClose }) {
         paymentTerms: "",
         creditLimit: "",
       });
+      setIsSubmitting(false);
       onClose();
+    }).catch(() => {
+      setIsSubmitting(false);
     });
   };
 
@@ -371,10 +377,18 @@ export function SupplierFormModal({ visible, onClose }) {
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
               <Text style={{ color: ThemeColors.textSecondary }}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
-              <Check size={18} color={ThemeColors.surface} />
+            <TouchableOpacity 
+              style={[styles.saveBtn, isSubmitting && { opacity: 0.7 }]} 
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.surface} />
+              ) : (
+                <Check size={18} color={ThemeColors.surface} />
+              )}
               <Text weight="bold" style={{ color: ThemeColors.surface }}>
-                Save Supplier
+                {isSubmitting ? "Saving..." : "Save Supplier"}
               </Text>
             </TouchableOpacity>
           </View>

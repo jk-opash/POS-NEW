@@ -16,6 +16,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
@@ -64,6 +65,7 @@ export default function EmployeeModal({ visible, onClose, employee }) {
   });
 
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setError(""); // Reset error on open
@@ -126,12 +128,20 @@ export default function EmployeeModal({ visible, onClose, employee }) {
       dataToSave.join_date = new Date().toISOString().split("T")[0];
     }
 
+    setIsSubmitting(true);
+    let actionPromise;
     if (isEditing) {
-      dispatch(updateTeamMember({ id: employee.id, data: dataToSave }));
+      actionPromise = dispatch(updateTeamMember({ id: employee.id, data: dataToSave }));
     } else {
-      dispatch(createTeamMember(dataToSave));
+      actionPromise = dispatch(createTeamMember(dataToSave));
     }
-    onClose();
+    
+    actionPromise.then(() => {
+      setIsSubmitting(false);
+      onClose();
+    }).catch(() => {
+      setIsSubmitting(false);
+    });
   };
 
   const renderInput = (
@@ -332,12 +342,17 @@ export default function EmployeeModal({ visible, onClose, employee }) {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.btn, styles.saveBtn]}
+              style={[styles.btn, styles.saveBtn, isSubmitting && { opacity: 0.7 }]}
               onPress={handleSave}
+              disabled={isSubmitting}
             >
-              <Text weight="bold" style={styles.saveBtnText}>
-                Save Changes
-              </Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} />
+              ) : (
+                <Text weight="bold" style={styles.saveBtnText}>
+                  Save Changes
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
