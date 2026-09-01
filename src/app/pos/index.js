@@ -1,3 +1,4 @@
+import { Loader } from "@/components/common/Loader";
 import { CartPanel } from "@/components/pos/CartPanel";
 import { CustomerReceiptModal } from "@/components/pos/CustomerReceiptModal";
 import { DiscountModal } from "@/components/pos/DiscountModal";
@@ -14,7 +15,6 @@ import { SplitPaymentModal } from "@/components/pos/SplitPaymentModal";
 import { TakeawayOrdersPanel } from "@/components/pos/TakeawayOrdersPanel";
 import { VariantSelectorModal } from "@/components/pos/VariantSelectorModal";
 import * as Icons from "lucide-react-native";
-import { Loader } from "@/components/common/Loader";
 
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -43,8 +43,8 @@ import {
   setCustomer,
   setOrderType,
   setTaxRate,
-  updateQuantity,
   updateItemNote,
+  updateQuantity,
   voidItem,
 } from "@/store/slices/posSlice";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";

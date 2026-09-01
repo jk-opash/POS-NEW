@@ -638,7 +638,7 @@ const posSlice = createSlice({
           modifiers: [
             ...(ci.variant ? [ci.variant.name] : []),
             ...(ci.spiceLevel ? [ci.spiceLevel.name] : []),
-            ...(ci.addons || []).map((a) => a.name)
+            ...(ci.addons || []).map((a) => a.name),
           ],
           note: ci.note || null,
         })),
@@ -775,7 +775,7 @@ const posSlice = createSlice({
                 modifiers: [
                   ...(ci.variant ? [ci.variant.name] : []),
                   ...(ci.spiceLevel ? [ci.spiceLevel.name] : []),
-                  ...(ci.addons || []).map((a) => a.name)
+                  ...(ci.addons || []).map((a) => a.name),
                 ],
                 note: ci.note || null,
               })),
