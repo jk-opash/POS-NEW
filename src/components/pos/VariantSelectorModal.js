@@ -31,7 +31,9 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
   }, [visible, product]);
 
   const handleConfirm = () => {
-    const finalSpiceLevel = product.spice_level_enabled ? selectedSpiceLevel : null;
+    const finalSpiceLevel = product.spice_level_enabled
+      ? selectedSpiceLevel
+      : null;
     onConfirm(product, selectedVariant, selectedAddons, finalSpiceLevel);
     onClose();
   };
@@ -53,8 +55,6 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
   const hasAddonGroups =
     product.addon_categories && product.addon_categories.length > 0;
   const showSpiceLevel = product.spice_level_enabled === true;
-
-  console.log("product ====> ", product);
 
   let totalPrice = Number(product.pricing?.sellingPrice || product.price || 0);
   if (selectedVariant) {
@@ -171,7 +171,10 @@ export function VariantSelectorModal({ visible, product, onClose, onConfirm }) {
                     const isSingleSelect = group.maxSelection === 1;
 
                     return (
-                      <View key={group.id || group.name} style={styles.addonGroup}>
+                      <View
+                        key={group.id || group.name}
+                        style={styles.addonGroup}
+                      >
                         <View style={styles.groupHeader}>
                           <Text weight="bold" style={styles.groupTitle}>
                             {group.name}

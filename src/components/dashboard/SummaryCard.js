@@ -78,7 +78,6 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.lg,
-    flex: 1,
     minWidth: 130,
     borderWidth: 1,
     borderColor: ThemeColors.border,

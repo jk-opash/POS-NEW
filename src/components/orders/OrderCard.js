@@ -41,7 +41,7 @@ export function OrderCard({ order, onPayBills, onSeeDetails }) {
             Order #{order.id} | {order.type}
           </Text>
         </View>
-        <StatusBadge status={order.status} />
+        <StatusBadge status={order.payment_status} />
       </View>
 
       {/* ── Date/Time ───────────────────────────── */}
@@ -130,18 +130,20 @@ export function OrderCard({ order, onPayBills, onSeeDetails }) {
             See Details
           </Text>
         </TouchableOpacity>
-        
-        {order.payment_status !== "Paid" && order.status !== "Completed" && order.status !== "Cancelled" && (
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            activeOpacity={0.8}
-            onPress={() => onPayBills(order)}
-          >
-            <Text weight="bold" style={styles.btnPrimaryText}>
-              Pay Bills
-            </Text>
-          </TouchableOpacity>
-        )}
+
+        {order.payment_status !== "Paid" &&
+          order.status !== "Completed" &&
+          order.status !== "Cancelled" && (
+            <TouchableOpacity
+              style={styles.btnPrimary}
+              activeOpacity={0.8}
+              onPress={() => onPayBills(order)}
+            >
+              <Text weight="bold" style={styles.btnPrimaryText}>
+                Pay Bills
+              </Text>
+            </TouchableOpacity>
+          )}
       </View>
     </View>
   );

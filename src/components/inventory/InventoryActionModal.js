@@ -4,12 +4,15 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { AlertCircle, Save, X } from "lucide-react-native";
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { adjustInventoryStock } from "@/store/slices/inventorySlice";
 import {
   Modal,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 export function InventoryActionModal({
@@ -19,7 +22,9 @@ export function InventoryActionModal({
   initialProductId = "",
 }) {
   const { isMobile } = useResponsive();
-  const { inventory, logStockMovement, adjustStock } = [];
+  const dispatch = useDispatch();
+  const inventory = useSelector((state) => state.inventory.items || []);
+  const currentUser = useSelector((state) => state.auth?.user);
 
   const [productId, setProductId] = React.useState(initialProductId);
   const [adjustmentType, setAdjustmentType] = React.useState("remove");
@@ -27,6 +32,7 @@ export function InventoryActionModal({
   const [reason, setReason] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [error, setError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -60,20 +66,26 @@ export function InventoryActionModal({
         finalQty = -finalQty;
       }
 
-      if (type === "adjustments") {
-        adjustStock(product.id, product.name, finalQty, reason, "Admin");
-      } else {
-        logStockMovement({
-          productId: product.id,
-          itemName: product.name,
-          quantityChange: finalQty,
-          reason: type === "quarantine" ? `Quarantine: ${reason}` : reason,
-          notes: notes,
-          performedBy: "Admin", // Hardcoded for mock
-        });
-      }
+      const movementType = type === "quarantine" ? "Quarantine" : "Adjustment";
+      const finalReason = type === "quarantine" ? `Quarantine: ${reason}` : reason;
 
-      onClose();
+      setIsSubmitting(true);
+      dispatch(adjustInventoryStock({
+        item_id: product.id,
+        quantity_change: finalQty,
+        movement_type: movementType,
+        reason: finalReason,
+        performed_by: currentUser?.id
+      }))
+      .unwrap()
+      .then(() => {
+        setIsSubmitting(false);
+        onClose();
+      })
+      .catch((err) => {
+        setIsSubmitting(false);
+        setError(err.message || "Failed to adjust stock");
+      });
     } else {
       // Stub for other types
       onClose();
@@ -372,14 +384,22 @@ export function InventoryActionModal({
             <TouchableOpacity style={styles.btnCancel} onPress={onClose}>
               <Text style={styles.btnCancelText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.btnPrimary} onPress={handleSubmit}>
-              <Save
-                size={16}
-                color={ThemeColors.white}
-                style={{ marginRight: 8 }}
-              />
+            <TouchableOpacity 
+              style={[styles.btnPrimary, isSubmitting && { opacity: 0.7 }]} 
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} style={{ marginRight: 8 }} />
+              ) : (
+                <Save
+                  size={16}
+                  color={ThemeColors.white}
+                  style={{ marginRight: 8 }}
+                />
+              )}
               <Text weight="bold" style={styles.btnPrimaryText}>
-                Submit
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Text>
             </TouchableOpacity>
           </View>

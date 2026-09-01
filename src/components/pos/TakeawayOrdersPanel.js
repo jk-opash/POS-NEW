@@ -8,7 +8,7 @@ import {
 } from "@/store/slices/posSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { ArrowRight, Clock, ShoppingBag, X } from "lucide-react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Modal,
@@ -16,6 +16,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -29,6 +30,7 @@ export function TakeawayOrdersPanel({ visible, onClose, branchId }) {
     (order) => order.order_type === "Takeaway" && order.status !== "Completed",
   );
 
+  const [processingOrderId, setProcessingOrderId] = useState(null);
   const slideAnim = useRef(new Animated.Value(400)).current;
 
   useEffect(() => {
@@ -67,11 +69,14 @@ export function TakeawayOrdersPanel({ visible, onClose, branchId }) {
   };
 
   const handleCloseOrder = async (orderId) => {
+    setProcessingOrderId(orderId);
     try {
       await orderApi.update(orderId, { status: "Completed" });
       dispatch(fetchActiveOrders(branchId));
     } catch (error) {
       console.error("Failed to close order", error);
+    } finally {
+      setProcessingOrderId(null);
     }
   };
 
@@ -270,7 +275,8 @@ export function TakeawayOrdersPanel({ visible, onClose, branchId }) {
                           {
                             backgroundColor: session.payment_status === "Paid" 
                               ? ThemeColors.emerald 
-                              : ThemeColors.primary + "10"
+                              : ThemeColors.primary + "10",
+                            opacity: processingOrderId === session.id ? 0.7 : 1
                           }
                         ]}
                         onPress={() => {
@@ -280,6 +286,7 @@ export function TakeawayOrdersPanel({ visible, onClose, branchId }) {
                             handleRestore(session);
                           }
                         }}
+                        disabled={processingOrderId === session.id}
                       >
                         <Text 
                           style={[
@@ -290,14 +297,20 @@ export function TakeawayOrdersPanel({ visible, onClose, branchId }) {
                           ]} 
                           weight="bold"
                         >
-                          {session.payment_status === "Paid"
-                            ? "Mark Served"
-                            : "Pre-pay"}
+                          {processingOrderId === session.id
+                            ? "Processing..."
+                            : session.payment_status === "Paid"
+                              ? "Mark Served"
+                              : "Pre-pay"}
                         </Text>
-                        <ArrowRight 
-                          size={14} 
-                          color={session.payment_status === "Paid" ? "white" : ThemeColors.primary} 
-                        />
+                        {processingOrderId === session.id ? (
+                           <ActivityIndicator size="small" color="white" />
+                        ) : (
+                          <ArrowRight 
+                            size={14} 
+                            color={session.payment_status === "Paid" ? "white" : ThemeColors.primary} 
+                          />
+                        )}
                       </TouchableOpacity>
                     </View>
                   </View>

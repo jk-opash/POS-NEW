@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useStaff } from "@/hooks/useStaff";
+import { useSelector } from "react-redux";
 
 const SHIFT_TYPES = [
   {
@@ -33,14 +34,15 @@ const SHIFT_TYPES = [
 ];
 
 export default function ShiftsTab() {
-  const { employees, shifts, assignShift } = useStaff();
+  const { shifts, assignShift } = useStaff();
+  const { teamMembers: employees } = useSelector((state) => state.teamMember);
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = employees.filter(
     (emp) =>
       emp.status !== "Terminated" &&
-      (emp.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.lastName.toLowerCase().includes(searchQuery.toLowerCase())),
+      (emp.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.last_name?.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const getAssignedShift = (employeeId) => {
@@ -103,28 +105,31 @@ export default function ShiftsTab() {
             return (
               <View key={item.id} style={styles.tableRow}>
                 {/* Employee */}
-                <View style={{ width: 200, justifyContent: "center" }}>
-                  <Text weight="bold" style={styles.nameText} numberOfLines={1}>
-                    {item.firstName} {item.lastName}
-                  </Text>
-                  <Text style={styles.subText}>{item.id}</Text>
+                <View style={[styles.col, { width: 200 }, styles.rowAlign]}>
+                  <View style={styles.avatarMini}>
+                    <Text weight="bold" style={styles.avatarMiniText}>
+                      {item.first_name?.[0] || ""}{item.last_name?.[0] || ""}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text weight="bold" style={styles.nameText} numberOfLines={1}>
+                      {item.first_name} {item.last_name}
+                    </Text>
+                    <Text style={styles.subText}>{item.id}</Text>
+                  </View>
                 </View>
 
                 {/* Role */}
-                <Text style={[styles.col, { width: 160 }]} numberOfLines={1}>
-                  {item.role}
-                </Text>
+                <View style={[styles.col, { width: 160 }]}>
+                  <Text style={styles.rowText}>{item.role?.name || "No Role"}</Text>
+                </View>
 
                 {/* Store */}
-                <Text
-                  style={[
-                    styles.col,
-                    { width: 140, color: ThemeColors.textMuted },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.store}
-                </Text>
+                <View style={[styles.col, { width: 140 }]}>
+                  <Text style={[styles.rowText, { color: ThemeColors.textMuted }]} numberOfLines={1}>
+                    {item.branch?.name || "All Stores"}
+                  </Text>
+                </View>
 
                 {/* Shift Buttons */}
                 <View

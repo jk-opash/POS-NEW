@@ -1,3 +1,4 @@
+import React from "react";
 import { Text } from "@/components/ui/Text";
 
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
@@ -20,6 +21,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
@@ -35,9 +37,9 @@ export function TableActionModal({
 }) {
   if (!table) return null;
 
-  const isAvailable = table.status === "Available";
-  const isOccupied = table.status === "Occupied";
-  const isReserved = table.status === "Reserved";
+  const isAvailable = table.status?.toLowerCase() === "available";
+  const isOccupied = table.status?.toLowerCase() === "occupied";
+  const isReserved = table.status?.toLowerCase() === "reserved";
 
   const hasOrder =
     table.order &&
@@ -66,15 +68,26 @@ export function TableActionModal({
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const handlePrintBill = async () => {
-    onUpdateStatus(table.id, "Occupied"); // Keeps occupied or update to some billed state
-    await printReceipt({
-      type: "bill",
-      table: table.name,
-      items: orderItemsList,
-      total: totalAmount,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      onUpdateStatus(table.id, "Occupied"); // Keeps occupied or update to some billed state
+      if (typeof printReceipt === 'function') {
+        await printReceipt({
+          type: "bill",
+          table: table.name,
+          items: orderItemsList,
+          total: totalAmount,
+        });
+      }
+    } catch (err) {
+      console.error("Print failed", err);
+    } finally {
+      setIsSubmitting(false);
+      onClose();
+    }
   };
 
   // Calculate order items for display
@@ -249,10 +262,16 @@ export function TableActionModal({
                     style={[
                       styles.secondaryBtn,
                       { flex: 1, backgroundColor: ThemeColors.blueDim },
+                      isSubmitting && { opacity: 0.7 }
                     ]}
                     onPress={handlePrintBill}
+                    disabled={isSubmitting}
                   >
-                    <Printer size={18} color={ThemeColors.blue} />
+                    {isSubmitting ? (
+                      <ActivityIndicator size="small" color={ThemeColors.blue} />
+                    ) : (
+                      <Printer size={18} color={ThemeColors.blue} />
+                    )}
                     <Text
                       weight="semibold"
                       style={[
@@ -260,7 +279,7 @@ export function TableActionModal({
                         { color: ThemeColors.blue },
                       ]}
                     >
-                      Print Bill
+                      {isSubmitting ? "Printing..." : "Print Bill"}
                     </Text>
                   </TouchableOpacity>
 
@@ -388,6 +407,7 @@ export function TableActionModal({
                       </Text>
                     </TouchableOpacity>
 
+                  <View style={[styles.statusGrid, { marginTop: ThemeSpacing.md }]}>
                     <TouchableOpacity
                       style={[
                         styles.statusBtn,
@@ -405,7 +425,7 @@ export function TableActionModal({
                       <Text
                         style={[
                           styles.statusBtnText,
-                          { color: ThemeColors.blue },
+                          { color: ThemeColors.blue, textAlign: "center" },
                         ]}
                         adjustsFontSizeToFit
                         numberOfLines={2}
@@ -431,15 +451,16 @@ export function TableActionModal({
                       <Text
                         style={[
                           styles.statusBtnText,
-                          { color: ThemeColors.red },
+                          { color: ThemeColors.red, textAlign: "center" },
                         ]}
                         adjustsFontSizeToFit
-                        numberOfLines={1}
+                        numberOfLines={2}
                       >
                         Cancel Reservation
                       </Text>
                     </TouchableOpacity>
-                  </>
+                  </View>
+                </>
                 )}
 
                 {/* Occupied (No Order) Logic */}
@@ -490,7 +511,7 @@ export function TableActionModal({
             )}
 
             {/* Unmerge Table Option */}
-            {table.originalTables && table.originalTables.length > 0 && (
+            {(table.originalTables?.length > 0 || table.merged_tables?.length > 0) && (
               <TouchableOpacity
                 style={[
                   styles.secondaryBtn,
