@@ -7,7 +7,8 @@ import { useNavigation } from "expo-router";
 import { Bell, Menu } from "lucide-react-native";
 import { useState, useEffect } from "react";
 import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
-import { CommonHeader } from "@/components/common/CommonHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function KDSPage() {
@@ -52,28 +53,35 @@ export default function KDSPage() {
     if (activeStation !== "All" && order.station !== activeStation)
       return false;
     if (searchQuery && !order.orderNumber.includes(searchQuery)) return false;
-    if (
-      order.status === "Completed" ||
-      order.status === "Cancelled" ||
-      order.status === "Served" ||
-      order.status === "Done"
-    )
+    if (order.status === "Completed" || order.status === "Cancelled" || order.status === "Served" || order.status === "Done")
       return false;
-
-    // Check if there are any active items (Accepted or Preparing)
-    const hasActiveItems = order.items && order.items.some(item => {
-      const effectiveStatus = item.status || order.status || "Accepted";
-      return effectiveStatus === "Accepted" || effectiveStatus === "Preparing";
-    });
-
-    if (!hasActiveItems) return false;
-
     return true;
   });
 
   return (
     <View style={styles.root}>
-      <CommonHeader title="Kitchen Display" />
+      <SafeAreaView style={styles.headerSafe} edges={["top"]}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            {!isWebDesktop && (
+              <TouchableOpacity
+                style={styles.menuBtn}
+                onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
+              >
+                <Menu size={24} color={ThemeColors.textPrimary} />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.pageTitle}>Kitchen Display</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <HeaderQuickNav />
+            <TouchableOpacity style={styles.notifBtn}>
+              <Bell size={24} color={ThemeColors.textSecondary} />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
       <FlatList
         key={`cols-${numCols}`}
         data={filteredOrders}
@@ -108,7 +116,44 @@ export default function KDSPage() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ThemeColors.bg },
-
+  headerSafe: {
+    backgroundColor: ThemeColors.surface,
+    borderBottomWidth: 1,
+    borderColor: ThemeColors.border,
+    zIndex: 100,
+    elevation: 100,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: ThemeSpacing.xxl,
+    paddingVertical: ThemeSpacing.md,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
+  menuBtn: { padding: 4 },
+  pageTitle: { fontSize: 26, color: ThemeColors.textPrimary },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.lg,
+  },
+  notifBtn: { position: "relative", padding: 4 },
+  notifDot: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ThemeColors.red,
+    borderWidth: 1.5,
+    borderColor: ThemeColors.surface,
+  },
   boardContent: {
     padding: ThemeSpacing.md,
     paddingBottom: 40,

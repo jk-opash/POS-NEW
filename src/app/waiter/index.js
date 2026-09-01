@@ -1,4 +1,3 @@
-import { CommonHeader } from "@/components/common/CommonHeader";
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 import { Text } from "@/components/ui/Text";
 import { WaiterTicket } from "@/components/waiter/WaiterTicket";
@@ -80,7 +79,28 @@ export default function WaiterPage() {
 
   return (
     <View style={styles.root}>
-      <CommonHeader title="Wait Staff" />
+      <SafeAreaView style={styles.headerSafe} edges={["top"]}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            {!isWebDesktop && (
+              <TouchableOpacity
+                style={styles.menuBtn}
+                onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
+              >
+                <Menu size={24} color={ThemeColors.textPrimary} />
+              </TouchableOpacity>
+            )}
+            <Text style={styles.pageTitle}>Wait Staff</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <HeaderQuickNav />
+            <TouchableOpacity style={styles.notifBtn}>
+              <Bell size={24} color={ThemeColors.textSecondary} />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
       <FlatList
         key={`cols-${numCols}`}
         data={filteredOrders}

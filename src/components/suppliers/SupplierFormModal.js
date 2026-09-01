@@ -1,5 +1,4 @@
 import { Text } from "@/components/ui/Text";
-import { createSupplier } from "@/store/slices/supplierSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Check, X } from "lucide-react-native";
 import { useState } from "react";
@@ -10,16 +9,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
 
 export function SupplierFormModal({ visible, onClose }) {
-  const dispatch = useDispatch();
-  const auth = useSelector((state) => state.auth);
-  const businessId = auth.user?.businesses?.[0]?.id || auth.user?.business_id;
-  const branchId =
-    auth.user?.businesses?.[0]?.branches?.[0]?.id || auth.user?.branch_id;
+  const { addSupplier } = useSuppliers();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,97 +34,84 @@ export function SupplierFormModal({ visible, onClose }) {
     creditLimit: "",
   });
 
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleChange = (key, val) => {
     setFormData((prev) => ({ ...prev, [key]: val }));
   };
 
   const handleSubmit = () => {
-    setError("");
-    if (!formData.name.trim()) {
-      return setError("Name is required.");
+    if (!formData.name || !formData.businessName) {
+      alert("Name and Business Name are required.");
+      return;
     }
-    if (!formData.businessName.trim()) {
-      return setError("Business Name is required.");
-    }
-    setIsSubmitting(true);
-    dispatch(
-      createSupplier({
-        business_id: businessId,
-        branch_id: branchId,
-        name: formData.name,
-        businessName: formData.businessName,
-        category: formData.category,
-        registrationNumber: formData.regNumber,
-        status: "Active",
-        registrationDate: new Date().toISOString().split("T")[0],
-        contact: {
-          person: formData.contactPerson,
-          mobile: formData.mobile,
-          office: formData.officeNumber,
-          email: formData.email,
-          website: formData.website,
-        },
-        address: {
-          line1: formData.addressLine1,
-          city: formData.city,
-          state: formData.state,
-          zip: formData.zip,
-          country: formData.country,
-        },
-        tax: { gst: formData.gst },
-        financial: {
-          paymentTerms: formData.paymentTerms,
-          creditLimit: parseFloat(formData.creditLimit) || 0,
-        },
-        banking: {},
-        performance: {
-          deliveryScore: 0,
-          qualityScore: 0,
-          pricingScore: 0,
-          overallRating: 0,
-          riskLevel: "Medium",
-        },
-        stats: {
-          totalOrders: 0,
-          totalSpend: 0,
-          outstandingBalance: 0,
-          lastOrderDate: "N/A",
-          avgDeliveryTime: "N/A",
-          returnRate: "0%",
-        },
-        products: [],
-        contracts: {},
-        communications: [],
-      }),
-    ).then(() => {
-      // Reset and close
-      setFormData({
-        name: "",
-        businessName: "",
-        category: "Manufacturer",
-        regNumber: "",
-        contactPerson: "",
-        mobile: "",
-        officeNumber: "",
-        email: "",
-        website: "",
-        gst: "",
-        addressLine1: "",
-        city: "",
-        state: "",
-        zip: "",
-        country: "",
-        paymentTerms: "",
-        creditLimit: "",
-      });
-      setIsSubmitting(false);
-      onClose();
-    }).catch(() => {
-      setIsSubmitting(false);
+
+    addSupplier({
+      name: formData.name,
+      businessName: formData.businessName,
+      category: formData.category,
+      registrationNumber: formData.regNumber,
+      status: "Active",
+      registrationDate: new Date().toISOString().split("T")[0],
+      contact: {
+        person: formData.contactPerson,
+        mobile: formData.mobile,
+        office: formData.officeNumber,
+        email: formData.email,
+        website: formData.website,
+      },
+      address: {
+        line1: formData.addressLine1,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        country: formData.country,
+      },
+      tax: { gst: formData.gst },
+      financial: {
+        paymentTerms: formData.paymentTerms,
+        creditLimit: parseFloat(formData.creditLimit) || 0,
+      },
+      banking: {},
+      performance: {
+        deliveryScore: 0,
+        qualityScore: 0,
+        pricingScore: 0,
+        overallRating: 0,
+        riskLevel: "Medium",
+      },
+      stats: {
+        totalOrders: 0,
+        totalSpend: 0,
+        outstandingBalance: 0,
+        lastOrderDate: "N/A",
+        avgDeliveryTime: "N/A",
+        returnRate: "0%",
+      },
+      products: [],
+      contracts: {},
+      communications: [],
     });
+
+    // Reset and close
+    setFormData({
+      name: "",
+      businessName: "",
+      category: "Manufacturer",
+      regNumber: "",
+      contactPerson: "",
+      mobile: "",
+      officeNumber: "",
+      email: "",
+      website: "",
+      gst: "",
+      addressLine1: "",
+      city: "",
+      state: "",
+      zip: "",
+      country: "",
+      paymentTerms: "",
+      creditLimit: "",
+    });
+    onClose();
   };
 
   const categories = [
@@ -163,11 +143,6 @@ export function SupplierFormModal({ visible, onClose }) {
             style={styles.body}
             contentContainerStyle={{ paddingBottom: ThemeSpacing.xxl }}
           >
-            {error ? (
-              <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
-                {error}
-              </Text>
-            ) : null}
             {/* Basic Info */}
             <View style={styles.section}>
               <Text weight="bold" style={styles.sectionTitle}>
@@ -377,18 +352,10 @@ export function SupplierFormModal({ visible, onClose }) {
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
               <Text style={{ color: ThemeColors.textSecondary }}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.saveBtn, isSubmitting && { opacity: 0.7 }]} 
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={ThemeColors.surface} />
-              ) : (
-                <Check size={18} color={ThemeColors.surface} />
-              )}
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
+              <Check size={18} color={ThemeColors.surface} />
               <Text weight="bold" style={{ color: ThemeColors.surface }}>
-                {isSubmitting ? "Saving..." : "Save Supplier"}
+                Save Supplier
               </Text>
             </TouchableOpacity>
           </View>

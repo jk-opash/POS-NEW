@@ -20,7 +20,7 @@ import { deleteInventoryItem } from "@/store/slices/inventorySlice";
 export function StockListTab({ onEditItem }) {
   const dispatch = useDispatch();
   const { items: inventory } = useSelector((state) => state.inventory);
-
+  
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [adjustmentProduct, setAdjustmentProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,7 +113,7 @@ export function StockListTab({ onEditItem }) {
             const inStock = parseFloat(item.in_stock) || 0;
             const price = parseFloat(item.price) || 0;
             const reorderLvl = parseFloat(item.reorder_level) || 0;
-
+            
             const isZero = inStock === 0;
             const isLow = inStock <= reorderLvl && !isZero;
 

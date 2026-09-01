@@ -28,18 +28,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export function SupplierDetailModal({ visible, supplierId, onClose }) {
-  const { items: suppliers } = useSelector((state) => state.supplier);
-  const dispatch = useDispatch();
-
-  // Mock functions for UI only since these are not in redux yet
-  const createPurchaseOrder = () => {};
-  const recordPayment = () => {};
-  const logCommunication = () => {};
-  const mapProduct = () => {};
+  const {
+    suppliers,
+    createPurchaseOrder,
+    recordPayment,
+    logCommunication,
+    mapProduct,
+  } = useSuppliers();
   const supplier = suppliers.find((s) => s.id === supplierId);
   const { isDesktop, isTablet, isMobile } = useResponsive();
   const isLargeScreen = isDesktop;

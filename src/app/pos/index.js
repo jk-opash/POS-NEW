@@ -14,7 +14,6 @@ import { SplitPaymentModal } from "@/components/pos/SplitPaymentModal";
 import { TakeawayOrdersPanel } from "@/components/pos/TakeawayOrdersPanel";
 import { VariantSelectorModal } from "@/components/pos/VariantSelectorModal";
 import * as Icons from "lucide-react-native";
-import { Loader } from "@/components/common/Loader";
 
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -43,6 +42,8 @@ import {
   setCustomer,
   setOrderType,
   setTaxRate,
+  updateKDSItemStatus,
+  updateKDSOrderStatus,
   updateQuantity,
   voidItem,
 } from "@/store/slices/posSlice";
@@ -119,21 +120,7 @@ export default function POSScreen() {
   ) => dispatch(addToCart({ product, variant, addons, quantity, spiceLevel }));
   const handleUpdateQuantityRedux = (id, quantity) =>
     dispatch(updateQuantity({ id, quantity }));
-  const handleVoidItemRedux = (id) => {
-    const item = cart.find((i) => i.id === id);
-    Alert.alert(
-      "Remove Item",
-      `Are you sure you want to remove ${item?.product?.name || "this item"} from the cart?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => dispatch(voidItem(id)),
-        },
-      ],
-    );
-  };
+  const handleVoidItemRedux = (id) => dispatch(voidItem(id));
   const handleVoidLockedItemRedux = (item) => {
     Alert.alert(
       "Remove KOT Item",
@@ -217,7 +204,6 @@ export default function POSScreen() {
             style: "destructive",
             onPress: () => {
               dispatch(resetOrder());
-              dispatch(setActiveTable(null));
               dispatch(setOrderType("Takeaway"));
             },
           },
@@ -225,7 +211,6 @@ export default function POSScreen() {
       );
     } else {
       dispatch(resetOrder());
-      dispatch(setActiveTable(null));
       dispatch(setOrderType("Takeaway"));
     }
   };
@@ -236,22 +221,32 @@ export default function POSScreen() {
   const completeOrderInKDS = () => {};
   const activeOrders = kdsOrders;
 
+  // ── KDS Action Handlers ───────────────────────────────────────────────
+  // Update a full KOT ticket status (START PREP / BUMP TICKET buttons)
+  const updateOrderStatus = (id, status) => {
+    dispatch(updateKDSOrderStatus({ id, status }));
+  };
+  // Update a single item status within a KOT ticket
+  const updateItemStatus = (orderId, itemId, status) => {
+    dispatch(updateKDSItemStatus({ orderId, itemId, status }));
+  };
+
   const takeawaySessions = {};
 
   const tables = useSelector((state) => state.branch?.tables) || [];
   const floors = useSelector((state) => state.branch?.floors) || [];
 
   const handleSetActiveTable = (table) => {
+    dispatch(setActiveTable(table));
+    dispatch(setOrderType("Dine-In"));
+
     if (table.status === "Occupied") {
-      dispatch(setActiveTable(table));
       dispatch(restoreOrder({ branchId, tableId: table.id }));
     } else {
-      // Clear old order data first, then set the new table
+      // It's an available table. Do not create the DB order yet. Just clear Redux state.
       dispatch(resetOrder());
-      dispatch(setActiveTable(table));
     }
   };
-
   const handleSetOrderType = (type) => dispatch(setOrderType(type));
 
   useEffect(() => {
@@ -611,10 +606,6 @@ export default function POSScreen() {
       }
     });
   };
-
-  if (isLoadingMenu) {
-    return <Loader text="Loading POS Data..." />;
-  }
 
   return (
     <View style={styles.root}>

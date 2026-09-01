@@ -171,14 +171,9 @@ export function OrderTicket({ order, onAction, onItemAction }) {
         {Array.from(
           new Set(order.items.map((i) => i.course || "Uncategorized")),
         ).map((courseName) => {
-          const courseItems = order.items.filter((item) => {
-            const effectiveStatus = item.status || order.status || "Accepted";
-            const isValidStatus =
-              effectiveStatus === "Accepted" || effectiveStatus === "Preparing";
-            return (
-              (item.course || "Uncategorized") === courseName && isValidStatus
-            );
-          });
+          const courseItems = order.items.filter(
+            (item) => (item.course || "Uncategorized") === courseName,
+          );
           if (courseItems.length === 0) return null;
 
           return (
@@ -285,6 +280,7 @@ const styles = StyleSheet.create({
   orderCard: {
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.xl,
+    marginBottom: ThemeSpacing.lg,
     borderWidth: 1,
     overflow: "hidden",
     shadowColor: "#000",

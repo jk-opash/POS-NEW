@@ -12,21 +12,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 
 import { useDispatch } from "react-redux";
-import {
-  createInventoryItem,
-  updateInventoryItem,
-} from "@/store/slices/inventorySlice";
+import { createInventoryItem, updateInventoryItem } from "@/store/slices/inventorySlice";
 
-export function InventoryItemModal({
-  visible,
-  onClose,
-  branchId,
-  initialData,
-}) {
+export function InventoryItemModal({ visible, onClose, branchId, initialData }) {
   const { isMobile } = useResponsive();
   const dispatch = useDispatch();
 
@@ -39,7 +30,6 @@ export function InventoryItemModal({
   const [reorderLevel, setReorderLevel] = useState("");
   const [image, setImage] = useState(null);
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -47,16 +37,10 @@ export function InventoryItemModal({
         setName(initialData.name || "");
         setSku(initialData.sku || "");
         setCategory(initialData.category || "");
-        setStock(
-          initialData.in_stock != null ? String(initialData.in_stock) : "",
-        );
+        setStock(initialData.in_stock != null ? String(initialData.in_stock) : "");
         setUnit(initialData.unit || "pcs");
         setPrice(initialData.price != null ? String(initialData.price) : "");
-        setReorderLevel(
-          initialData.reorder_level != null
-            ? String(initialData.reorder_level)
-            : "10",
-        );
+        setReorderLevel(initialData.reorder_level != null ? String(initialData.reorder_level) : "10");
         setImage(initialData.image_url || null);
       } else {
         setName("");
@@ -133,32 +117,16 @@ export function InventoryItemModal({
       reorder_level: reorderNum,
       unit: unit.trim(),
       price: priceNum,
-      status:
-        stockNum > reorderNum
-          ? "Normal"
-          : stockNum === 0
-            ? "Out of Stock"
-            : "Low",
+      status: stockNum > reorderNum ? "Normal" : stockNum === 0 ? "Out of Stock" : "Low",
     };
 
-    setIsSubmitting(true);
-    let actionPromise;
     if (initialData && initialData.id) {
-      actionPromise = dispatch(
-        updateInventoryItem({ id: initialData.id, payload }),
-      );
+      dispatch(updateInventoryItem({ id: initialData.id, payload }));
     } else {
-      actionPromise = dispatch(createInventoryItem(payload));
+      dispatch(createInventoryItem(payload));
     }
 
-    actionPromise
-      .then(() => {
-        setIsSubmitting(false);
-        onClose();
-      })
-      .catch(() => {
-        setIsSubmitting(false);
-      });
+    onClose();
   };
 
   return (
@@ -302,30 +270,14 @@ export function InventoryItemModal({
             <TouchableOpacity style={styles.btnCancel} onPress={onClose}>
               <Text style={styles.btnCancelText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.btnPrimary, isSubmitting && { opacity: 0.7 }]}
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator
-                  size="small"
-                  color={ThemeColors.white}
-                  style={{ marginRight: 8 }}
-                />
-              ) : (
-                <Save
-                  size={16}
-                  color={ThemeColors.white}
-                  style={{ marginRight: 8 }}
-                />
-              )}
+            <TouchableOpacity style={styles.btnPrimary} onPress={handleSubmit}>
+              <Save
+                size={16}
+                color={ThemeColors.white}
+                style={{ marginRight: 8 }}
+              />
               <Text weight="bold" style={styles.btnPrimaryText}>
-                {isSubmitting
-                  ? "Saving..."
-                  : initialData
-                    ? "Save Changes"
-                    : "Save Item"}
+                {initialData ? "Save Changes" : "Save Item"}
               </Text>
             </TouchableOpacity>
           </View>

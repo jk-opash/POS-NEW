@@ -15,14 +15,14 @@ export function TablesZoomControls({
       style={[
         styles.zoomControls,
         {
-          bottom: isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xl,
-          right: isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xxl + 170,
+          bottom: (isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xl) + 70,
+          right: isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xxl,
         },
         isSmallScreen && {
           flexDirection: "column",
         },
         isEditMode && {
-          right: isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xxl + 180,
+          bottom: (isSmallScreen ? ThemeSpacing.md : ThemeSpacing.xl) + 140,
         },
       ]}
     >
@@ -59,7 +59,7 @@ export function TablesZoomControls({
 const styles = StyleSheet.create({
   zoomControls: {
     position: "absolute",
-    bottom: ThemeSpacing.md,
+    bottom: ThemeSpacing.xl,
     right: ThemeSpacing.xxl,
     flexDirection: "row",
     alignItems: "center",
