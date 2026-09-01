@@ -1,3 +1,4 @@
+import React from "react";
 import { Text } from "@/components/ui/Text";
 
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";

@@ -175,15 +175,15 @@ export default function SuppliersPage() {
       />
 
       <View style={[styles.tableContainer]}>
-        {loading && suppliers.length === 0 ? (
+        {loading ? (
           <Loader />
         ) : (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ width: "100%" }}
+            contentContainerStyle={{ flexGrow: 1 }}
           >
-            <View style={{ minWidth: 900, width: "100%" }}>
+            <View style={{ minWidth: 900, flex: 1 }}>
               <FlatList
                 data={paginatedSuppliers}
                 keyExtractor={(item) => item.id}
@@ -197,9 +197,9 @@ export default function SuppliersPage() {
                 )}
                 ListEmptyComponent={renderEmptyState}
                 showsVerticalScrollIndicator={false}
-            />
-          </View>
-        </ScrollView>
+              />
+            </View>
+          </ScrollView>
         )}
         {renderPagination()}
       </View>
@@ -241,7 +241,7 @@ export default function SuppliersPage() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ThemeColors.bg },
   tableContainer: {
-    // flex: 1,
+    flex: 1,
     margin: ThemeSpacing.lg,
     backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.lg,

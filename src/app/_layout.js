@@ -21,6 +21,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import { Provider, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { Loader } from "@/components/common/Loader";
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({
@@ -56,12 +57,12 @@ export default function RootLayout() {
   const drawerWidth = hideDrawer ? 0 : 230;
 
   if (!fontsLoaded) {
-    return null;
+    return <Loader text="Loading fonts..." />;
   }
 
   return (
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <PersistGate loading={<Loader text="Loading App..." />} persistor={persistor}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <AuthGuard>
             <View

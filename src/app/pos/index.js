@@ -14,6 +14,7 @@ import { SplitPaymentModal } from "@/components/pos/SplitPaymentModal";
 import { TakeawayOrdersPanel } from "@/components/pos/TakeawayOrdersPanel";
 import { VariantSelectorModal } from "@/components/pos/VariantSelectorModal";
 import * as Icons from "lucide-react-native";
+import { Loader } from "@/components/common/Loader";
 
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -610,6 +611,10 @@ export default function POSScreen() {
       }
     });
   };
+
+  if (isLoadingMenu) {
+    return <Loader text="Loading POS Data..." />;
+  }
 
   return (
     <View style={styles.root}>

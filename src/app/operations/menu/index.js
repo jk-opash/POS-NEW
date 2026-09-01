@@ -23,6 +23,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -54,7 +55,7 @@ export default function MenuScreen() {
 
   const branchId = activeBranch;
 
-  const { items: menuItems = [], categories = [] } = useSelector(
+  const { items: menuItems = [], categories = [], isLoading } = useSelector(
     (state) => state.menu,
   );
 
@@ -207,81 +208,88 @@ export default function MenuScreen() {
       />
 
       <View style={styles.mainContent}>
-        <SectionList
-          sections={sections}
-          keyExtractor={(item, index) => (item[0]?._id || item[0]?.id) + index}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<MenuEmptyState />}
-          renderSectionHeader={({ section: { title, itemCount } }) => (
-            <TouchableOpacity
-              style={styles.sectionHeader}
-              activeOpacity={0.7}
-              onPress={() => toggleSection(title)}
-            >
-              <View style={styles.sectionTitleWrap}>
-                <Text weight="black" style={styles.sectionTitle}>
-                  {title}
-                </Text>
-                <Text weight="bold" style={styles.sectionCount}>
-                  {itemCount}
-                </Text>
+        {isLoading && menuItems.length === 0 ? (
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <ActivityIndicator size="large" color={ThemeColors.emerald} />
+            <Text style={{ marginTop: ThemeSpacing.md, color: ThemeColors.textSecondary }}>Loading menu...</Text>
+          </View>
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item, index) => (item[0]?._id || item[0]?.id) + index}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={<MenuEmptyState />}
+            renderSectionHeader={({ section: { title, itemCount } }) => (
+              <TouchableOpacity
+                style={styles.sectionHeader}
+                activeOpacity={0.7}
+                onPress={() => toggleSection(title)}
+              >
+                <View style={styles.sectionTitleWrap}>
+                  <Text weight="black" style={styles.sectionTitle}>
+                    {title}
+                  </Text>
+                  <Text weight="bold" style={styles.sectionCount}>
+                    {itemCount}
+                  </Text>
+                </View>
+                {collapsedSections[title] ? (
+                  <ChevronDown size={24} color={ThemeColors.textSecondary} />
+                ) : (
+                  <ChevronUp size={24} color={ThemeColors.textSecondary} />
+                )}
+              </TouchableOpacity>
+            )}
+            renderItem={({ item: row }) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: ThemeSpacing.sm,
+                  marginBottom: ThemeSpacing.sm,
+                }}
+              >
+                {row.map((item) => {
+                  const itemId = item._id || item.id;
+                  return (
+                    <View
+                      key={itemId}
+                      style={[
+                        styles.cardWrapper,
+                        { width: cardWidth, position: "relative" },
+                      ]}
+                    >
+                      <MenuItemCard
+                        menuItem={item}
+                        isList={false}
+                        onPress={handleMenuItemPress}
+                        onEdit={(menuItem) => {
+                          setEditingMenuItem(menuItem);
+                          setIsWizardVisible(true);
+                        }}
+                        onToggleStatus={handleToggleStatus}
+                      />
+                      {isSelectMode && (
+                        <View
+                          style={[
+                            styles.selectOverlay,
+                            selectedIds.includes(itemId) &&
+                              styles.selectOverlayActive,
+                          ]}
+                          pointerEvents="none"
+                        >
+                          {selectedIds.includes(itemId) && (
+                            <CheckSquare size={24} color={ThemeColors.emerald} />
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
-              {collapsedSections[title] ? (
-                <ChevronDown size={24} color={ThemeColors.textSecondary} />
-              ) : (
-                <ChevronUp size={24} color={ThemeColors.textSecondary} />
-              )}
-            </TouchableOpacity>
-          )}
-          renderItem={({ item: row }) => (
-            <View
-              style={{
-                flexDirection: "row",
-                gap: ThemeSpacing.sm,
-                marginBottom: ThemeSpacing.sm,
-              }}
-            >
-              {row.map((item) => {
-                const itemId = item._id || item.id;
-                return (
-                  <View
-                    key={itemId}
-                    style={[
-                      styles.cardWrapper,
-                      { width: cardWidth, position: "relative" },
-                    ]}
-                  >
-                    <MenuItemCard
-                      menuItem={item}
-                      isList={false}
-                      onPress={handleMenuItemPress}
-                      onEdit={(menuItem) => {
-                        setEditingMenuItem(menuItem);
-                        setIsWizardVisible(true);
-                      }}
-                      onToggleStatus={handleToggleStatus}
-                    />
-                    {isSelectMode && (
-                      <View
-                        style={[
-                          styles.selectOverlay,
-                          selectedIds.includes(itemId) &&
-                            styles.selectOverlayActive,
-                        ]}
-                        pointerEvents="none"
-                      >
-                        {selectedIds.includes(itemId) && (
-                          <CheckSquare size={24} color={ThemeColors.emerald} />
-                        )}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
       </View>
 
       {isSelectMode && selectedIds.length > 0 && (
