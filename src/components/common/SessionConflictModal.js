@@ -117,7 +117,15 @@ export default function SessionConflictModal() {
     socketService.emit("resolve_conflict", { pin });
 
     // Fallback timeout in case server doesn't respond
-    if (isSubmitting) setIsSubmitting(false);
+    setTimeout(() => {
+      setIsSubmitting((prev) => {
+        if (prev) {
+          setIsError(true);
+          return false;
+        }
+        return prev;
+      });
+    }, 5000);
   };
 
   const handleLogout = () => {

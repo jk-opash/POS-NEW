@@ -24,6 +24,7 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,6 +37,7 @@ export default function MenuScreen() {
   const [isBulkModalVisible, setIsBulkModalVisible] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [editingMenuItem, setEditingMenuItem] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState(() => {
     const initial = {};
     [].forEach((cat) => {
@@ -64,6 +66,12 @@ export default function MenuScreen() {
       dispatch(fetchMenuData(branchId));
     }
   }, [dispatch, branchId]);
+
+  const handleRefresh = () => {
+    if (branchId) {
+      dispatch(fetchMenuData(branchId));
+    }
+  };
 
   const { isDesktop, isTablet, isMiniTab, width, isWebDesktop } =
     useResponsive();
@@ -156,6 +164,7 @@ export default function MenuScreen() {
 
   const handleSaveMenuItem = async (data) => {
     try {
+      setIsSaving(true);
       const payload = {
         ...data,
         status: data.status || "Active",
@@ -175,6 +184,8 @@ export default function MenuScreen() {
     } catch (error) {
       console.error("Error saving menu item", error);
       Alert.alert("Error", "Failed to save menu item.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -209,16 +220,24 @@ export default function MenuScreen() {
 
       <View style={styles.mainContent}>
         {isLoading && menuItems.length === 0 ? (
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <ActivityIndicator size="large" color={ThemeColors.emerald} />
-            <Text style={{ marginTop: ThemeSpacing.md, color: ThemeColors.textSecondary }}>Loading menu...</Text>
-          </View>
+          <ActivityIndicator
+            size="large"
+            color={ThemeColors.emerald}
+            style={{ marginTop: 40 }}
+          />
         ) : (
           <SectionList
             sections={sections}
             keyExtractor={(item, index) => (item[0]?._id || item[0]?.id) + index}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading && menuItems.length > 0}
+                onRefresh={handleRefresh}
+                colors={[ThemeColors.emerald]}
+              />
+            }
             ListEmptyComponent={<MenuEmptyState />}
             renderSectionHeader={({ section: { title, itemCount } }) => (
               <TouchableOpacity
@@ -336,6 +355,7 @@ export default function MenuScreen() {
         onClose={() => setIsWizardVisible(false)}
         onSave={handleSaveMenuItem}
         initialData={editingMenuItem}
+        isSaving={isSaving}
       />
     </View>
   );
