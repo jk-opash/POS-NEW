@@ -16,14 +16,12 @@ import {
 } from "@expo-google-fonts/outfit";
 import { usePathname, useSegments } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { createRequire } from "module";
+
 import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-
-const require = createRequire(import.meta.url);
 
 export default function RootLayout() {
   let [fontsLoaded] = useFonts({
