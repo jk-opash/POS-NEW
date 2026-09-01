@@ -10,7 +10,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
 
 export function CreateTicketModal({ visible, onClose }) {
@@ -19,34 +18,22 @@ export function CreateTicketModal({ visible, onClose }) {
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("Hardware");
   const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
-    setError("");
-    if (!subject.trim()) return setError("Subject is required.");
-    if (!description.trim()) return setError("Description is required.");
+  const handleSubmit = () => {
+    if (!subject || !description) return;
 
-    setIsSubmitting(true);
-    try {
-      await addTicket({
-        subject: subject.trim(),
-        category,
-        description: description.trim(),
-        priority: "Medium",
-      });
+    addTicket({
+      subject,
+      category,
+      description,
+      priority: "Medium",
+    });
 
-      // Reset form
-      setSubject("");
-      setCategory("Hardware");
-      setDescription("");
-      setError("");
-      onClose();
-    } catch (err) {
-      setError("Failed to create ticket");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Reset form
+    setSubject("");
+    setCategory("Hardware");
+    setDescription("");
+    onClose();
   };
 
   return (
@@ -66,11 +53,6 @@ export function CreateTicketModal({ visible, onClose }) {
           </View>
 
           <View style={styles.form}>
-            {error ? (
-              <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
-                {error}
-              </Text>
-            ) : null}
             <View style={styles.field}>
               <Text style={styles.label}>Subject</Text>
               <TextInput
@@ -131,18 +113,14 @@ export function CreateTicketModal({ visible, onClose }) {
             <TouchableOpacity
               style={[
                 styles.submitBtn,
-                (!subject || !description || isSubmitting) && { opacity: 0.5 },
+                (!subject || !description) && { opacity: 0.5 },
               ]}
               onPress={handleSubmit}
-              disabled={!subject || !description || isSubmitting}
+              disabled={!subject || !description}
             >
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={ThemeColors.white} />
-              ) : (
-                <Text weight="bold" style={styles.submitBtnText}>
-                  Submit Ticket
-                </Text>
-              )}
+              <Text weight="bold" style={styles.submitBtnText}>
+                Submit Ticket
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

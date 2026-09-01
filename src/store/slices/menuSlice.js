@@ -1,6 +1,5 @@
 import { menuApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import Toast from "react-native-toast-message";
 
 export const fetchMenuData = createAsyncThunk(
   "menu/fetchMenuData",
@@ -119,7 +118,6 @@ const menuSlice = createSlice({
         });
       })
       .addCase(fetchMenuData.rejected, (state, action) => {
-        Toast.show({ type: "error", text1: "Error", text2: action.payload?.message || action.payload || "Request failed." });
         state.isLoading = false;
         state.error = action.payload;
       })

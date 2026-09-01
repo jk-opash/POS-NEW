@@ -412,7 +412,6 @@ const posSlice = createSlice({
         totals: { ...state.totals },
       };
       state.parkedSales.push(parkedSale);
-
       // Clear current sale
       state.cart = [];
       state.runningOrder = [];
@@ -522,7 +521,6 @@ const posSlice = createSlice({
         isLockedItem: true,
       }));
       state.cart = []; // Cart is always empty when restoring — new items go in fresh
-
       // Ensure we re-calculate the totals for the restored running order!
       posSlice.caseReducers.calculateTotals(state);
     });

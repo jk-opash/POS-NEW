@@ -1,4 +1,3 @@
-import { Loader } from "@/components/common/Loader";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
@@ -21,31 +20,18 @@ import {
   Menu,
   Save,
   Store,
-  UserCircle,
 } from "lucide-react-native";
 
 import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
-import { CommonHeader } from "@/components/common/CommonHeader";
 import { BranchDetails } from "@/components/settings/tabs/BranchDetails";
 import { BusinessDetails } from "@/components/settings/tabs/BusinessDetails";
-import { UserProfileCard } from "@/components/settings/tabs/UserProfile";
-import {
-  fetchSettings,
-  updateBranchSettings,
-  updateBusiness,
-} from "@/store/slices/settingsSlice";
+import { fetchSettings, updateBusiness, updateBranchSettings } from "@/store/slices/settingsSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const GROUPS = [
   {
     name: "General settings",
     items: [
-      {
-        id: "profile",
-        label: "My Profile",
-        icon: UserCircle,
-        description: "View your login details and role",
-      },
       {
         id: "business",
         label: "Business Details",
@@ -66,10 +52,6 @@ const ALL_ITEMS = GROUPS.flatMap((g) => g.items);
 
 function renderContent(activeTab, settings, updateSetting) {
   switch (activeTab) {
-    case "profile":
-      return (
-        <UserProfileCard settings={settings} updateSetting={updateSetting} />
-      );
     case "business":
       return (
         <BusinessDetails settings={settings} updateSetting={updateSetting} />
@@ -234,12 +216,9 @@ export default function SettingsPage() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { activeBranch } = useSelector((state) => state.branch);
-  const {
-    business: reduxBusiness,
-    branch: reduxBranch,
-    isLoading: loading,
-    isSaving: saving,
-  } = useSelector((state) => state.settings);
+  const { business: reduxBusiness, branch: reduxBranch, isLoading: loading, isSaving: saving } = useSelector(
+    (state) => state.settings
+  );
 
   const [settings, setSettings] = useState(defaultSettings);
 
@@ -308,21 +287,10 @@ export default function SettingsPage() {
       const businessId = user?.business_id || user?.businesses?.[0]?.id;
       const promises = [];
       if (businessId) {
-        promises.push(
-          dispatch(
-            updateBusiness({ businessId, data: settings.business }),
-          ).unwrap(),
-        );
+        promises.push(dispatch(updateBusiness({ businessId, data: settings.business })).unwrap());
       }
       if (activeBranch) {
-        promises.push(
-          dispatch(
-            updateBranchSettings({
-              branchId: activeBranch,
-              data: settings.branch,
-            }),
-          ).unwrap(),
-        );
+        promises.push(dispatch(updateBranchSettings({ branchId: activeBranch, data: settings.branch })).unwrap());
       }
       await Promise.all(promises);
       Alert.alert("Success", "Settings saved successfully");
@@ -341,29 +309,48 @@ export default function SettingsPage() {
 
   return (
     <View style={styles.root}>
-      <CommonHeader
-        title="Settings"
-        showBack={isMobile && !showHub}
-        onBack={isMobile && !showHub ? () => setShowHub(true) : undefined}
-        rightContent={
-          <TouchableOpacity
-            style={[styles.saveBtn, saving && { opacity: 0.7 }]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color={ThemeColors.white} />
-            ) : (
-              <>
-                <Save size={18} color={ThemeColors.white} />
-                <Text weight="semibold" style={styles.saveBtnText}>
-                  Save
-                </Text>
-              </>
+      <SafeAreaView edges={["top"]} style={styles.headerSafe}>
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            {!isWebDesktop && (
+              <TouchableOpacity
+                onPress={
+                  isMobile && !showHub
+                    ? () => setShowHub(true)
+                    : () => navigation.openDrawer()
+                }
+                style={styles.menuBtn}
+              >
+                <Menu size={22} color={ThemeColors.textPrimary} />
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-        }
-      />
+            <Text style={styles.pageTitle}>Settings</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <HeaderQuickNav />
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && { opacity: 0.7 }]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} />
+              ) : (
+                <>
+                  <Save size={18} color={ThemeColors.white} />
+                  <Text weight="semibold" style={styles.saveBtnText}>
+                    Save
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.notifBtn}>
+              <Bell size={20} color={ThemeColors.textPrimary} />
+              <View style={styles.notifDot} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
 
       <View style={styles.body}>
         {!isMobile && (
@@ -401,7 +388,11 @@ export default function SettingsPage() {
               contentContainerStyle={styles.contentScroll}
             >
               {loading ? (
-                <Loader />
+                <ActivityIndicator
+                  size="large"
+                  color={ThemeColors.accent}
+                  style={{ marginTop: 50 }}
+                />
               ) : (
                 renderContent(activeTab, settings, updateSetting)
               )}
@@ -550,16 +541,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hubRowText: { flex: 1, gap: 2 },
-  hubRowLabel: {
-    fontSize: 15,
-    color: ThemeColors.textPrimary,
-    marginBottom: 2,
-  },
-  hubRowDesc: {
-    fontSize: 13,
-    color: ThemeColors.textMuted,
-  },
-
+  hubRowLabel: { fontSize: 15, color: ThemeColors.textPrimary },
+  hubRowDesc: { fontSize: 12, color: ThemeColors.textMuted },
   content: { flex: 1 },
   contentHeader: {
     flexDirection: "row",

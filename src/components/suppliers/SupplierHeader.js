@@ -1,129 +1,122 @@
 import { Text } from "@/components/ui/Text";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { StyleSheet, View, TextInput, TouchableOpacity } from "react-native";
-import { CommonHeader } from "@/components/common/CommonHeader";
-import { Search, ChevronDown, Plus } from "lucide-react-native";
+import { useNavigation } from "expo-router";
+import { Menu, Bell } from "lucide-react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { SearchWithFilter } from "@/components/ui/SearchWithFilter";
+import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 export function SupplierHeader({
+  isDesktop,
   searchQuery,
   setSearchQuery,
-  statusFilter,
-  setStatusFilter,
-  onAddSupplier,
+  filterCategory,
+  setFilterCategory,
+  categories,
 }) {
-  const statuses = ["All Statuses", "Active", "Blocked", "Archived"];
+  const navigation = useNavigation();
+
+  // Map categories to { label, value } for SearchWithFilter
+  const filterOptions = categories.map(cat => ({ label: cat, value: cat }));
 
   return (
-    <CommonHeader
-      title="Suppliers Hub"
-      subtitle="Manage your vendors, contacts, and supply chain."
-      bottomContent={
-        <View style={styles.toolbarRow}>
-          <View style={styles.filtersContainer}>
-            {/* Search Input */}
-            <View style={styles.searchBox}>
-              <Search size={16} color={ThemeColors.textMuted} style={styles.searchIcon} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search suppliers..."
-                placeholderTextColor={ThemeColors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-
-            {/* Status Filter Dummy Button (Would ideally open an ActionSheet or simple Modal) */}
-            <TouchableOpacity 
-              style={styles.statusDropdown}
-              onPress={() => {
-                // Simple cycle for now to replicate select box behavior on React Native without heavy libraries
-                const currentIndex = statuses.indexOf(statusFilter === "all" ? "All Statuses" : statusFilter);
-                const nextIndex = (currentIndex + 1) % statuses.length;
-                const nextStatus = statuses[nextIndex];
-                setStatusFilter(nextStatus === "All Statuses" ? "all" : nextStatus);
-              }}
+    <SafeAreaView edges={["top"]} style={styles.headerSafe}>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          {!isDesktop && (
+            <TouchableOpacity
+              onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
+              style={styles.menuBtn}
             >
-              <Text style={styles.statusText}>{statusFilter === "all" ? "All Statuses" : statusFilter}</Text>
-              <ChevronDown size={14} color={ThemeColors.textMuted} />
+              <Menu size={24} color={ThemeColors.textPrimary} />
             </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity style={styles.addButton} onPress={onAddSupplier}>
-            <Plus size={16} color={ThemeColors.white} />
-            <Text weight="bold" style={styles.addButtonText}>Add Supplier</Text>
+          )}
+          <Text style={styles.pageTitle}>Supplier Management</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <HeaderQuickNav />
+          <TouchableOpacity style={styles.notifBtn}>
+            <Bell size={20} color={ThemeColors.textPrimary} />
+            <View style={styles.notifDot} />
           </TouchableOpacity>
         </View>
-      }
-    />
+      </View>
+
+      <View style={styles.toolbarRow}>
+        <SearchWithFilter
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterOptions={filterOptions}
+          activeFilter={filterCategory}
+          onFilterChange={setFilterCategory}
+          placeholder="Search suppliers..."
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  headerSafe: {
+    backgroundColor: ThemeColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: ThemeColors.border,
+    zIndex: 100,
+    elevation: 100,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: ThemeSpacing.xxl,
+    paddingVertical: ThemeSpacing.md,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.md,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 26,
+    color: ThemeColors.textPrimary,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ThemeSpacing.lg,
+  },
+  notifBtn: {
+    position: "relative",
+    padding: 4,
+  },
+  notifDot: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ThemeColors.red,
+    borderWidth: 1.5,
+    borderColor: ThemeColors.surface,
+  },
   toolbarRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: ThemeSpacing.lg,
+    paddingHorizontal: ThemeSpacing.xxl,
     paddingBottom: ThemeSpacing.md,
     gap: ThemeSpacing.md,
     flexWrap: "wrap",
-  },
-  filtersContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.sm,
-    flex: 1,
-    minWidth: 250,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ThemeColors.white,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
-    borderRadius: ThemeRadius.md,
-    paddingHorizontal: 12,
-    flex: 1,
-    maxWidth: 300,
-    height: 36,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: ThemeColors.textPrimary,
-    height: "100%",
-  },
-  statusDropdown: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: ThemeColors.white,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
-    borderRadius: ThemeRadius.md,
-    paddingHorizontal: 12,
-    height: 36,
-    minWidth: 120,
-    gap: 8,
-  },
-  statusText: {
-    fontSize: 14,
-    color: ThemeColors.textSecondary,
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ThemeColors.textPrimary, // Slate 900
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: ThemeRadius.md,
-    gap: 8,
-  },
-  addButtonText: {
-    color: ThemeColors.white,
-    fontSize: 13,
+    zIndex: 1000,
+    elevation: 50,
   },
 });

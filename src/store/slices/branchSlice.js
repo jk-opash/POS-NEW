@@ -1,6 +1,5 @@
 import { branchApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import Toast from "react-native-toast-message";
 
 export const fetchZonesAndTables = createAsyncThunk(
   "branch/fetchZonesAndTables",

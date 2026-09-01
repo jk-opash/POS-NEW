@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { fetchInventoryItemById, clearSelectedItem } from '@/store/slices/inventorySlice';
 import { ActivityIndicator } from 'react-native';
-import { Loader } from "@/components/common/Loader";
 
 export function ProductInventoryModal({ product, visible, onClose }) {
   const { isMobile } = useResponsive();
@@ -64,7 +63,7 @@ export function ProductInventoryModal({ product, visible, onClose }) {
           {/* Quick Stats */}
           {isItemLoading && !selectedItem ? (
              <View style={{ padding: ThemeSpacing.xl, alignItems: 'center' }}>
-               <Loader />
+               <ActivityIndicator size="large" color={ThemeColors.primary} />
              </View>
           ) : (
             <>

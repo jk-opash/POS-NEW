@@ -11,11 +11,9 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from "react-native";
 
 export function BranchFormModal({ visible, initialData, onClose, onSubmit }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -76,14 +74,9 @@ export function BranchFormModal({ visible, initialData, onClose, onSubmit }) {
     }
   }, [visible, initialData]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.name || !formData.code) return; // Simple validation
-    setIsSubmitting(true);
-    try {
-      await onSubmit(formData);
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSubmit(formData);
   };
 
   const updateField = (field, value) => {
@@ -383,12 +376,8 @@ export function BranchFormModal({ visible, initialData, onClose, onSubmit }) {
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
               <Text weight="bold" style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <ActivityIndicator size="small" color={ThemeColors.white} />
-              ) : (
-                <Text weight="bold" style={styles.saveBtnText}>Save Branch</Text>
-              )}
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
+              <Text weight="bold" style={styles.saveBtnText}>Save Branch</Text>
             </TouchableOpacity>
           </View>
         </View>

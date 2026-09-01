@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useStaff } from "@/hooks/useStaff";
 
 export function EmployeeSelectionModal({
   visible,
@@ -18,11 +18,11 @@ export function EmployeeSelectionModal({
   onSelect,
   selectedEmployeeId,
 }) {
-  const { teamMembers: employees } = useSelector((state) => state.teamMember);
+  const { employees } = useStaff();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredEmployees = employees.filter((emp) =>
-    ((emp.first_name || "") + " " + (emp.last_name || ""))
+    (emp.firstName + " " + emp.lastName)
       .toLowerCase()
       .includes(searchQuery.toLowerCase()),
   );
@@ -66,9 +66,9 @@ export function EmployeeSelectionModal({
                 >
                   <View style={styles.employeeInfo}>
                     <Text style={styles.employeeName}>
-                      {emp.first_name} {emp.last_name}
+                      {emp.firstName} {emp.lastName}
                     </Text>
-                    <Text style={styles.employeeRole}>{emp.role?.name || "No Role"}</Text>
+                    <Text style={styles.employeeRole}>{emp.role}</Text>
                   </View>
                   {isSelected && (
                     <CheckCircle2 size={24} color={ThemeColors.emerald} />

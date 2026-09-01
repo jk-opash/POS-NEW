@@ -1,53 +1,31 @@
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
-import {
-  deleteTeamMember,
-  updateTeamMember,
-} from "@/store/slices/teamMemberSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { Search, Users } from "lucide-react-native";
+import { Building, Search, Trash2 } from "lucide-react-native";
 import { useState } from "react";
 import {
   FlatList,
   ScrollView,
   StyleSheet,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { EmployeeListItem } from "../EmployeeListItem";
+import { useStaff } from "@/hooks/useStaff";
 
 export default function DirectoryTab({ onEditEmployee }) {
-  const dispatch = useDispatch();
-  const { teamMembers: employees } = useSelector((state) => state.teamMember);
-  const { user } = useSelector((state) => state.auth);
-  const { isMobile, isDesktop } = useResponsive();
+  const { employees, deleteEmployee } = useStaff();
+  const { isMobile, isMiniTab, isTablet, isDesktop } = useResponsive();
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredEmployees = employees.filter((emp) => {
-    // Exclude terminated staff
-    if (emp.status === "Terminated") return false;
-
-    // Filter by branch if user is tied to a specific branch
-    if (user?.branch_id) {
-      const empBranchId = emp.branch_id || emp.branch?.id || emp.branch?._id;
-      if (empBranchId !== user.branch_id) return false;
-    }
-
-    // Search query
-    const query = searchQuery.toLowerCase();
-    if (query) {
-      return (
-        emp.first_name?.toLowerCase().includes(query) ||
-        emp.last_name?.toLowerCase().includes(query) ||
-        emp.email?.toLowerCase().includes(query) ||
-        (emp.id || emp._id)?.toString().toLowerCase().includes(query)
-      );
-    }
-
-    return true;
-  });
+  const filteredEmployees = employees.filter(
+    (emp) =>
+      emp.status !== "Terminated" &&
+      (emp.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        emp.id.toLowerCase().includes(searchQuery.toLowerCase())),
+  );
 
   const handleEdit = (employee) => {
     if (onEditEmployee) {
@@ -56,65 +34,91 @@ export default function DirectoryTab({ onEditEmployee }) {
   };
 
   const handleDelete = (id) => {
-    dispatch(deleteTeamMember(id));
+    deleteEmployee(id);
   };
 
-  const handleToggleStatus = (employee) => {
-    const isAvailable = employee.status === "Active" || employee.active;
-    dispatch(
-      updateTeamMember({
-        id: employee.id,
-        data: { status: isAvailable ? "Inactive" : "Active" },
-      }),
-    );
-  };
-
-  const renderDesktopHeader = () => {
+  const renderEmployeeCard = ({ item }) => {
     return (
-      <View style={styles.tableHeaderRow}>
-        <View style={[styles.headerCell, { flex: 1 }]}>
-          <Text style={styles.headerText}>Member Name</Text>
-        </View>
-        <View style={[styles.headerCell, { flex: 1 }]}>
-          <Text style={styles.headerText}>Role</Text>
+      <TouchableOpacity
+        style={styles.row}
+        activeOpacity={0.7}
+        onPress={() => handleEdit(item)}
+      >
+        {/* Avatar */}
+        <View style={styles.avatar}>
+          <Text weight="bold" style={styles.avatarText}>
+            {item.firstName[0]}
+            {item.lastName[0]}
+          </Text>
         </View>
 
-        <View style={[styles.headerCell, { flex: 1 }]}>
-          <Text style={styles.headerText}>Status</Text>
+        {/* Info */}
+        <View style={styles.infoBlock}>
+          <Text weight="bold" style={styles.nameText} numberOfLines={1}>
+            {item.firstName} {item.lastName}
+          </Text>
+          <Text style={styles.subText} numberOfLines={1}>
+            {item.role}
+          </Text>
+          <View style={styles.metaRow}>
+            <Building size={13} color={ThemeColors.textMuted} />
+            <Text style={styles.metaText} numberOfLines={1}>
+              {item.store}
+            </Text>
+          </View>
         </View>
-        <View
-          style={[
-            styles.headerCell,
-            { flex: 1, alignItems: "flex-end", paddingRight: 24 },
-          ]}
-        >
-          <Text style={styles.headerText}>Actions</Text>
+
+        {/* Status + Actions */}
+        <View style={styles.rightBlock}>
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor:
+                  item.status === "Active"
+                    ? ThemeColors.emerald + "18"
+                    : ThemeColors.amber + "18",
+              },
+            ]}
+          >
+            <Text
+              weight="bold"
+              style={[
+                styles.statusText,
+                {
+                  color:
+                    item.status === "Active"
+                      ? ThemeColors.emerald
+                      : ThemeColors.amber,
+                },
+              ]}
+            >
+              {item.status}
+            </Text>
+          </View>
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.deleteBtn]}
+              onPress={() => handleDelete(item.id)}
+            >
+              <Trash2 size={15} color={ThemeColors.red} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>
-        No staff members added to this business yet.
-      </Text>
-    </View>
-  );
-
-  const ListHeader = () => (
-    <View style={styles.tabHeader}>
-      <View style={styles.titleRow}>
-        <Users size={20} color={ThemeColors.primary} />
-        <Text style={styles.headerTitle}>
-          Team Members ({employees.length})
-        </Text>
-      </View>
-
-      <View style={styles.headerRight}>
+  return (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.container}
+    >
+      <View style={styles.tabHeader}>
+        <Text style={styles.headerTitle}>Directory</Text>
         <View style={styles.searchContainer}>
           <Search
-            size={16}
+            size={18}
             color={ThemeColors.textMuted}
             style={styles.searchIcon}
           />
@@ -127,98 +131,47 @@ export default function DirectoryTab({ onEditEmployee }) {
           />
         </View>
       </View>
-    </View>
-  );
 
-  return (
-    <View style={styles.container}>
-      <View style={[styles.tableContainer]}>
-        <ListHeader />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ flex: 1 }}
-        >
-          <FlatList
-            data={filteredEmployees}
-            scrollEnabled={false}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={renderDesktopHeader}
-            renderItem={({ item }) => (
-              <EmployeeListItem
-                item={item}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onToggleStatus={handleToggleStatus}
-                isMobile={false}
-              />
-            )}
-            ListEmptyComponent={renderEmptyState}
-            showsVerticalScrollIndicator={false}
-          />
-        </ScrollView>
-      </View>
-    </View>
+      <FlatList
+        data={filteredEmployees}
+        keyExtractor={(item) => item.id}
+        scrollEnabled={false}
+        renderItem={renderEmployeeCard}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: ThemeColors.bg,
-  },
-  tableContainer: {
-    margin: ThemeSpacing.lg,
-    backgroundColor: ThemeColors.surface,
-    borderRadius: ThemeRadius.lg,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
-    overflow: "hidden",
-  },
-  tableContainerMobile: {
-    margin: 0,
-    backgroundColor: "transparent",
-    borderWidth: 0,
-    borderRadius: 0,
+    flexGrow: 1,
   },
   tabHeader: {
+    marginVertical: ThemeSpacing.lg,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: ThemeSpacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.borderSubtle,
-    backgroundColor: ThemeColors.surface,
-    flexWrap: "wrap",
+    paddingHorizontal: ThemeSpacing.lg,
     gap: ThemeSpacing.md,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    flexWrap: "wrap",
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 20,
     color: ThemeColors.textPrimary,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.md,
-    flex: 1,
-    justifyContent: "flex-end",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: ThemeColors.surfaceHighlight,
+    backgroundColor: ThemeColors.surface,
     borderRadius: ThemeRadius.sm,
     borderWidth: 1,
     borderColor: ThemeColors.border,
     paddingHorizontal: ThemeSpacing.md,
     height: 36,
     flex: 1,
+    minWidth: 200,
     maxWidth: 300,
   },
   searchIcon: {
@@ -230,53 +183,93 @@ const styles = StyleSheet.create({
     color: ThemeColors.textPrimary,
     outlineStyle: "none",
   },
-  addBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ThemeColors.primary,
-    paddingHorizontal: ThemeSpacing.md,
-    height: 36,
-    borderRadius: ThemeRadius.sm,
-    gap: 6,
-  },
-  addBtnText: {
-    color: ThemeColors.surface,
-    fontSize: 13,
-  },
-  tableHeaderRow: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: ThemeSpacing.md,
-    paddingHorizontal: ThemeSpacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.borderSubtle,
-    backgroundColor: ThemeColors.surfaceHighlight + "50",
-  },
-  headerCell: {
-    paddingHorizontal: ThemeSpacing.sm,
-  },
-  headerText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: ThemeColors.textSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  listContentDesktop: {
-    paddingBottom: 80,
-  },
-  listContentMobile: {
+  listContent: {
     paddingHorizontal: ThemeSpacing.lg,
     paddingBottom: 100,
+    gap: ThemeSpacing.sm,
   },
-  emptyContainer: {
-    padding: 60,
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: ThemeColors.surface,
+    borderRadius: ThemeRadius.lg,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
+    paddingVertical: ThemeSpacing.md,
+    paddingHorizontal: ThemeSpacing.lg,
+    gap: ThemeSpacing.md,
+    shadowColor: ThemeColors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ThemeColors.blueDim,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  avatarText: {
+    fontSize: 15,
+    color: ThemeColors.blue,
+  },
+  infoBlock: {
+    flex: 1,
+    gap: 3,
+  },
+  nameText: {
+    fontSize: 15,
+    color: ThemeColors.textPrimary,
+  },
+  subText: {
+    fontSize: 13,
+    color: ThemeColors.textSecondary,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+  },
+  metaText: {
+    fontSize: 12,
+    color: ThemeColors.textMuted,
+  },
+  rightBlock: {
+    alignItems: "flex-end",
+    gap: ThemeSpacing.sm,
+    flexShrink: 0,
+  },
+  statusBadge: {
+    paddingHorizontal: ThemeSpacing.sm,
+    paddingVertical: 3,
+    borderRadius: ThemeRadius.full,
+  },
+  statusText: {
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: ThemeSpacing.sm,
+  },
+  actionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: ThemeRadius.sm,
+    backgroundColor: ThemeColors.bg,
+    borderWidth: 1,
+    borderColor: ThemeColors.border,
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyText: {
-    color: ThemeColors.textMuted,
-    fontSize: 14,
+  deleteBtn: {
+    backgroundColor: ThemeColors.red + "10",
+    borderColor: ThemeColors.red + "30",
   },
 });

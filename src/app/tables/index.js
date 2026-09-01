@@ -14,12 +14,7 @@ import {
   updateTablePosition as rtkUpdateTablePosition,
   updateTableRotation as rtkUpdateTableRotation,
 } from "@/store/slices/branchSlice";
-import {
-  resetOrder,
-  restoreOrder,
-  setActiveTable,
-  setOrderType,
-} from "@/store/slices/posSlice";
+import { setActiveTable, setOrderType, createOrder, restoreOrder, resetOrder } from "@/store/slices/posSlice";
 
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useRouter } from "expo-router";
@@ -40,9 +35,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useDispatch, useSelector } from "react-redux";
 
-const TABLE_FLOOR_WIDTH = 1000;
-const TABLE_FLOOR_HEIGHT = 1000;
-
 export default function TablesScreen() {
   const {
     activeBranch,
@@ -53,11 +45,11 @@ export default function TablesScreen() {
 
   const currentBranchId =
     activeBranch && activeBranch !== "br-1" ? activeBranch : user?.branch_id;
-
+  
   // Branch details needed for generating the Order Number
-  const branchDetails = useSelector(
-    (state) => state.branch.branches || [],
-  ).find((b) => b.id === currentBranchId);
+  const branchDetails = useSelector((state) => state.branch.branches || []).find(
+    (b) => b.id === currentBranchId
+  );
   const branchCode = branchDetails?.branch_code || "BR";
 
   // ─── Generate Order Number (follows the same pattern as Invoice) ─────────
@@ -187,13 +179,9 @@ export default function TablesScreen() {
         onMergePress={() => setShowMergeModal(true)}
       />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.canvasScrollContent}
-      >
+      <ScrollView contentContainerStyle={styles.canvasScrollContent}>
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.canvasScrollContent}
         >
           <GestureDetector gesture={pinchGesture}>
@@ -212,18 +200,19 @@ export default function TablesScreen() {
                   }}
                   onPress={() => {
                     if (!isEditMode) {
-                      dispatch(setActiveTable(table));
-                      dispatch(setOrderType("Dine-In"));
                       if (table.status === "Occupied") {
                         // ── Occupied Table: Restore existing order from DB ────────
-                        dispatch(
-                          restoreOrder({
-                            branchId: currentBranchId,
-                            tableId: table.id,
-                          }),
-                        );
+                        dispatch(setActiveTable(table));
+                        dispatch(setOrderType("Dine-In"));
+                        dispatch(restoreOrder({
+                          branchId: currentBranchId,
+                          tableId: table.id,
+                        }));
                       } else {
+                        // ── Available Table: Start a fresh session ───────────────────
                         dispatch(resetOrder());
+                        dispatch(setActiveTable(table));
+                        dispatch(setOrderType("Dine-In"));
                       }
 
                       router.push("/pos");
@@ -248,7 +237,6 @@ export default function TablesScreen() {
         dineInCount={dineInCount}
         reservedCount={reservedCount}
       />
-
       <TablesZoomControls
         isSmallScreen={isSmallScreen}
         isEditMode={isEditMode}
@@ -258,16 +246,6 @@ export default function TablesScreen() {
       />
 
       <View style={styles.fabContainer}>
-        {!isEditMode && (
-          <TouchableOpacity
-            style={[styles.fab, isEditMode && styles.fabActive]}
-            activeOpacity={0.8}
-            onPress={() => setShowMergeModal(true)}
-          >
-            <Text style={styles.mergeFabText}>Merge Tables</Text>
-          </TouchableOpacity>
-        )}
-
         {isEditMode && (
           <TouchableOpacity
             style={[styles.fab, styles.addFab]}
@@ -377,14 +355,8 @@ export default function TablesScreen() {
           if (tbl?.merged_tables?.length) {
             for (const ot of tbl.merged_tables)
               await createTable({
-                name: ot.name,
-                capacity: ot.capacity,
-                shape: ot.shape || "rectangle",
-                position_x: ot.position_x || ot.x || 0,
-                position_y: ot.position_y || ot.y || 0,
-                status: "Available",
-                rotation: ot.rotation || 0,
-                is_active: ot.is_active !== undefined ? ot.is_active : true,
+                ...ot,
+                id: undefined,
                 zone_id: activeFloor,
                 branch_id: currentBranchId,
               });
@@ -400,20 +372,8 @@ export default function TablesScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ThemeColors.surfaceElevated },
-  canvasScrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingBottom: ThemeSpacing.xxl,
-  },
-  canvasArea: {
-    width: TABLE_FLOOR_WIDTH,
-    height: TABLE_FLOOR_HEIGHT,
-    position: "relative",
-    borderWidth: 2,
-    borderColor: ThemeColors.textMuted,
-    borderStyle: "dotted",
-  },
+  canvasScrollContent: { flexGrow: 1 },
+  canvasArea: { width: 1000, height: 1000, position: "relative" },
   fabContainer: {
     position: "absolute",
     bottom: ThemeSpacing.xl,
@@ -446,27 +406,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     letterSpacing: 0.5,
-  },
-  mergeFabContainer: {
-    position: "absolute",
-    bottom: ThemeSpacing.xl,
-    left: ThemeSpacing.xxl,
-    alignItems: "flex-start",
-  },
-  mergeFab: {
-    backgroundColor: ThemeColors.emerald,
-    paddingHorizontal: ThemeSpacing.xl,
-    paddingVertical: 14,
-    borderRadius: ThemeRadius.full,
-    shadowColor: ThemeColors.emerald,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  mergeFabText: {
-    color: ThemeColors.white,
-    fontSize: 15,
-    fontWeight: "700",
   },
 });
