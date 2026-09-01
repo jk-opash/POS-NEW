@@ -310,7 +310,7 @@ export default function LoginScreen() {
                   disabled={loading}
                 >
                   {loading ? (
-                    <ActivityIndicator color={ThemeColors.white} />
+                    <ActivityIndicator size="small" color={ThemeColors.white} />
                   ) : (
                     <Text weight="semibold" style={styles.loginButtonText}>
                       Sign in

@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 const CAPACITY_OPTIONS = Array.from({ length: 10 }, (_, i) => {
@@ -34,6 +35,8 @@ export function TableDetailsModal({
   const [name, setName] = useState("");
   const [selectedCapacity, setSelectedCapacity] = useState(2);
   const [shape, setShape] = useState("rectangle");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -51,17 +54,32 @@ export function TableDetailsModal({
 
   if (!visible) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const config = CAPACITY_OPTIONS.find(
       (c) => c.capacity === selectedCapacity,
     );
-    onSave({
-      name: name.trim() || "New",
-      capacity: config.capacity,
-      span: config.span,
-      shape,
-    });
-    onClose();
+    setIsSubmitting(true);
+    try {
+      await onSave({
+        name: name.trim() || "New",
+        capacity: config.capacity,
+        span: config.span,
+        shape,
+      });
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete();
+      onClose();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -225,14 +243,18 @@ export function TableDetailsModal({
           <View style={styles.footer}>
             {mode === "edit" && (
               <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => {
-                  onDelete();
-                  onClose();
-                }}
+                style={[styles.deleteBtn, isDeleting && { opacity: 0.7 }]}
+                onPress={handleDelete}
+                disabled={isDeleting || isSubmitting}
               >
-                <Trash2 size={18} color={ThemeColors.red} />
-                <Text style={styles.deleteBtnText}>Delete</Text>
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color={ThemeColors.red} />
+                ) : (
+                  <>
+                    <Trash2 size={18} color={ThemeColors.red} />
+                    <Text style={styles.deleteBtnText}>Delete</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
 
@@ -240,10 +262,14 @@ export function TableDetailsModal({
               <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                <Text weight="bold" style={styles.saveBtnText}>
-                  Save
-                </Text>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={isSubmitting || isDeleting}>
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color={ThemeColors.white} />
+                ) : (
+                  <Text weight="bold" style={styles.saveBtnText}>
+                    Save
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

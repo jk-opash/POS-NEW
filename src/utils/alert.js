@@ -1,4 +1,5 @@
 import { Alert, Platform } from "react-native";
+import Toast from "react-native-toast-message";
 
 /**
  * Cross-platform alert that works on both native (iOS/Android)
@@ -9,27 +10,70 @@ import { Alert, Platform } from "react-native";
  * @param {Array<{text: string, onPress?: () => void, style?: string}>} [buttons]
  */
 export function showAlert(title, message = "", buttons) {
-  if (Platform.OS !== "web") {
-    // Native: use React Native's Alert as-is
-    if (buttons && buttons.length > 0) {
-      Alert.alert(title, message, buttons);
-    } else {
-      Alert.alert(title, message);
+  // Helper to figure out the Toast type based on context
+  const getToastType = () => {
+    const combined = `${title || ""} ${message || ""}`.toLowerCase();
+    if (
+      combined.includes("error") ||
+      combined.includes("empty") ||
+      combined.includes("required") ||
+      combined.includes("no active") ||
+      combined.includes("not allowed") ||
+      combined.includes("please add") ||
+      combined.includes("cannot") ||
+      combined.includes("failed")
+    ) {
+      return "error";
     }
+    if (combined.includes("cancel") || combined.includes("restored")) {
+      return "info";
+    }
+    return "success"; // Default for "Payment Successful", "Sent to Kitchen", etc.
+  };
+
+  if (Platform.OS !== "web") {
+    // Native: use React Native's Alert as-is if there are interactive buttons
+    if (
+      buttons &&
+      buttons.length > 0 &&
+      !(buttons.length === 1 && buttons[0].text === "OK" && !buttons[0].onPress)
+    ) {
+      Alert.alert(title, message, buttons);
+      return;
+    }
+
+    // Otherwise, show Toast!
+    Toast.show({
+      type: getToastType(),
+      text1: title,
+      text2: message,
+      position: "top",
+      visibilityTime: 3000,
+    });
     return;
   }
 
   // Web fallback
-  if (!buttons || buttons.length === 0) {
-    // Simple info alert
-    window.alert(`${title}${message ? `\n\n${message}` : ""}`);
+  if (
+    !buttons ||
+    buttons.length === 0 ||
+    (buttons.length === 1 && buttons[0].text === "OK" && !buttons[0].onPress)
+  ) {
+    // Show Toast for Web as well!
+    Toast.show({
+      type: getToastType(),
+      text1: title,
+      text2: message,
+      position: "top",
+      visibilityTime: 3000,
+    });
     return;
   }
 
   // Filter out cancel-style buttons to find confirm/destructive ones
   const cancelBtn = buttons.find((b) => b.style === "cancel");
   const confirmBtn = buttons.find(
-    (b) => b.style === "destructive" || b.style !== "cancel"
+    (b) => b.style === "destructive" || b.style !== "cancel",
   );
 
   if (buttons.length === 1) {
@@ -41,7 +85,7 @@ export function showAlert(title, message = "", buttons) {
 
   // Two+ buttons — use window.confirm for yes/no style
   const confirmed = window.confirm(
-    `${title}${message ? `\n\n${message}` : ""}`
+    `${title}${message ? `\n\n${message}` : ""}`,
   );
 
   if (confirmed) {
