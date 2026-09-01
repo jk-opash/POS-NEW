@@ -93,7 +93,6 @@ export function FloorPlanBuilderModal({ visible, onClose }) {
           {/* Canvas */}
           <View style={styles.canvasContainer}>
             <View style={styles.canvas}>
-              {/* Grid pattern background mock */}
               <View style={styles.gridOverlay} pointerEvents="none" />
             </View>
           </View>

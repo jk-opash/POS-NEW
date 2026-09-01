@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
 const axiosClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api',
+  baseURL: process.env.EXPO_PUBLIC_API_URL || 'https://pos-backend-qcky.onrender.com/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

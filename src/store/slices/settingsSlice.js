@@ -1,5 +1,6 @@
 import { businessApi, branchApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import Toast from "react-native-toast-message";
 
 // ─── Thunks ───────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ const settingsSlice = createSlice({
         state.branch = action.payload.branch;
       })
       .addCase(fetchSettings.rejected, (state, action) => {
+        Toast.show({ type: "error", text1: "Error", text2: action.payload?.message || action.payload || "Request failed." });
         state.isLoading = false;
         state.error = action.payload;
       })
@@ -90,6 +92,7 @@ const settingsSlice = createSlice({
         state.isSaving = false;
       })
       .addCase(updateBusiness.rejected, (state, action) => {
+        Toast.show({ type: "error", text1: "Error", text2: action.payload?.message || action.payload || "Request failed." });
         state.isSaving = false;
         state.error = action.payload;
       })
@@ -102,6 +105,7 @@ const settingsSlice = createSlice({
         state.isSaving = false;
       })
       .addCase(updateBranchSettings.rejected, (state, action) => {
+        Toast.show({ type: "error", text1: "Error", text2: action.payload?.message || action.payload || "Request failed." });
         state.isSaving = false;
         state.error = action.payload;
       });

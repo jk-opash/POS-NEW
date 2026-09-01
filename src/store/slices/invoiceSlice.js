@@ -1,5 +1,6 @@
 import { invoiceApi, branchApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import Toast from "react-native-toast-message";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -164,6 +165,7 @@ const invoiceSlice = createSlice({
         state.branchData = action.payload.branchData;
       })
       .addCase(fetchInvoices.rejected, (state, action) => {
+        Toast.show({ type: "error", text1: "Error", text2: action.payload?.message || action.payload || "Request failed." });
         state.isLoading = false;
         state.error = action.payload;
       });

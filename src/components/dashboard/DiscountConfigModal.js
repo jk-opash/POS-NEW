@@ -19,6 +19,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 export function DiscountConfigModal({ visible, onClose }) {
@@ -35,12 +36,15 @@ export function DiscountConfigModal({ visible, onClose }) {
   const [name, setName] = useState("");
   const [type, setType] = useState("percentage"); // "percentage" or "fixed"
   const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddClick = () => {
     setEditingId(null);
     setName("");
     setType("percentage");
     setValue("");
+    setError("");
     setShowForm(true);
   };
 
@@ -49,29 +53,39 @@ export function DiscountConfigModal({ visible, onClose }) {
     setName(rule.name);
     setType(rule.type);
     setValue(String(rule.value));
+    setError("");
     setShowForm(true);
   };
 
-  const handleSaveForm = () => {
-    if (!name.trim() || !value.trim()) return;
+  const handleSaveForm = async () => {
+    setError("");
+    if (!name.trim()) return setError("Discount name is required.");
+    if (!value.trim()) return setError("Discount value is required.");
     const parsedValue = parseFloat(value);
-    if (isNaN(parsedValue)) return;
+    if (isNaN(parsedValue) || parsedValue <= 0) return setError("Please enter a valid positive number for the value.");
 
-    if (editingId) {
-      updateDiscountRule(editingId, {
-        name: name.trim(),
-        type,
-        value: parsedValue,
-      });
-    } else {
-      addDiscountRule({
-        name: name.trim(),
-        type,
-        value: parsedValue,
-        active: true,
-      });
+    setIsSubmitting(true);
+    try {
+      if (editingId) {
+        await updateDiscountRule(editingId, {
+          name: name.trim(),
+          type,
+          value: parsedValue,
+        });
+      } else {
+        await addDiscountRule({
+          name: name.trim(),
+          type,
+          value: parsedValue,
+          active: true,
+        });
+      }
+      setShowForm(false);
+    } catch (err) {
+      setError("Failed to save discount rule");
+    } finally {
+      setIsSubmitting(false);
     }
-    setShowForm(false);
   };
 
   if (!visible) return null;
@@ -100,6 +114,12 @@ export function DiscountConfigModal({ visible, onClose }) {
                 <Text weight="bold" style={styles.formTitle}>
                   {editingId ? "Edit Discount" : "Add New Discount"}
                 </Text>
+                
+                {error ? (
+                  <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
+                    {error}
+                  </Text>
+                ) : null}
 
                 <View style={styles.inputGroup}>
                   <Text weight="medium" style={styles.label}>
@@ -207,14 +227,18 @@ export function DiscountConfigModal({ visible, onClose }) {
                   <TouchableOpacity
                     style={[
                       styles.saveBtn,
-                      (!name.trim() || !value.trim()) && styles.saveBtnDisabled,
+                      (!name.trim() || !value.trim() || isSubmitting) && styles.saveBtnDisabled,
                     ]}
                     onPress={handleSaveForm}
-                    disabled={!name.trim() || !value.trim()}
+                    disabled={!name.trim() || !value.trim() || isSubmitting}
                   >
-                    <Text weight="semibold" style={styles.saveText}>
-                      Save Discount
-                    </Text>
+                    {isSubmitting ? (
+                      <ActivityIndicator size="small" color={ThemeColors.white} />
+                    ) : (
+                      <Text weight="semibold" style={styles.saveText}>
+                        Save Discount
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>

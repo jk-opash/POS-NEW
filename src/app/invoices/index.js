@@ -5,7 +5,7 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { fetchInvoices } from "@/store/slices/invoiceSlice";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";
 import { useNavigation } from "expo-router";
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -19,8 +19,7 @@ export default function InvoicesPage() {
 
   const user = useSelector((state) => state.auth.user);
   const activeBranch =
-    useSelector((state) => state.branch.activeBranch) ||
-    user?.branch_id;
+    useSelector((state) => state.branch.activeBranch) || user?.branch_id;
   const { items: invoices } = useSelector((state) => state.invoice);
 
   useEffect(() => {
@@ -55,8 +54,10 @@ export default function InvoicesPage() {
       if (isTodaySelected) {
         if (invDate.toDateString() !== now.toDateString()) return;
       } else {
-        if (selectedMonth !== "all" && invDate.getMonth() !== selectedMonth) return;
-        if (selectedYear !== "all" && invDate.getFullYear() !== selectedYear) return;
+        if (selectedMonth !== "all" && invDate.getMonth() !== selectedMonth)
+          return;
+        if (selectedYear !== "all" && invDate.getFullYear() !== selectedYear)
+          return;
       }
 
       totalRevenue += inv.grandTotal;
@@ -65,7 +66,8 @@ export default function InvoicesPage() {
       const pm = inv.paymentMethod || "Full Payment";
       if (pm.includes("Part Payment")) partTotal += inv.grandTotal;
       else if (pm.includes("Split (Equal)")) splitEqualTotal += inv.grandTotal;
-      else if (pm.includes("Split (Item wise)")) splitItemTotal += inv.grandTotal;
+      else if (pm.includes("Split (Item wise)"))
+        splitItemTotal += inv.grandTotal;
       else if (pm.includes("Split")) splitCustomTotal += inv.grandTotal;
       else fullTotal += inv.grandTotal;
     });
@@ -107,7 +109,6 @@ export default function InvoicesPage() {
           selectedMonth={selectedMonth}
           selectedYear={selectedYear}
         />
-        <View style={styles.bottomPad} />
       </ScrollView>
     </View>
   );
@@ -118,4 +119,3 @@ const styles = StyleSheet.create({
   scrollContent: { padding: ThemeSpacing.md },
   bottomPad: { height: 100 },
 });
-

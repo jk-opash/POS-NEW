@@ -9,14 +9,18 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 export function AddTaxModal({ visible, onClose, editingRule }) {
   const { addTaxRule, updateTaxRule } = [];
   const [name, setName] = useState("");
   const [rate, setRate] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    setError(""); // Reset error on open
     if (editingRule) {
       setName(editingRule.name);
       setRate(String(editingRule.rate));
@@ -26,26 +30,35 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
     }
   }, [editingRule, visible]);
 
-  const handleSave = () => {
-    if (!name.trim() || !rate.trim()) return;
+  const handleSave = async () => {
+    setError("");
+    if (!name.trim()) return setError("Tax Name is required.");
+    if (!rate.trim()) return setError("Tax Rate is required.");
 
     const parsedRate = parseFloat(rate);
-    if (isNaN(parsedRate)) return;
+    if (isNaN(parsedRate) || parsedRate < 0) return setError("Please enter a valid positive rate.");
 
-    if (editingRule) {
-      updateTaxRule(editingRule.id, {
-        name: name.trim(),
-        rate: parsedRate,
-      });
-    } else {
-      addTaxRule({
-        name: name.trim(),
-        rate: parsedRate,
-        type: "percentage",
-        active: true,
-      });
+    setIsSubmitting(true);
+    try {
+      if (editingRule) {
+        await updateTaxRule(editingRule.id, {
+          name: name.trim(),
+          rate: parsedRate,
+        });
+      } else {
+        await addTaxRule({
+          name: name.trim(),
+          rate: parsedRate,
+          type: "percentage",
+          active: true,
+        });
+      }
+      onClose();
+    } catch (err) {
+      setError("Failed to save tax rule");
+    } finally {
+      setIsSubmitting(false);
     }
-    onClose();
   };
 
   if (!visible) return null;
@@ -64,6 +77,11 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
           </View>
 
           <View style={styles.body}>
+            {error ? (
+              <Text style={{ color: ThemeColors.error, marginBottom: 12, fontSize: 14 }}>
+                {error}
+              </Text>
+            ) : null}
             <View style={styles.inputGroup}>
               <Text weight="medium" style={styles.label}>
                 Tax Name
@@ -115,14 +133,18 @@ export function AddTaxModal({ visible, onClose, editingRule }) {
             <TouchableOpacity
               style={[
                 styles.saveBtn,
-                (!name.trim() || !rate.trim()) && styles.saveBtnDisabled,
+                (!name.trim() || !rate.trim() || isSubmitting) && styles.saveBtnDisabled,
               ]}
               onPress={handleSave}
-              disabled={!name.trim() || !rate.trim()}
+              disabled={!name.trim() || !rate.trim() || isSubmitting}
             >
-              <Text weight="semibold" style={styles.saveText}>
-                Save Rule
-              </Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color={ThemeColors.white} />
+              ) : (
+                <Text weight="semibold" style={styles.saveText}>
+                  Save Rule
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

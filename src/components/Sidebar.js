@@ -1,8 +1,10 @@
 import { Text } from "@/components/ui/Text";
 import { logoutUser } from "@/store/slices/authSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { hasPermission } from "@/utils/permissions";
 import { usePathname, useRouter } from "expo-router";
 import {
+  ChevronRight,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -24,7 +26,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 
-// ── Petpooja-style grouped menu structure ────────────────────────────────────
 const MENU_SECTIONS = [
   {
     title: null,
@@ -59,18 +60,11 @@ const MENU_SECTIONS = [
     items: [
       { key: "crm", label: "CRM & Loyalty", Icon: Heart },
       { key: "reports", label: "Reports", Icon: PieChart },
-      { key: "inventory", label: "Inventory", Icon: Boxes },
-      { key: "invoices", label: "Invoices", Icon: Receipt },
-      { key: "feedback", label: "Feedback", Icon: MessageSquare },
     ],
   },
   {
     title: "ADMIN",
     items: [
-      { key: "staff", label: "Staff", Icon: Users },
-      { key: "branches", label: "Branches", Icon: MapPin },
-      { key: "suppliers", label: "Suppliers", Icon: Truck },
-      { key: "day-end", label: "Day End", Icon: Moon },
       { key: "time", label: "Time Tracker", Icon: Clock },
     ],
   },
@@ -99,6 +93,7 @@ export function Sidebar({ isCollapsed }) {
     waiter: "/waiter",
     inventory: "/inventory",
     invoices: "/invoices",
+    expenses: "/expenses",
     staff: "/staff",
     pos: "/pos",
     suppliers: "/suppliers",
@@ -113,6 +108,7 @@ export function Sidebar({ isCollapsed }) {
     feedback: "/feedback",
     "day-end": "/day-end",
     operations: "/operations",
+    "audit-logs": "/logs",
   };
 
   const getActiveKey = () => {
@@ -127,6 +123,7 @@ export function Sidebar({ isCollapsed }) {
       "/waiter": "waiter",
       "/menu": "menu",
       "/invoices": "invoices",
+      "/expenses": "expenses",
       "/qr-ordering": "qr-ordering",
       "/online-orders": "online-orders",
       "/inventory": "inventory",
@@ -143,6 +140,7 @@ export function Sidebar({ isCollapsed }) {
       "/operations": "operations",
       "/time": "time",
       "/orders": "orders",
+      "/logs": "audit-logs",
     };
     for (const [prefix, key] of Object.entries(exactMap)) {
       if (pathname === prefix || pathname.startsWith(prefix + "/")) return key;
@@ -171,42 +169,45 @@ export function Sidebar({ isCollapsed }) {
   };
 
   // ── Render a single menu item ─────────────────────────────────────
-  const renderItem = (item, isActive) => (
-    <TouchableOpacity
-      key={item.key}
-      style={[
-        styles.menuItem,
-        isActive && styles.menuItemActive,
-        isCollapsed && styles.menuItemCollapsed,
-      ]}
-      onPress={() => handleNavigate(item.key)}
-      activeOpacity={0.7}
-    >
-      <item.Icon
-        size={18}
-        color={isActive ? ThemeColors.accent : ThemeColors.textMuted}
-        strokeWidth={isActive ? 2.2 : 1.8}
-      />
-      {!isCollapsed && (
-        <Text
-          weight={isActive ? "semibold" : "regular"}
-          style={[styles.menuLabel, isActive && styles.menuLabelActive]}
-          numberOfLines={1}
-        >
-          {item.label}
-        </Text>
-      )}
-      {/* Badge for online orders */}
-      {item.badge && !isCollapsed && (
-        <View style={styles.badgeContainer}>
-          <Text weight="bold" style={styles.badgeText}>
-            3
+  const renderItem = (item, isActive) => {
+    if (!hasPermission(authUser, item.key)) return null;
+
+    return (
+      <TouchableOpacity
+        key={item.key}
+        style={[
+          styles.menuItem,
+          isActive && styles.menuItemActive,
+          isCollapsed && styles.menuItemCollapsed,
+        ]}
+        onPress={() => handleNavigate(item.key)}
+        activeOpacity={0.7}
+      >
+        <item.Icon
+          size={20}
+          color={isActive ? ThemeColors.accent : ThemeColors.textMuted}
+          strokeWidth={isActive ? 2.5 : 2}
+        />
+        {!isCollapsed && (
+          <Text
+            weight={isActive ? "bold" : "medium"}
+            style={[styles.menuLabel, isActive && styles.menuLabelActive]}
+            numberOfLines={1}
+          >
+            {item.label}
           </Text>
-        </View>
-      )}
-      {isActive && !item.badge && <View style={styles.activeIndicator} />}
-    </TouchableOpacity>
-  );
+        )}
+        {item.badge && !isCollapsed && (
+          <View style={styles.badgeContainer}>
+            <Text weight="bold" style={styles.badgeText}>
+              3
+            </Text>
+          </View>
+        )}
+        {isActive && !item.badge && <View style={styles.activeIndicator} />}
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView
@@ -215,13 +216,6 @@ export function Sidebar({ isCollapsed }) {
     >
       {/* ── Brand ───────────────────────────────── */}
       <View style={styles.brandSection}>
-        <View style={styles.logoIcon}>
-          <UtensilsCrossed
-            size={18}
-            color={ThemeColors.white}
-            strokeWidth={2.2}
-          />
-        </View>
         {!isCollapsed && (
           <View style={styles.brandTextContainer}>
             <Text weight="bold" style={styles.brandName} numberOfLines={1}>
@@ -256,25 +250,43 @@ export function Sidebar({ isCollapsed }) {
       </ScrollView>
 
       {/* ── User & Branch Profile ─────────────────────── */}
-      <View
-        style={styles.branchIndicator}
+      <TouchableOpacity
+        style={[
+          styles.branchIndicator,
+          isCollapsed && styles.branchIndicatorCollapsed,
+        ]}
         onPress={() => {
           if (authUser?.role === "admin" || authUser?.role === "superadmin") {
             setShowBranchModal(true);
           }
         }}
         activeOpacity={0.7}
+        disabled={
+          !(authUser?.role === "admin" || authUser?.role === "superadmin")
+        }
       >
         <View style={styles.branchDot} />
-        <View style={{ flex: 1, overflow: "hidden" }}>
-          <Text style={styles.branchLabel} numberOfLines={1}>
-            {branchName ||
-              (typeof authUser?.role === "string"
-                ? authUser.role
-                : authUser?.role?.name || "Staff")}
-          </Text>
-        </View>
-      </View>
+        {!isCollapsed && (
+          <>
+            <View style={{ flex: 1, overflow: "hidden" }}>
+              <Text style={styles.branchLabel} numberOfLines={1}>
+                {branchName ||
+                  (typeof authUser?.role === "string"
+                    ? authUser.role
+                    : authUser?.role?.name || "Staff")}
+              </Text>
+            </View>
+            {(authUser?.role === "admin" ||
+              authUser?.role === "superadmin") && (
+              <ChevronRight
+                size={14}
+                color={ThemeColors.emerald}
+                style={{ opacity: 0.7 }}
+              />
+            )}
+          </>
+        )}
+      </TouchableOpacity>
 
       {/* ── Bottom: Settings & Support ────────────── */}
       <View style={styles.bottomSection}>
@@ -294,7 +306,7 @@ export function Sidebar({ isCollapsed }) {
                 ? ThemeColors.accent
                 : ThemeColors.textMuted
             }
-            strokeWidth={1.8}
+            strokeWidth={2}
           />
           {!isCollapsed && (
             <Text
@@ -341,11 +353,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
     ...(Platform.OS === "web"
-      ? { boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }
+      ? { boxShadow: "2px 0 16px rgba(0,0,0,0.4)" }
       : {
           shadowColor: ThemeColors.black,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.4,
+          shadowOffset: { width: 4, height: 0 },
+          shadowOpacity: 0.3,
           elevation: 20,
         }),
   },
@@ -370,20 +382,26 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.accent,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: ThemeColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   brandTextContainer: {
     flex: 1,
   },
   brandName: {
     color: ThemeColors.accent,
-    fontSize: 16,
-    letterSpacing: 2,
+    fontSize: 18,
+    letterSpacing: 1.5,
   },
   brandTagline: {
     color: ThemeColors.textMuted,
-    fontSize: 10,
-    letterSpacing: 0.5,
-    marginTop: 1,
+    fontSize: 11,
+    letterSpacing: 1,
+    marginTop: 2,
+    fontWeight: "600",
   },
 
   // ── Sections ──────────────────────────
@@ -391,48 +409,51 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
-    color: "rgba(255,255,255,0.35)",
+    color: "rgba(255,255,255,0.3)",
     fontSize: 10,
-    letterSpacing: 1.5,
-    paddingHorizontal: 16,
+    letterSpacing: 2,
+    paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 6,
+    paddingBottom: 8,
+    textTransform: "uppercase",
   },
 
   // ── Scrollable Area ───────────────────
   menuScrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 8,
-    paddingTop: 8,
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
 
   // ── Menu Item ─────────────────────────
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 12,
-    marginVertical: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: ThemeRadius.lg,
+    gap: 14,
+    marginVertical: 2,
   },
   menuItemCollapsed: {
     justifyContent: "center",
     paddingHorizontal: 0,
-    width: 42,
-    height: 42,
+    width: 46,
+    height: 46,
     alignSelf: "center",
-    borderRadius: 12,
+    borderRadius: ThemeRadius.lg,
     gap: 0,
   },
   menuItemActive: {
-    backgroundColor: "rgba(255,107,53,0.12)",
+    backgroundColor: "rgba(59, 130, 246, 0.15)", // Premium Blue with low opacity
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
   },
 
   // ── Labels ────────────────────────────
   menuLabel: {
     color: ThemeColors.textMuted,
-    fontSize: 13,
+    fontSize: 14,
     flex: 1,
   },
   menuLabelActive: {
@@ -441,82 +462,99 @@ const styles = StyleSheet.create({
 
   // ── Badge ─────────────────────────────
   badgeContainer: {
-    backgroundColor: ThemeColors.accent,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    backgroundColor: ThemeColors.primary,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
   },
   badgeText: {
     color: ThemeColors.white,
-    fontSize: 10,
+    fontSize: 11,
   },
 
   // ── Active Indicator ──────────────────
   activeIndicator: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: ThemeColors.accent,
+    position: "absolute",
+    left: -12,
+    top: "50%",
+    marginTop: -8,
+    width: 4,
+    height: 16,
+    borderRadius: 4,
+    backgroundColor: ThemeColors.primary,
+    shadowColor: ThemeColors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 4,
   },
 
   // ── Branch Indicator ──────────────────
   branchIndicator: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    gap: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(16, 185, 129, 0.08)", // subtle emerald tint
   },
   branchIndicatorCollapsed: {
     justifyContent: "center",
     paddingHorizontal: 0,
+    paddingVertical: 18,
   },
   branchDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: ThemeColors.emerald,
+    shadowColor: ThemeColors.emerald,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 2,
   },
   branchLabel: {
     color: ThemeColors.emerald,
-    fontSize: 12,
-    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
   },
 
   // ── Bottom Section ────────────────────
   bottomSection: {
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
+    borderTopColor: "rgba(255,255,255,0.05)",
   },
   bottomBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginHorizontal: 8,
-    borderRadius: 8,
-    gap: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    marginHorizontal: 12,
+    borderRadius: ThemeRadius.md,
+    gap: 14,
   },
   bottomBtnCollapsed: {
     justifyContent: "center",
     paddingHorizontal: 0,
-    marginHorizontal: 8,
+    marginHorizontal: 12,
   },
   bottomBtnActive: {
-    backgroundColor: "rgba(255,107,53,0.12)",
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
   },
   bottomBtnLabel: {
     color: ThemeColors.textMuted,
     fontSize: 15,
+    fontWeight: "500",
   },
   bottomBtnLabelActive: {
-    color: ThemeColors.accent,
+    color: ThemeColors.white,
   },
 
   // ── Modal ─────────────────────────────
