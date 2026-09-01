@@ -1,20 +1,12 @@
+import { CommonHeader } from "@/components/common/CommonHeader";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
 import { useNavigation } from "expo-router";
-import { Bell, Menu } from "lucide-react-native";
 import { useRef, useState } from "react";
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, Platform, StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { HeaderQuickNav } from "@/components/common/HeaderQuickNav";
 
 import { QRPreviewModal } from "@/components/qr-ordering/QRPreviewModal";
 import { TableQRCard } from "@/components/qr-ordering/TableQRCard";
@@ -136,28 +128,7 @@ export default function TablesQRPage() {
 
   return (
     <View style={styles.root}>
-      <SafeAreaView edges={["top"]} style={styles.headerSafe}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            {!isWebDesktop && (
-              <TouchableOpacity
-                onPress={() => navigation.dispatch({ type: "TOGGLE_DRAWER" })}
-                style={styles.menuBtn}
-              >
-                <Menu size={24} color={ThemeColors.textPrimary} />
-              </TouchableOpacity>
-            )}
-            <Text style={styles.pageTitle}>QR Ordering</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <HeaderQuickNav />
-            <TouchableOpacity style={styles.notifBtn}>
-              <Bell size={20} color={ThemeColors.textPrimary} />
-              <View style={styles.notifDot} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+      <CommonHeader title="QR Ordering" />
 
       {activeTab === "qrcodes" && (
         <View style={styles.ordersContainer}>
@@ -200,30 +171,6 @@ export default function TablesQRPage() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: ThemeColors.bg },
-  headerSafe: {
-    backgroundColor: ThemeColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: ThemeSpacing.xxl,
-    paddingVertical: ThemeSpacing.md,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.md,
-  },
-  menuBtn: { padding: 4 },
-  pageTitle: { fontSize: 26, color: ThemeColors.textPrimary },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ThemeSpacing.lg,
-  },
   notifBtn: { position: "relative", padding: 4 },
   notifDot: {
     position: "absolute",

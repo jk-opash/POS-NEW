@@ -50,6 +50,7 @@ export default function OrdersPage() {
 
     return {
       ...o,
+      dbId: o.id,
       id: o.order_number || o.id,
       type: (o.order_type === "Dine-in" ? "Dine In" : o.order_type) || "Takeaway",
       table: o.table?.name || o.table_no,

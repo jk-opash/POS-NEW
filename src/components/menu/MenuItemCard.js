@@ -38,7 +38,7 @@ export function MenuItemCard({
   }
 
   return (
-    <TouchableOpacity
+    <View
       style={[
         styles.card,
         {
@@ -49,7 +49,7 @@ export function MenuItemCard({
         isList && styles.cardList,
       ]}
       activeOpacity={0.8}
-      onPress={() => onPress && onPress(menuItem)}
+      // onPress={() => onPress && onPress(menuItem)}
     >
       <View style={[styles.content, isList && styles.contentList]}>
         <View style={styles.headerRow}>
@@ -78,7 +78,10 @@ export function MenuItemCard({
               style={[
                 styles.statusDot,
                 {
-                  backgroundColor: menuItem.status === 'Inactive' ? ThemeColors.red : ThemeColors.emerald,
+                  backgroundColor:
+                    menuItem.status === "Inactive"
+                      ? ThemeColors.red
+                      : ThemeColors.emerald,
                 },
               ]}
             />
@@ -87,7 +90,10 @@ export function MenuItemCard({
               style={[
                 styles.statusText,
                 {
-                  color: menuItem.status === 'Inactive' ? ThemeColors.red : ThemeColors.emerald,
+                  color:
+                    menuItem.status === "Inactive"
+                      ? ThemeColors.red
+                      : ThemeColors.emerald,
                 },
               ]}
             >
@@ -106,7 +112,8 @@ export function MenuItemCard({
                       "Are you sure you want to delete this menu item?",
                     )
                   ) {
-                    menuItem.onDelete && menuItem.onDelete(menuItem._id || menuItem.id);
+                    menuItem.onDelete &&
+                      menuItem.onDelete(menuItem._id || menuItem.id);
                   }
                 } else {
                   showAlert(
@@ -117,7 +124,8 @@ export function MenuItemCard({
                       {
                         text: "Delete",
                         onPress: () =>
-                          menuItem.onDelete && menuItem.onDelete(menuItem._id || menuItem.id),
+                          menuItem.onDelete &&
+                          menuItem.onDelete(menuItem._id || menuItem.id),
                         style: "destructive",
                       },
                     ],
@@ -140,7 +148,7 @@ export function MenuItemCard({
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 

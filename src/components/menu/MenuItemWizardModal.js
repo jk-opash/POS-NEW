@@ -3,6 +3,7 @@ import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { showAlert } from "@/utils/alert";
+import { getImageUrl } from "@/utils/image";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -31,7 +32,15 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
   const { isMobile, isMiniTab } = useResponsive();
   const [currentStep, setCurrentStep] = useState(0);
 
-  const FOOD_TYPES = ["Veg", "Non-Veg", "Egg", "Vegan", "Jain", "Dessert", "Beverage"];
+  const FOOD_TYPES = [
+    "Veg",
+    "Non-Veg",
+    "Egg",
+    "Vegan",
+    "Jain",
+    "Dessert",
+    "Beverage",
+  ];
 
   const categoryOptions = categories.map((cat) => ({
     label: cat.name,
@@ -55,8 +64,10 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
 
   const subCategoryOptions = (() => {
     if (!formData.category_id) return [];
-    
-    const selectedCategory = categories.find((c) => c.id === formData.category_id);
+
+    const selectedCategory = categories.find(
+      (c) => c.id === formData.category_id,
+    );
     if (!selectedCategory || !selectedCategory.sub_categories) return [];
 
     return selectedCategory.sub_categories.map((sub) => ({
@@ -198,7 +209,6 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
       transparent
       animationType={isMobile || isMiniTab ? "slide" : "fade"}
     >
-      {console.log("visible", initialData)}
       <View style={styles.overlay}>
         <View style={[styles.container, { width: modalWidth }]}>
           {/* Header */}
@@ -384,7 +394,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                   >
                     {formData.image ? (
                       <Image
-                        source={{ uri: formData.image }}
+                        source={{ uri: getImageUrl(formData.image) }}
                         style={{
                           width: "100%",
                           height: 100,
@@ -662,7 +672,9 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                                 styles.input,
                                 { flex: 1, padding: 8, marginBottom: 0 },
                               ]}
-                              value={addon.price != null ? String(addon.price) : ""}
+                              value={
+                                addon.price != null ? String(addon.price) : ""
+                              }
                               onChangeText={(val) => {
                                 const newGroups = [
                                   ...formData.customAddonGroups,

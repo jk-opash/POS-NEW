@@ -1,5 +1,6 @@
-import { orderApi, invoiceApi } from "@/api/services";
+import { invoiceApi, orderApi } from "@/api/services";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import Toast from "react-native-toast-message";
 
 // ─── API #1: Create Order ──────────────────────────────────────────────────────
 // Fired when: Table card is tapped (Dine-In) OR new Takeaway session is started
@@ -16,7 +17,7 @@ export const createOrder = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #2: Save KOT ─────────────────────────────────────────────────────────
@@ -29,7 +30,10 @@ export const createOrder = createAsyncThunk(
 // Route: PUT /api/order/:id
 export const saveKOT = createAsyncThunk(
   "pos/saveKOT",
-  async ({ orderId, kotNumber, cartItems, runningOrder, totals }, { rejectWithValue }) => {
+  async (
+    { orderId, kotNumber, cartItems, runningOrder, totals },
+    { rejectWithValue },
+  ) => {
     try {
       // Sanitize: extract only the DB-safe fields from each cart item
       // Full Redux objects contain undefined/circular refs that break JSON serialization
@@ -37,43 +41,57 @@ export const saveKOT = createAsyncThunk(
         id: item.id,
         kot_number: kotNumber,
         isLockedItem: true,
+        added_at: item.added_at || new Date().toISOString(),
         quantity: item.quantity,
         status: item.status || "Accepted",
         note: item.note || null,
-        product: item.product ? {
-          id: item.product.id || item.product._id,
-          name: item.product.name,
-          category: item.product.category || item.product.category_name || null,
-          price: item.product.pricing?.sellingPrice || item.product.price || item.product.base_price || 0,
-        } : null,
-        variant: item.variant ? {
-          id: item.variant.id,
-          name: item.variant.name,
-          price: item.variant.price,
-        } : null,
-        addons: (item.addons || []).map(a => ({ id: a.id, name: a.name, price: a.price || 0 })),
+        product: item.product
+          ? {
+              id: item.product.id || item.product._id,
+              name: item.product.name,
+              category:
+                item.product.category || item.product.category_name || null,
+              price:
+                item.product.pricing?.sellingPrice ||
+                item.product.price ||
+                item.product.base_price ||
+                0,
+            }
+          : null,
+        variant: item.variant
+          ? {
+              id: item.variant.id,
+              name: item.variant.name,
+              price: item.variant.price,
+            }
+          : null,
+        addons: (item.addons || []).map((a) => ({
+          id: a.id,
+          name: a.name,
+          price: a.price || 0,
+        })),
       });
 
       const sanitizedCart = cartItems.map(sanitizeItem);
-      const sanitizedRunning = (runningOrder || []).map(item =>
-        item.kot_number ? item : sanitizeItem(item) // already sanitized items pass through
+      const sanitizedRunning = (runningOrder || []).map(
+        (item) => (item.kot_number ? item : sanitizeItem(item)), // already sanitized items pass through
       );
       const newRunningOrder = [...sanitizedRunning, ...sanitizedCart];
 
       const res = await orderApi.update(orderId, {
-        kot_numbers:      [kotNumber],
-        running_order:    newRunningOrder,
-        cart_items:       [],
-        subtotal:         totals.subtotal || 0,
-        tax_amount:       totals.taxAmount || 0,
-        discount_amount:  totals.discountAmount || 0,
-        total_amount:     totals.grandTotal || 0,
+        kot_numbers: [kotNumber],
+        running_order: newRunningOrder,
+        cart_items: [],
+        subtotal: totals.subtotal || 0,
+        tax_amount: totals.taxAmount || 0,
+        discount_amount: totals.discountAmount || 0,
+        total_amount: totals.grandTotal || 0,
       });
       return { kotNumber, cartItems, updatedOrder: res.data.data };
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #2: Fetch Active Orders ──────────────────────────────────────────────
@@ -88,7 +106,7 @@ export const fetchActiveOrders = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #2b: Fetch All Orders (History/Running) ──────────────────────────────
@@ -101,16 +119,27 @@ export const fetchAllOrders = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── Remove Item from Running Order (KOT void) ───────────────────────────────
 export const removeRunningOrderItem = createAsyncThunk(
   "pos/removeRunningOrderItem",
-  async ({ orderId, itemId, currentRunningOrder, totals }, { rejectWithValue }) => {
+  async (
+    { orderId, itemId, currentRunningOrder, totals },
+    { dispatch, rejectWithValue },
+  ) => {
     try {
-      const newRunningOrder = currentRunningOrder.filter((item) => item.id !== itemId);
-      
+      const newRunningOrder = currentRunningOrder.filter(
+        (item) => item.id !== itemId,
+      );
+
+      if (newRunningOrder.length === 0) {
+        // If the order becomes empty, delete the whole order
+        await dispatch(deleteOrderAsync(orderId)).unwrap();
+        return { itemId, isDeleted: true };
+      }
+
       const res = await orderApi.update(orderId, {
         running_order: newRunningOrder,
         subtotal: totals.subtotal || 0,
@@ -122,14 +151,17 @@ export const removeRunningOrderItem = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── Decrease Quantity of a Running Order Item (KOT item qty -1) ─────────────
 // Decrements the item's quantity by 1. Removes it entirely when qty reaches 0.
 export const decreaseRunningOrderItemQty = createAsyncThunk(
   "pos/decreaseRunningOrderItemQty",
-  async ({ orderId, itemId, currentRunningOrder, totals }, { rejectWithValue }) => {
+  async (
+    { orderId, itemId, currentRunningOrder, totals },
+    { dispatch, rejectWithValue },
+  ) => {
     try {
       const newRunningOrder = currentRunningOrder.reduce((acc, item) => {
         if (item.id !== itemId) {
@@ -140,6 +172,11 @@ export const decreaseRunningOrderItemQty = createAsyncThunk(
         // quantity === 1 → drop it (removed)
         return acc;
       }, []);
+
+      if (newRunningOrder.length === 0) {
+        await dispatch(deleteOrderAsync(orderId)).unwrap();
+        return { newRunningOrder, isDeleted: true };
+      }
 
       const res = await orderApi.update(orderId, {
         running_order: newRunningOrder,
@@ -152,7 +189,7 @@ export const decreaseRunningOrderItemQty = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── Restore Order (Occupied Table) ───────────────────────────────────────────
@@ -165,12 +202,13 @@ export const restoreOrder = createAsyncThunk(
       const res = await orderApi.getPending(branchId);
       const orders = res.data.data || [];
       const existing = orders.find((o) => o.table_id === tableId);
-      if (!existing) return rejectWithValue("No active order found for this table");
+      if (!existing)
+        return rejectWithValue("No active order found for this table");
       return existing;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #3: Update KDS Status ──────────────────────────────────────────────────
@@ -184,7 +222,7 @@ export const updateKDSOrderStatusAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 export const updateKDSItemStatusAsync = createAsyncThunk(
@@ -196,7 +234,7 @@ export const updateKDSItemStatusAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 export const updateKDSMultipleItemsStatusAsync = createAsyncThunk(
@@ -208,7 +246,7 @@ export const updateKDSMultipleItemsStatusAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #4: Delete/Cancel Order ────────────────────────────────────────────────
@@ -222,7 +260,7 @@ export const deleteOrderAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 // ─── API #5: Create Invoice (Settle Bill) ───────────────────────────────────────
@@ -236,13 +274,13 @@ export const createInvoiceAsync = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
 const initialState = {
   activeTable: null,
-  activeOrderId: null,       // DB Order UUID — set after createOrder resolves
-  activeOrderNumber: null,   // e.g. "ORD-DG-01-T1-02012026-XXXXXXXXXX"
+  activeOrderId: null, // DB Order UUID — set after createOrder resolves
+  activeOrderNumber: null, // e.g. "ORD-DG-01-T1-02012026-XXXXXXXXXX"
   orderType: "Dine-In",
   cart: [],
   runningOrder: [],
@@ -285,13 +323,13 @@ const posSlice = createSlice({
       const order = action.payload;
       state.activeOrderId = order?.id || null;
       state.activeOrderNumber = order?.order_number || null;
-      
+
       if (order) {
-        state.runningOrder = (order.running_order || []).map(item => ({
+        state.runningOrder = (order.running_order || []).map((item) => ({
           ...item,
           isLockedItem: true,
         }));
-        state.cart = (order.cart_items || []);
+        state.cart = order.cart_items || [];
         posSlice.caseReducers.calculateTotals(state);
       }
     },
@@ -300,14 +338,25 @@ const posSlice = createSlice({
       state.activeOrderNumber = null;
       state.cart = [];
       state.runningOrder = [];
-      state.activeTable = null;
+      // NOTE: Do NOT clear activeTable here.
+      // resetOrder is called when switching to a new available table,
+      // and clearing activeTable would wipe the selection that was just set.
       state.customer = null;
     },
     addToCart: (state, action) => {
-      const { product, quantity = 1, variant = null, addons = [], spiceLevel = null } = action.payload;
-      const cartItemId = `${product.id}-${variant?.name || 'base'}-${addons.map(a => a.name).sort().join('-')}-${spiceLevel?.id || 'none'}`;
-      
-      const existing = state.cart.find(c => c.id === cartItemId);
+      const {
+        product,
+        quantity = 1,
+        variant = null,
+        addons = [],
+        spiceLevel = null,
+      } = action.payload;
+      const cartItemId = `${product.id}-${variant?.name || "base"}-${addons
+        .map((a) => a.name)
+        .sort()
+        .join("-")}-${spiceLevel?.id || "none"}`;
+
+      const existing = state.cart.find((c) => c.id === cartItemId);
       if (existing) {
         existing.quantity += quantity;
       } else {
@@ -318,7 +367,7 @@ const posSlice = createSlice({
           addons,
           spiceLevel,
           quantity,
-          isLockedItem: false
+          isLockedItem: false,
         });
       }
       posSlice.caseReducers.calculateTotals(state);
@@ -326,9 +375,9 @@ const posSlice = createSlice({
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
       if (quantity <= 0) {
-        state.cart = state.cart.filter(c => c.id !== id);
+        state.cart = state.cart.filter((c) => c.id !== id);
       } else {
-        const item = state.cart.find(c => c.id === id);
+        const item = state.cart.find((c) => c.id === id);
         if (item) {
           item.quantity = quantity;
         }
@@ -337,7 +386,7 @@ const posSlice = createSlice({
     },
     voidItem: (state, action) => {
       const id = action.payload;
-      state.cart = state.cart.filter(c => c.id !== id);
+      state.cart = state.cart.filter((c) => c.id !== id);
       posSlice.caseReducers.calculateTotals(state);
     },
     clearCart: (state) => {
@@ -363,7 +412,7 @@ const posSlice = createSlice({
         totals: { ...state.totals },
       };
       state.parkedSales.push(parkedSale);
-      
+
       // Clear current sale
       state.cart = [];
       state.runningOrder = [];
@@ -374,7 +423,7 @@ const posSlice = createSlice({
     },
     resumeParkedSale: (state, action) => {
       const id = action.payload;
-      const saleIndex = state.parkedSales.findIndex(s => s.id === id);
+      const saleIndex = state.parkedSales.findIndex((s) => s.id === id);
       if (saleIndex > -1) {
         const sale = state.parkedSales[saleIndex];
         state.cart = sale.cart || [];
@@ -383,43 +432,56 @@ const posSlice = createSlice({
         state.orderType = sale.orderType || "Dine-In";
         state.customer = sale.customer || null;
         state.discount = sale.discount || null;
-        state.totals = sale.totals || { subtotal: 0, taxAmount: 0, discountAmount: 0, grandTotal: 0 };
-        
+        state.totals = sale.totals || {
+          subtotal: 0,
+          taxAmount: 0,
+          discountAmount: 0,
+          grandTotal: 0,
+        };
+
         // Remove from parked
         state.parkedSales.splice(saleIndex, 1);
       }
     },
     deleteParkedSale: (state, action) => {
       const id = action.payload;
-      state.parkedSales = state.parkedSales.filter(s => s.id !== id);
+      state.parkedSales = state.parkedSales.filter((s) => s.id !== id);
     },
     calculateTotals: (state) => {
       let subtotal = 0;
       let taxAmount = 0;
-      
+
       const allItems = [...state.runningOrder, ...state.cart];
-      
-      allItems.forEach(item => {
-        let itemPrice = Number(item.product.pricing?.sellingPrice || item.product.price || item.product.base_price || 0);
+
+      allItems.forEach((item) => {
+        let itemPrice = Number(
+          item.product.pricing?.sellingPrice ||
+            item.product.price ||
+            item.product.base_price ||
+            0,
+        );
         if (item.variant) {
           itemPrice = Number(item.variant.price) || 0;
         }
-        const addonsPrice = (item.addons || []).reduce((sum, a) => sum + Number(a.price || 0), 0);
+        const addonsPrice = (item.addons || []).reduce(
+          (sum, a) => sum + Number(a.price || 0),
+          0,
+        );
         const totalItemPrice = (itemPrice + addonsPrice) * item.quantity;
-        
+
         subtotal += totalItemPrice;
-        
+
         // Calculate tax based on the dynamic taxRate (percentage)
         const currentTaxRate = state.taxRate || 0;
-        taxAmount += totalItemPrice * (currentTaxRate / 100); 
+        taxAmount += totalItemPrice * (currentTaxRate / 100);
       });
 
       // Calculate discount
       let discountAmount = 0;
       if (state.discount) {
-        if (state.discount.type === 'percentage') {
+        if (state.discount.type === "percentage") {
           discountAmount = subtotal * (state.discount.value / 100);
-        } else if (state.discount.type === 'fixed') {
+        } else if (state.discount.type === "fixed") {
           discountAmount = state.discount.value;
         }
       }
@@ -428,9 +490,9 @@ const posSlice = createSlice({
         subtotal,
         taxAmount,
         discountAmount,
-        grandTotal: subtotal + taxAmount - discountAmount
+        grandTotal: subtotal + taxAmount - discountAmount,
       };
-    }
+    },
   },
   extraReducers: (builder) => {
     // createOrder: store DB id
@@ -442,6 +504,11 @@ const posSlice = createSlice({
     });
     builder.addCase(createOrder.rejected, (state, action) => {
       console.warn("[POS] createOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create order.",
+      });
     });
 
     // restoreOrder: rebuild Redux state from existing DB order when re-entering an Occupied table
@@ -450,34 +517,80 @@ const posSlice = createSlice({
       state.activeOrderId = order.id;
       state.activeOrderNumber = order.order_number;
       // Restore running_order from DB as locked items so they appear in the POS cart panel
-      state.runningOrder = (order.running_order || []).map(item => ({
+      state.runningOrder = (order.running_order || []).map((item) => ({
         ...item,
         isLockedItem: true,
       }));
       state.cart = []; // Cart is always empty when restoring — new items go in fresh
-      
+
       // Ensure we re-calculate the totals for the restored running order!
       posSlice.caseReducers.calculateTotals(state);
     });
     builder.addCase(restoreOrder.rejected, (state, action) => {
       console.warn("[POS] restoreOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to restore order.",
+      });
     });
 
     builder.addCase(removeRunningOrderItem.fulfilled, (state, action) => {
-      const { itemId } = action.payload;
-      state.runningOrder = state.runningOrder.filter(item => item.id !== itemId);
+      const { itemId, isDeleted } = action.payload;
+      if (!isDeleted) {
+        state.runningOrder = state.runningOrder.filter(
+          (item) => item.id !== itemId,
+        );
+        Toast.show({
+          type: "success",
+          text1: "Item Removed",
+          text2: "Item successfully removed from KOT.",
+        });
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "Order Deleted",
+          text2: "The empty order has been deleted.",
+        });
+      }
     });
     builder.addCase(removeRunningOrderItem.rejected, (state, action) => {
       console.warn("[POS] removeRunningOrderItem failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to remove item.",
+      });
     });
 
     builder.addCase(decreaseRunningOrderItemQty.fulfilled, (state, action) => {
-      const { newRunningOrder } = action.payload;
-      // Replace runningOrder with the server-confirmed list (already has updated qty or item removed)
-      state.runningOrder = newRunningOrder.map(item => ({ ...item, isLockedItem: true }));
+      const { newRunningOrder, isDeleted } = action.payload;
+      if (!isDeleted) {
+        // Replace runningOrder with the server-confirmed list
+        state.runningOrder = newRunningOrder.map((item) => ({
+          ...item,
+          isLockedItem: true,
+        }));
+        Toast.show({
+          type: "success",
+          text1: "Quantity Updated",
+          text2: "Item quantity decreased.",
+        });
+      } else {
+        Toast.show({
+          type: "info",
+          text1: "Order Deleted",
+          text2: "The empty order has been deleted.",
+        });
+      }
     });
     builder.addCase(decreaseRunningOrderItemQty.rejected, (state, action) => {
       console.warn("[POS] decreaseRunningOrderItemQty failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update item quantity.",
+      });
     });
 
     // saveKOT: move cart -> runningOrder in Redux, add ticket to KDS board
@@ -485,7 +598,11 @@ const posSlice = createSlice({
       const { kotNumber, cartItems } = action.payload;
 
       // Lock cart items into runningOrder (they can no longer be edited)
-      const locked = cartItems.map((item) => ({ ...item, isLockedItem: true, kot_number: kotNumber }));
+      const locked = cartItems.map((item) => ({
+        ...item,
+        isLockedItem: true,
+        kot_number: kotNumber,
+      }));
       state.runningOrder = [...state.runningOrder, ...locked];
       state.cart = [];
 
@@ -517,9 +634,12 @@ const posSlice = createSlice({
     });
     builder.addCase(saveKOT.rejected, (state, action) => {
       console.warn("[POS] saveKOT failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to send KOT.",
+      });
     });
-
-
 
     // fetchAllOrders (fetches full history)
     builder.addCase(fetchAllOrders.fulfilled, (state, action) => {
@@ -529,15 +649,33 @@ const posSlice = createSlice({
 
     // deleteOrderAsync
     builder.addCase(deleteOrderAsync.fulfilled, (state) => {
-      // Free the table locally by clearing the active session
+      // Clear the current active order
       state.activeOrderId = null;
       state.activeOrderNumber = null;
-      state.cart = [];
       state.runningOrder = [];
+      state.cart = [];
+      state.customer = null;
+      state.orderType = "Dine-In";
+      state.totals = {
+        subtotal: 0,
+        taxAmount: 0,
+        discount: 0,
+        grandTotal: 0,
+      };
       state.activeTable = null;
+      Toast.show({
+        type: "info",
+        text1: "Order Deleted",
+        text2: "The order has been removed.",
+      });
     });
     builder.addCase(deleteOrderAsync.rejected, (state, action) => {
       console.warn("[POS] deleteOrder failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete order.",
+      });
     });
 
     // createInvoiceAsync
@@ -551,6 +689,11 @@ const posSlice = createSlice({
     });
     builder.addCase(createInvoiceAsync.rejected, (state, action) => {
       console.warn("[POS] createInvoice failed:", action.payload);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create invoice.",
+      });
     });
 
     // fetchActiveOrders: Parse orders into kdsTickets
@@ -558,13 +701,13 @@ const posSlice = createSlice({
       const orders = action.payload || [];
       state.activeOrders = orders;
       const kdsTickets = [];
-      
-      orders.forEach(order => {
+
+      orders.forEach((order) => {
         if (!order.kot_numbers || !order.running_order) return;
-        
+
         // Group running_order items by kot_number
         const itemsByKot = {};
-        order.running_order.forEach(item => {
+        order.running_order.forEach((item) => {
           if (item.kot_number) {
             if (!itemsByKot[item.kot_number]) itemsByKot[item.kot_number] = [];
             itemsByKot[item.kot_number].push(item);
@@ -572,15 +715,26 @@ const posSlice = createSlice({
         });
 
         // Create a ticket for each KOT — derive ticket status from most-advanced item
-        order.kot_numbers.forEach(kotNum => {
+        order.kot_numbers.forEach((kotNum) => {
           const kotItems = itemsByKot[kotNum] || [];
           if (kotItems.length > 0) {
             // Derive top-level ticket status from items (most advanced status wins)
-            const statusPriority = ["Accepted", "Preparing", "Done", "Served", "Completed", "Cancelled"];
-            const statuses = kotItems.map(ci => ci.status || "Accepted");
-            const ticketStatus = statuses.reduce((best, s) => 
-              statusPriority.indexOf(s) > statusPriority.indexOf(best) ? s : best
-            , "Accepted");
+            const statusPriority = [
+              "Accepted",
+              "Preparing",
+              "Done",
+              "Served",
+              "Completed",
+              "Cancelled",
+            ];
+            const statuses = kotItems.map((ci) => ci.status || "Accepted");
+            const ticketStatus = statuses.reduce(
+              (best, s) =>
+                statusPriority.indexOf(s) > statusPriority.indexOf(best)
+                  ? s
+                  : best,
+              "Accepted",
+            );
 
             kdsTickets.push({
               id: kotNum,
@@ -588,20 +742,22 @@ const posSlice = createSlice({
               orderNumber: kotNum,
               type: order.order_type,
               table: order.table?.name || null,
-              customer: order.customer_info?.name || order.customer?.name || null,
+              customer:
+                order.customer_info?.name || order.customer?.name || null,
               station: "Kitchen",
-              status: ticketStatus,   // ← restored from DB
-              startTime: order.created_at,
+              status: ticketStatus, // ← restored from DB
+              startTime: kotItems[0]?.added_at || order.created_at,
               priority: "Normal",
-              items: kotItems.map(ci => ({
+              total: order.total_amount || 0,
+              items: kotItems.map((ci) => ({
                 id: ci.id,
                 name: ci.product?.name || "Item",
                 qty: ci.quantity,
                 course: ci.product?.category || "Uncategorized",
-                status: ci.status || "Accepted",  // ← restored from DB
-                modifiers: (ci.addons || []).map(a => a.name),
-                note: ci.note || null
-              }))
+                status: ci.status || "Accepted", // ← restored from DB
+                modifiers: (ci.addons || []).map((a) => a.name),
+                note: ci.note || null,
+              })),
             });
           }
         });
@@ -617,7 +773,9 @@ const posSlice = createSlice({
       if (order) {
         order.status = status;
         // Also update every item in the ticket so Waiter screen filter works
-        order.items.forEach(item => { item.status = status; });
+        order.items.forEach((item) => {
+          item.status = status;
+        });
       }
     });
     builder.addCase(updateKDSItemStatusAsync.fulfilled, (state, action) => {
@@ -628,23 +786,39 @@ const posSlice = createSlice({
         if (item) item.status = status;
       }
     });
-    builder.addCase(updateKDSMultipleItemsStatusAsync.fulfilled, (state, action) => {
-      const { orderId, itemIds, status } = action.payload;
-      const order = state.kdsOrders.find((o) => o.id === orderId);
-      if (order) {
-        order.items.forEach((item) => {
-          if (itemIds.includes(item.id)) {
-            item.status = status;
-          }
-        });
-      }
-    });
+    builder.addCase(
+      updateKDSMultipleItemsStatusAsync.fulfilled,
+      (state, action) => {
+        const { orderId, itemIds, status } = action.payload;
+        const order = state.kdsOrders.find((o) => o.id === orderId);
+        if (order) {
+          order.items.forEach((item) => {
+            if (itemIds.includes(item.id)) {
+              item.status = status;
+            }
+          });
+        }
+      },
+    );
   },
 });
 
 export const {
-  setActiveTable, setOrderType, setTaxRate, clearPOSData, setActiveOrder,
-  addToCart, updateQuantity, voidItem, clearCart, applyDiscount,
-  parkSale, resumeParkedSale, deleteParkedSale, calculateTotals, resetOrder, setCustomer
+  setActiveTable,
+  setOrderType,
+  setTaxRate,
+  clearPOSData,
+  setActiveOrder,
+  addToCart,
+  updateQuantity,
+  voidItem,
+  clearCart,
+  applyDiscount,
+  parkSale,
+  resumeParkedSale,
+  deleteParkedSale,
+  calculateTotals,
+  resetOrder,
+  setCustomer,
 } = posSlice.actions;
 export default posSlice.reducer;

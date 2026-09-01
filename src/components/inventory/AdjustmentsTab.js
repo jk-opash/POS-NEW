@@ -1,17 +1,22 @@
+import { Loader } from "@/components/common/Loader";
 import { Text } from "@/components/ui/Text";
-import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
-import { ScrollView, StyleSheet, View, ActivityIndicator } from "react-native";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { fetchInventoryLedger } from "@/store/slices/inventorySlice";
+import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 export function AdjustmentsTab() {
   const dispatch = useDispatch();
   const { activeBranch } = useSelector((state) => state.branch);
-  const { ledger, isLedgerLoading: loading } = useSelector((state) => state.inventory);
+  const {
+    ledger,
+    isLedgerLoading: loading,
+    error,
+  } = useSelector((state) => state.inventory);
 
   const stockAdjustments = ledger.filter(
-    (item) => item.movement_type === "ADJUSTMENT"
+    (item) => item.movement_type === "ADJUSTMENT",
   );
 
   useEffect(() => {
@@ -56,8 +61,7 @@ export function AdjustmentsTab() {
 
         {loading ? (
           <View style={{ padding: 40, alignItems: "center" }}>
-            <ActivityIndicator size="large" color={ThemeColors.primary} />
-            <Text style={{ color: ThemeColors.textMuted, marginTop: 10 }}>Loading adjustments...</Text>
+            <Loader text="Loading adjustments..." />
           </View>
         ) : error ? (
           <View style={{ padding: 40, alignItems: "center" }}>
@@ -74,11 +78,17 @@ export function AdjustmentsTab() {
             const qtyChange = Number(item.quantity_change);
             return (
               <View key={item.id} style={styles.tableRow}>
-                <Text style={[styles.col, { width: 150, color: ThemeColors.blue }]} numberOfLines={1}>
+                <Text
+                  style={[styles.col, { width: 150, color: ThemeColors.blue }]}
+                  numberOfLines={1}
+                >
                   {item.id.slice(0, 13)}
                 </Text>
                 <Text
-                  style={[styles.col, { width: 180, color: ThemeColors.textMuted }]}
+                  style={[
+                    styles.col,
+                    { width: 180, color: ThemeColors.textMuted },
+                  ]}
                 >
                   {new Date(item.created_at).toLocaleString()}
                 </Text>
@@ -88,7 +98,11 @@ export function AdjustmentsTab() {
                 <Text
                   style={[
                     styles.col,
-                    { flex: 1, minWidth: 200, color: ThemeColors.textSecondary },
+                    {
+                      flex: 1,
+                      minWidth: 200,
+                      color: ThemeColors.textSecondary,
+                    },
                   ]}
                 >
                   {item.reason || "-"}
@@ -105,12 +119,13 @@ export function AdjustmentsTab() {
                         qtyChange > 0
                           ? ThemeColors.emerald
                           : qtyChange < 0
-                          ? ThemeColors.rose
-                          : ThemeColors.textSecondary,
+                            ? ThemeColors.rose
+                            : ThemeColors.textSecondary,
                     },
                   ]}
                 >
-                  {qtyChange > 0 ? "+" : ""}{qtyChange}
+                  {qtyChange > 0 ? "+" : ""}
+                  {qtyChange}
                 </Text>
 
                 <Text

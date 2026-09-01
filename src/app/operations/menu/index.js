@@ -1,4 +1,3 @@
-import { deleteMenuItem as deleteMenuItemThunk, updateMenuItemStatus, createMenuItem as createMenuItemThunk, updateMenuItem as updateMenuItemThunk, fetchMenuData } from "@/store/slices/menuSlice";
 import { BulkActionModal } from "@/components/menu/BulkActionModal";
 import { MenuEmptyState } from "@/components/menu/MenuEmptyState";
 import { MenuHeader } from "@/components/menu/MenuHeader";
@@ -6,6 +5,13 @@ import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { MenuItemWizardModal } from "@/components/menu/MenuItemWizardModal";
 import { Text } from "@/components/ui/Text";
 import { useResponsive } from "@/hooks/useResponsive";
+import {
+  createMenuItem as createMenuItemThunk,
+  deleteMenuItem as deleteMenuItemThunk,
+  fetchMenuData,
+  updateMenuItemStatus,
+  updateMenuItem as updateMenuItemThunk,
+} from "@/store/slices/menuSlice";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { useNavigation } from "expo-router";
 import { CheckSquare, ChevronDown, ChevronUp, Plus } from "lucide-react-native";
@@ -17,6 +23,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -29,10 +37,11 @@ export default function MenuScreen() {
   const [isBulkModalVisible, setIsBulkModalVisible] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [editingMenuItem, setEditingMenuItem] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState(() => {
     const initial = {};
     [].forEach((cat) => {
-      initial[cat] = true;
+      initial[cat] = false;
     });
     return initial;
   });
@@ -48,7 +57,7 @@ export default function MenuScreen() {
 
   const branchId = activeBranch;
 
-  const { items: menuItems = [], categories = [] } = useSelector(
+  const { items: menuItems = [], categories = [], isLoading } = useSelector(
     (state) => state.menu,
   );
 
@@ -57,6 +66,12 @@ export default function MenuScreen() {
       dispatch(fetchMenuData(branchId));
     }
   }, [dispatch, branchId]);
+
+  const handleRefresh = () => {
+    if (branchId) {
+      dispatch(fetchMenuData(branchId));
+    }
+  };
 
   const { isDesktop, isTablet, isMiniTab, width, isWebDesktop } =
     useResponsive();
@@ -117,9 +132,7 @@ export default function MenuScreen() {
     const id = menuItem._id || menuItem.id;
     if (isSelectMode) {
       setSelectedIds((prev) =>
-        prev.includes(id)
-          ? prev.filter((i) => i !== id)
-          : [...prev, id],
+        prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
       );
     } else {
       setSelectedMenuItem(menuItem);
@@ -151,6 +164,7 @@ export default function MenuScreen() {
 
   const handleSaveMenuItem = async (data) => {
     try {
+      setIsSaving(true);
       const payload = {
         ...data,
         status: data.status || "Active",
@@ -170,14 +184,20 @@ export default function MenuScreen() {
     } catch (error) {
       console.error("Error saving menu item", error);
       Alert.alert("Error", "Failed to save menu item.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const SIDEBAR_ITEMS = ["All", ...categories];
-  const filterOptions = SIDEBAR_ITEMS.map((cat) => ({
-    label: cat === "All" ? "All Items" : cat,
-    value: cat,
-  }));
+  const filterOptions = SIDEBAR_ITEMS.map((cat) => {
+    const catName = cat === "All" ? "All Items" : cat.name || cat;
+    const catValue = cat === "All" ? "All" : cat.name || cat;
+    return {
+      label: catName,
+      value: catValue,
+    };
+  });
 
   return (
     <View style={styles.root}>
@@ -199,81 +219,96 @@ export default function MenuScreen() {
       />
 
       <View style={styles.mainContent}>
-        <SectionList
-          sections={sections}
-          keyExtractor={(item, index) => (item[0]?._id || item[0]?.id) + index}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={<MenuEmptyState />}
-          renderSectionHeader={({ section: { title, itemCount } }) => (
-            <TouchableOpacity
-              style={styles.sectionHeader}
-              activeOpacity={0.7}
-              onPress={() => toggleSection(title)}
-            >
-              <View style={styles.sectionTitleWrap}>
-                <Text weight="black" style={styles.sectionTitle}>
-                  {title}
-                </Text>
-                <Text weight="bold" style={styles.sectionCount}>
-                  {itemCount}
-                </Text>
+        {isLoading && menuItems.length === 0 ? (
+          <ActivityIndicator
+            size="large"
+            color={ThemeColors.emerald}
+            style={{ marginTop: 40 }}
+          />
+        ) : (
+          <SectionList
+            sections={sections}
+            keyExtractor={(item, index) => (item[0]?._id || item[0]?.id) + index}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading && menuItems.length > 0}
+                onRefresh={handleRefresh}
+                colors={[ThemeColors.emerald]}
+              />
+            }
+            ListEmptyComponent={<MenuEmptyState />}
+            renderSectionHeader={({ section: { title, itemCount } }) => (
+              <TouchableOpacity
+                style={styles.sectionHeader}
+                activeOpacity={0.7}
+                onPress={() => toggleSection(title)}
+              >
+                <View style={styles.sectionTitleWrap}>
+                  <Text weight="black" style={styles.sectionTitle}>
+                    {title}
+                  </Text>
+                  <Text weight="bold" style={styles.sectionCount}>
+                    {itemCount}
+                  </Text>
+                </View>
+                {collapsedSections[title] ? (
+                  <ChevronDown size={24} color={ThemeColors.textSecondary} />
+                ) : (
+                  <ChevronUp size={24} color={ThemeColors.textSecondary} />
+                )}
+              </TouchableOpacity>
+            )}
+            renderItem={({ item: row }) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: ThemeSpacing.sm,
+                  marginBottom: ThemeSpacing.sm,
+                }}
+              >
+                {row.map((item) => {
+                  const itemId = item._id || item.id;
+                  return (
+                    <View
+                      key={itemId}
+                      style={[
+                        styles.cardWrapper,
+                        { width: cardWidth, position: "relative" },
+                      ]}
+                    >
+                      <MenuItemCard
+                        menuItem={item}
+                        isList={false}
+                        onPress={handleMenuItemPress}
+                        onEdit={(menuItem) => {
+                          setEditingMenuItem(menuItem);
+                          setIsWizardVisible(true);
+                        }}
+                        onToggleStatus={handleToggleStatus}
+                      />
+                      {isSelectMode && (
+                        <View
+                          style={[
+                            styles.selectOverlay,
+                            selectedIds.includes(itemId) &&
+                              styles.selectOverlayActive,
+                          ]}
+                          pointerEvents="none"
+                        >
+                          {selectedIds.includes(itemId) && (
+                            <CheckSquare size={24} color={ThemeColors.emerald} />
+                          )}
+                        </View>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
-              {collapsedSections[title] ? (
-                <ChevronDown size={24} color={ThemeColors.textSecondary} />
-              ) : (
-                <ChevronUp size={24} color={ThemeColors.textSecondary} />
-              )}
-            </TouchableOpacity>
-          )}
-          renderItem={({ item: row }) => (
-            <View
-              style={{
-                flexDirection: "row",
-                gap: ThemeSpacing.sm,
-                marginBottom: ThemeSpacing.sm,
-              }}
-            >
-              {row.map((item) => {
-                const itemId = item._id || item.id;
-                return (
-                  <View
-                    key={itemId}
-                    style={[
-                      styles.cardWrapper,
-                      { width: cardWidth, position: "relative" },
-                    ]}
-                  >
-                    <MenuItemCard
-                      menuItem={item}
-                      isList={false}
-                      onPress={handleMenuItemPress}
-                      onEdit={(menuItem) => {
-                        setEditingMenuItem(menuItem);
-                        setIsWizardVisible(true);
-                      }}
-                      onToggleStatus={handleToggleStatus}
-                    />
-                    {isSelectMode && (
-                      <View
-                        style={[
-                          styles.selectOverlay,
-                          selectedIds.includes(itemId) &&
-                            styles.selectOverlayActive,
-                        ]}
-                        pointerEvents="none"
-                      >
-                        {selectedIds.includes(itemId) && (
-                          <CheckSquare size={24} color={ThemeColors.emerald} />
-                        )}
-                      </View>
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        />
+            )}
+          />
+        )}
       </View>
 
       {isSelectMode && selectedIds.length > 0 && (
@@ -315,11 +350,12 @@ export default function MenuScreen() {
         <Text style={styles.fabText}>Add MenuItem</Text>
       </TouchableOpacity>
 
-      <MenuItemWizardModal 
+      <MenuItemWizardModal
         visible={isWizardVisible}
         onClose={() => setIsWizardVisible(false)}
         onSave={handleSaveMenuItem}
         initialData={editingMenuItem}
+        isSaving={isSaving}
       />
     </View>
   );

@@ -1,8 +1,9 @@
+import { Loader } from "@/components/common/Loader";
 import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";
 import { useNavigation } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import { InventoryActionModal } from "@/components/inventory/InventoryActionModal";
@@ -23,7 +24,8 @@ export default function InventoryPage() {
     (state) => state.inventory,
   );
 
-  const currentBranchObj = branches?.find((b) => b.id === activeBranch) || branches?.[0];
+  const currentBranchObj =
+    branches?.find((b) => b.id === activeBranch) || branches?.[0];
 
   const [activeTab, setActiveTab] = useState("stock");
   const [activeLocation, setActiveLocation] = useState(
@@ -75,7 +77,13 @@ export default function InventoryPage() {
       }
     });
 
-    return { totalItems, lowStockCount, outOfStockCount, quarantineCount, totalValue };
+    return {
+      totalItems,
+      lowStockCount,
+      outOfStockCount,
+      quarantineCount,
+      totalValue,
+    };
   }, [inventoryItems]);
 
   const now = new Date();
@@ -105,11 +113,7 @@ export default function InventoryPage() {
         <InventorySummaryCards metrics={metrics} />
         <View style={styles.contentSection}>
           {isLoading ? (
-            <ActivityIndicator
-              size="large"
-              color={ThemeColors.primary}
-              style={{ marginTop: 40 }}
-            />
+            <Loader />
           ) : (
             <InventoryContent
               activeTab={activeTab}

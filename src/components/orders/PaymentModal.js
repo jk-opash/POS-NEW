@@ -3,6 +3,9 @@ import { useResponsive } from "@/hooks/useResponsive";
 import { ThemeColors, ThemeRadius, ThemeSpacing } from "@/theme/theme";
 import { Banknote, CreditCard, Smartphone, X } from "lucide-react-native";
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { orderApi } from "@/api/services";
+import { fetchAllOrders } from "@/store/slices/posSlice";
 import {
   Modal,
   ScrollView,
@@ -10,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
@@ -42,10 +46,16 @@ export function PaymentModal({
   order,
   viewMode = "payment",
 }) {
+  const dispatch = useDispatch();
+  const activeBranch = useSelector((state) => state.branch?.activeBranch);
+  const userBranchId = useSelector((state) => state.auth?.user?.branch_id);
+  const currentBranchId = activeBranch && activeBranch !== "br-1" ? activeBranch : userBranchId;
+
   const { isMobile, isMiniTab } = useResponsive();
   const [amount, setAmount] = useState("");
   const [discount, setDiscount] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("cash");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const PAYMENT_METHODS = [
     { id: "cash", label: "Cash", Icon: Banknote },
@@ -59,6 +69,29 @@ export function PaymentModal({
   const subtotal = order.total;
   const tax = subtotal * 0.05;
   const finalTotal = Math.max(0, subtotal + tax - discountVal);
+
+  const handlePayment = async () => {
+    if (!order) return;
+    setIsProcessing(true);
+    try {
+      const orderId = order.dbId || order.id;
+      await orderApi.update(orderId, {
+        payment_status: "Paid",
+        payment_method: selectedMethod,
+        status: "Completed",
+      });
+
+      if (currentBranchId) {
+        dispatch(fetchAllOrders(currentBranchId));
+      }
+      onClose();
+    } catch (error) {
+      console.error("Payment failed:", error);
+      alert("Payment failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const modalWidth =
     viewMode === "receipt"
@@ -333,10 +366,21 @@ export function PaymentModal({
                       </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.payBtn} onPress={onClose}>
-                      <Text weight="bold" style={styles.payBtnText}>
-                        Pay Now
-                      </Text>
+                    <TouchableOpacity 
+                      style={[styles.payBtn, isProcessing && { opacity: 0.7 }]} 
+                      onPress={handlePayment}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <ActivityIndicator size="small" color={ThemeColors.white} />
+                          <Text weight="bold" style={styles.payBtnText}>Processing...</Text>
+                        </View>
+                      ) : (
+                        <Text weight="bold" style={styles.payBtnText}>
+                          Pay Now
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
