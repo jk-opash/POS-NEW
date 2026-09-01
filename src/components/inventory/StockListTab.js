@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getImageUrl } from "@/utils/image";
 import { InventoryActionModal } from "./InventoryActionModal";
 import { ProductInventoryModal } from "./ProductInventoryModal";
 import { deleteInventoryItem } from "@/store/slices/inventorySlice";
@@ -125,7 +126,7 @@ export function StockListTab({ onEditItem }) {
               >
                 <View style={styles.imageContainer}>
                   {item.image ? (
-                    <Image source={{ uri: item.image }} style={styles.image} />
+                    <Image source={{ uri: getImageUrl(item.image) }} style={styles.image} />
                   ) : (
                     <View style={styles.placeholderImage}>
                       <Package size={32} color={ThemeColors.textMuted} />

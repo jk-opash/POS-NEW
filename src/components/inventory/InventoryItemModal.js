@@ -14,6 +14,7 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
+import { getImageUrl } from "@/utils/image";
 
 import { useDispatch } from "react-redux";
 import { createInventoryItem, updateInventoryItem } from "@/store/slices/inventorySlice";
@@ -247,7 +248,7 @@ export function InventoryItemModal({ visible, onClose, branchId, initialData }) 
               >
                 {image ? (
                   <Image
-                    source={{ uri: image }}
+                    source={{ uri: getImageUrl(image) }}
                     style={{
                       width: "100%",
                       height: 120,

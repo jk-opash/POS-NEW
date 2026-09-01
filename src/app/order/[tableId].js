@@ -22,8 +22,8 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  View,
 } from "react-native";
+import { getImageUrl } from "@/utils/image";
 
 const { width } = Dimensions.get("window");
 const isTablet = width > 600;
@@ -185,7 +185,7 @@ export default function OrderScreen() {
         <View style={styles.productImageContainer}>
           {product.image ? (
             <Image
-              source={{ uri: product.image }}
+              source={{ uri: getImageUrl(product.image) }}
               style={styles.productImage}
               contentFit="cover"
             />

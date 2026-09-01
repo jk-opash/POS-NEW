@@ -23,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { getImageUrl } from "@/utils/image";
 import { useSelector } from "react-redux";
 
 export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
@@ -393,7 +394,7 @@ export function MenuItemWizardModal({ visible, onClose, onSave, initialData }) {
                   >
                     {formData.image ? (
                       <Image
-                        source={{ uri: formData.image }}
+                        source={{ uri: getImageUrl(formData.image) }}
                         style={{
                           width: "100%",
                           height: 100,
