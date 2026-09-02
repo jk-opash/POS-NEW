@@ -65,7 +65,7 @@ export default function OnlineOrdersPage() {
   const numCols = isDesktop ? 4 : isTablet ? 3 : isMiniTab ? 2 : 1;
 
   const filteredOrders = activeOrders.filter((order) => {
-    if (order.type !== "QR Order") return false;
+    // if (order.type !== "QR Order") return false;
 
     if (activeStation !== "All" && order.station !== activeStation)
       return false;

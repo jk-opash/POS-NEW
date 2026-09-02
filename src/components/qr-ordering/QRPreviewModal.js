@@ -5,7 +5,8 @@ import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
 export function QRPreviewModal({ previewTable, onClose, onDownload }) {
-  const baseUrl = process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://your-ordering-site.com/order";
+  const baseUrl =
+    process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://pos-client-red.vercel.app";
 
   return (
     <Modal visible={!!previewTable} transparent animationType="fade">
@@ -19,7 +20,7 @@ export function QRPreviewModal({ previewTable, onClose, onDownload }) {
           <View style={styles.modalQrWrapper}>
             {previewTable && (
               <QRCode
-                value={`${baseUrl}?table=${previewTable.name}`}
+                value={`${baseUrl}/order/${previewTable.id}`}
                 size={200}
                 color={ThemeColors.primary}
                 backgroundColor={ThemeColors.white}
@@ -27,7 +28,7 @@ export function QRPreviewModal({ previewTable, onClose, onDownload }) {
             )}
           </View>
           <Text style={styles.modalUrlText}>
-            {baseUrl}?table={previewTable?.name}
+            {baseUrl}/order/{previewTable?.id}
           </Text>
 
           <View style={styles.modalActions}>

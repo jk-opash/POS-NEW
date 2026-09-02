@@ -20,8 +20,9 @@ export function TableQRCard({
   onDownload,
   qrRefs,
 }) {
-  const baseUrl = process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://your-ordering-site.com/order";
-  const url = `${baseUrl}?table=${table.name}`;
+  const baseUrl =
+    process.env.EXPO_PUBLIC_QR_ORDERING_URL || "https://pos-client-red.vercel.app";
+  const url = `${baseUrl}/order/${table.id}`;
   const analytics = getMockAnalytics(table.name);
 
   return (
