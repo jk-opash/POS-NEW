@@ -718,6 +718,8 @@ const posSlice = createSlice({
           if (kotItems.length > 0) {
             // Derive top-level ticket status from items (most advanced status wins)
             const statusPriority = [
+              "New",
+              "Pending",
               "Accepted",
               "Preparing",
               "Done",
@@ -725,13 +727,13 @@ const posSlice = createSlice({
               "Completed",
               "Cancelled",
             ];
-            const statuses = kotItems.map((ci) => ci.status || "Accepted");
+            const statuses = kotItems.map((ci) => ci.status || "New");
             const ticketStatus = statuses.reduce(
               (best, s) =>
                 statusPriority.indexOf(s) > statusPriority.indexOf(best)
                   ? s
                   : best,
-              "Accepted",
+              "New",
             );
 
             kdsTickets.push({
@@ -752,7 +754,7 @@ const posSlice = createSlice({
                 name: ci.product?.name || "Item",
                 qty: ci.quantity,
                 course: ci.product?.category || "Uncategorized",
-                status: ci.status || "Accepted", // ← restored from DB
+                status: ci.status || "New", // ← restored from DB
                 modifiers: (ci.addons || []).map((a) => a.name),
                 note: ci.note || null,
               })),
