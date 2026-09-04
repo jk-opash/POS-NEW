@@ -11,10 +11,8 @@ import {
   Mail,
   Monitor,
   Package,
-  Shield,
   ShoppingCart,
   Store,
-  User,
 } from "lucide-react-native";
 import { useState } from "react";
 import {
@@ -51,7 +49,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("anand@dailygrind.co");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
-  const [loginType, setLoginType] = useState("admin"); // 'admin' or 'team'
+  const [loginType, setLoginType] = useState("team"); // 'admin' or 'team'
 
   const dispatch = useDispatch();
   const router = useRouter();
@@ -177,62 +175,6 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.formContainer}>
-                {/* Login Type Selector */}
-                <View style={styles.typeSelector}>
-                  <TouchableOpacity
-                    style={[
-                      styles.typeOption,
-                      loginType === "admin" && styles.typeOptionActive,
-                    ]}
-                    onPress={() => setLoginType("admin")}
-                  >
-                    <Shield
-                      size={16}
-                      color={
-                        loginType === "admin"
-                          ? ThemeColors.emerald
-                          : ThemeColors.textSecondary
-                      }
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text
-                      weight={loginType === "admin" ? "bold" : "medium"}
-                      style={[
-                        styles.typeText,
-                        loginType === "admin" && styles.typeTextActive,
-                      ]}
-                    >
-                      Owner / Admin
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.typeOption,
-                      loginType === "team" && styles.typeOptionActive,
-                    ]}
-                    onPress={() => setLoginType("team")}
-                  >
-                    <User
-                      size={16}
-                      color={
-                        loginType === "team"
-                          ? ThemeColors.emerald
-                          : ThemeColors.textSecondary
-                      }
-                      style={{ marginRight: 6 }}
-                    />
-                    <Text
-                      weight={loginType === "team" ? "bold" : "medium"}
-                      style={[
-                        styles.typeText,
-                        loginType === "team" && styles.typeTextActive,
-                      ]}
-                    >
-                      Staff / Team
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
                 <View style={styles.inputGroup}>
                   <Text weight="semibold" style={styles.label}>
                     Email address
