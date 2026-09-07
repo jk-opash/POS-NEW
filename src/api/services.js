@@ -67,7 +67,7 @@ export const orderApi = {
   update: (orderId, data) => axiosClient.put(`/order/${orderId}`, data),
   delete: (orderId) => axiosClient.delete(`/order/${orderId}`),
   getPending: (branchId) =>
-    axiosClient.get(`/order?branch_id=${branchId}&status=Pending`),
+    axiosClient.get(`/order?branch_id=${branchId}&status=Pending,Accepted,Preparing`),
   getAll: (branchId) => axiosClient.get(`/order?branch_id=${branchId}`),
   updateKds: (orderId, data) => axiosClient.put(`/order/${orderId}/kds`, data),
 };
