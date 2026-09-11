@@ -7,7 +7,6 @@ import {
   Monitor,
   MonitorPlay,
   ReceiptText,
-  Smartphone,
   UtensilsCrossed,
   Wrench,
 } from "lucide-react-native";
@@ -24,12 +23,12 @@ const NAV_ITEMS = [
   { key: "dashboard", path: "/", icon: Home, label: "Dash" },
   { key: "tables", path: "/tables", icon: LayoutGrid, label: "Tables" },
   { key: "pos", path: "/pos", icon: Monitor, label: "POS" },
-  {
-    key: "online-orders",
-    path: "/online-orders",
-    icon: Smartphone,
-    label: "Online",
-  },
+  // {
+  //   key: "online-orders",
+  //   path: "/online-orders",
+  //   icon: Smartphone,
+  //   label: "Online",
+  // },
   { key: "kds", path: "/kds", icon: MonitorPlay, label: "KDS" },
   { key: "waiter", path: "/waiter", icon: UtensilsCrossed, label: "Waiter" },
   { key: "invoices", path: "/invoices", icon: ReceiptText, label: "invoices" },

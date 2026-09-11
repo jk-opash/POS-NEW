@@ -11,7 +11,6 @@ import {
   MonitorPlay,
   Receipt,
   Settings,
-  Smartphone,
   Store,
   UtensilsCrossed,
 } from "lucide-react-native";
@@ -38,11 +37,11 @@ const MENU_SECTIONS = [
   {
     title: "KITCHEN",
     items: [
-      {
-        key: "online-orders",
-        label: "Online Orders",
-        Icon: Smartphone,
-      },
+      // {
+      //   key: "online-orders",
+      //   label: "Online Orders",
+      //   Icon: Smartphone,
+      // },
       { key: "kds", label: "KOT / KDS", Icon: MonitorPlay },
       { key: "waiter", label: "Waiter / Serve", Icon: UtensilsCrossed },
     ],

@@ -12,6 +12,8 @@ class SocketService {
     const apiUrl =
       process.env.EXPO_PUBLIC_API_URL ||
       "https://pos-backend-qcky.onrender.com/api";
+    // const apiUrl =
+    //   process.env.EXPO_PUBLIC_API_URL || "http://localhost:5001/api";
     const socketUrl = apiUrl.replace("/api", "");
 
     this.socket = io(socketUrl, {

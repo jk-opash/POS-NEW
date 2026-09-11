@@ -44,6 +44,7 @@ import {
   setOrderType,
   setTaxRate,
   updateQuantity,
+  updateItemNote,
   voidItem,
 } from "@/store/slices/posSlice";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";
@@ -204,7 +205,11 @@ export default function POSScreen() {
     }
   };
   const generateKOT = () => null;
-  const updateCartItem = () => {};
+  const updateCartItem = (itemId, updates) => {
+    if (updates && updates.note !== undefined) {
+      dispatch(updateItemNote({ id: itemId, note: updates.note }));
+    }
+  };
   const createNewTakeaway = () => {
     if (cart.length > 0 || runningOrder.length > 0) {
       Alert.alert(
