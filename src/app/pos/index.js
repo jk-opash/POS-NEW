@@ -45,6 +45,7 @@ import {
   setTaxRate,
   updateItemNote,
   updateQuantity,
+  updateItemNote,
   voidItem,
 } from "@/store/slices/posSlice";
 import { ThemeColors, ThemeSpacing } from "@/theme/theme";
