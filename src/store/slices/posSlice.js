@@ -65,6 +65,12 @@ export const saveKOT = createAsyncThunk(
               price: item.variant.price,
             }
           : null,
+        spiceLevel: item.spiceLevel
+          ? {
+              id: item.spiceLevel.id,
+              name: item.spiceLevel.name,
+            }
+          : null,
         addons: (item.addons || []).map((a) => ({
           id: a.id,
           name: a.name,
@@ -393,6 +399,13 @@ const posSlice = createSlice({
       state.cart = [];
       posSlice.caseReducers.calculateTotals(state);
     },
+    updateItemNote: (state, action) => {
+      const { id, note } = action.payload;
+      const item = state.cart.find((c) => c.id === id);
+      if (item) {
+        item.note = note;
+      }
+    },
     applyDiscount: (state, action) => {
       state.discount = action.payload; // { type, value, reason }
       posSlice.caseReducers.calculateTotals(state);
@@ -624,7 +637,11 @@ const posSlice = createSlice({
           qty: ci.quantity,
           course: ci.product?.category || "Uncategorized",
           status: "Accepted",
-          modifiers: (ci.addons || []).map((a) => a.name),
+          modifiers: [
+            ...(ci.variant ? [ci.variant.name] : []),
+            ...(ci.spiceLevel ? [ci.spiceLevel.name] : []),
+            ...(ci.addons || []).map((a) => a.name)
+          ],
           note: ci.note || null,
         })),
       };
@@ -757,7 +774,11 @@ const posSlice = createSlice({
                 qty: ci.quantity,
                 course: ci.product?.category || "Uncategorized",
                 status: ci.status || "New", // ← restored from DB
-                modifiers: (ci.addons || []).map((a) => a.name),
+                modifiers: [
+                  ...(ci.variant ? [ci.variant.name] : []),
+                  ...(ci.spiceLevel ? [ci.spiceLevel.name] : []),
+                  ...(ci.addons || []).map((a) => a.name)
+                ],
                 note: ci.note || null,
               })),
             });
@@ -813,6 +834,7 @@ export const {
   setActiveOrder,
   addToCart,
   updateQuantity,
+  updateItemNote,
   voidItem,
   clearCart,
   applyDiscount,

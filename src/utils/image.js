@@ -10,6 +10,7 @@ export const getImageUrl = (imagePath) => {
   const apiUrl =
     process.env.EXPO_PUBLIC_API_URL ||
     "https://pos-backend-qcky.onrender.com/api";
+  // const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5001/api";
 
   // Remove trailing '/api' to get the base domain for static assets if hosted on the same server
   const baseUrl = apiUrl.endsWith("/api")
